@@ -16,18 +16,22 @@ import (
 )
 
 //Datos autentificación en BD
-var username = "root"
-var password = "ViadJid3"
-
 //var username = "root"
-//var password = "chn6NQXM"
-var adress = "51.255.44.18" //vps222360.ovh.net
+//var password = "ViadJid3"
+
+var username = "otro"
+var password = "otro"
+
+//var username = "sds"
+//var password = "sds"
+var adress = "localhost" //vps222360.ovh.net
 var database = "sds"
 
 //Insertamos a un nuevo usuario en BD
 func insertUsuarioBD(nombre string, clavepubrsa string) {
-	//db, err := sql.Open("mysql", username+":"+password+"@tcp("+adress+":8080)/"+database)
-	db, err := sql.Open("mysql", username+":"+password+"@"+adress+"/"+database)
+	db, err := sql.Open("mysql", username+":"+password+"@tcp(51.255.44.18:3306)/"+database)
+	//db, err := sql.Open("mysql", username+":"+password+"@"+adress+"/"+database)
+	//db, err := sql.Open("mysql", username+":"+password+"@/"+database)
 
 	if err != nil {
 		panic(err.Error())
