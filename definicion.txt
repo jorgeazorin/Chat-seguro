@@ -1,0 +1,47 @@
+Servidor guarda mensajes pero cifrados
+Los clientes pueden descifrarlos con su clave que es una contraseña (que el servidor no sabe). Esta contraseña
+la haremo más compleja con Hash o Script para que sea mñas dificil de descifrar.
+
+
+Todos los usuarios tienen su clave pública y privada.
+
+En los chat grupales se cifra con el conjunto de las claves públicas de esos usuarios.
+
+COMO ES
+Chat grupal (si alguien sale se cambia la clave)
+Conversaciones online y offline (chat persistentes)
+Puedes cambiar de dispositivo
+Servidor ignorante
+
+CLAVES
+Cliente = Usuario y contraseña + clave pública/privada (RSA) + clave AES por cada cliente
+Servidor = clave pública/privada (RSA) + clave AES por cada cliente
+
+FLUJO
+
+Servidor= 
+	tiene todos los mensajes CIFRADOS + clave del CHAT + de quién a quién NO CIFRADO
+
+ESCENARIOS:
+
+	2 personas que quieren comunicarse. 
+	C1 envía Cpública a S (S guarda cliente+su clave publica)
+	C2 envía C2pública a S (S guarda cliente+su clave publica)
+	
+
+	C1 envía mensaje a S para C2. (S lo guarda: usuarios y mensaje encriptado)
+	S envía a C1 C2pública
+
+
+
+
+	C2 pregunta a S si tiene mensajes. (S le manda desde la fecha del último)
+
+
+Un mensaje encriptado con clave, Servidor sabe mensaje 1, identificador de la clave a usar
+Los usuarios tienen sus claves con su identificador para descifrar
+Si cambia de dispositivo, recupera sus claves que están en el servidor (están cifradas por su contraseña + script)
+
+Si no hay chat (está vacío) se realiza RSA para tener 1 misma clave AES 
+Si alguien se va del chat: se genera otra vez lo del chat vacío
+
