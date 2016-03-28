@@ -7,10 +7,10 @@ package main
 
 import (
 	"database/sql"
-	//"fmt"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	//"reflect"
-	//"strconv"
+	"strconv"
 	//"strings"
 	//"unsafe"
 )
@@ -51,6 +51,68 @@ func insertUsuarioBD(nombre string, clavepubrsa string) {
 	defer stmtIns.Close()
 }
 
+// Comprobamos un usuario con su nombre y clave cifrada
+func comprobarUsuarioBD(nombre string, claveusuario string) bool {
+
+	var idusuario int
+	var claveusuariobd string
+
+	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	//Obtenemos el id del usuario
+	rows, err := db.Query("SELECT id FROM usuario WHERE nombre = '" + nombre + "'")
+	if err != nil {
+		defer db.Close()
+		return false
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&idusuario)
+		if err != nil {
+			defer db.Close()
+			return false
+		}
+	}
+
+	if idusuario == 0 {
+		return false
+	}
+
+	//Obtenemos el la clave del usuario con id obtenido
+	rows, err = db.Query("SELECT clave FROM clavesusuario WHERE usuario = " + strconv.Itoa(idusuario))
+	if err != nil {
+		defer db.Close()
+		return false
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&claveusuariobd)
+		if err != nil {
+			defer db.Close()
+			return false
+		}
+	}
+
+	//Vemos si claves coinciden
+	if claveusuario != claveusuariobd {
+		return false
+	}
+
+	defer db.Close()
+
+	return true
+}
+
 func main() {
-	insertUsuarioBD("maria", "clave1")
+	//insertUsuarioBD("maria", "clave1")
+
+	var test bool
+	test = comprobarUsuarioBD("pepe", "clave1cifrada")
+	fmt.Println("Mira comprobando usuario:", test)
+
 }
