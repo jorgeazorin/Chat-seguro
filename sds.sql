@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 29-03-2016 a las 21:34:16
+-- Tiempo de generación: 29-03-2016 a las 22:08:56
 -- Versión del servidor: 5.6.25
 -- Versión de PHP: 5.6.11
 
@@ -66,18 +66,10 @@ INSERT INTO `clavesmensajes` (`id`) VALUES
 --
 
 CREATE TABLE IF NOT EXISTS `clavesusuario` (
-  `id` int(11) NOT NULL,
-  `clave` varchar(50) NOT NULL,
-  `usuario` int(11) NOT NULL,
-  `clavechat` int(11) DEFAULT NULL
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
-
---
--- Volcado de datos para la tabla `clavesusuario`
---
-
-INSERT INTO `clavesusuario` (`id`, `clave`, `usuario`, `clavechat`) VALUES
-(1, 'clave1cifrada', 1, NULL);
+  `idusuario` int(11) NOT NULL,
+  `idclavesmensajes` int(11) NOT NULL,
+  `claveusuario` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
@@ -185,9 +177,8 @@ ALTER TABLE `clavesmensajes`
 -- Indices de la tabla `clavesusuario`
 --
 ALTER TABLE `clavesusuario`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `usuario` (`usuario`),
-  ADD KEY `clavechat` (`clavechat`);
+  ADD PRIMARY KEY (`idusuario`,`idclavesmensajes`),
+  ADD KEY `clavesusuario_rest2` (`idclavesmensajes`);
 
 --
 -- Indices de la tabla `mensaje`
@@ -234,11 +225,6 @@ ALTER TABLE `chat`
 ALTER TABLE `clavesmensajes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=2;
 --
--- AUTO_INCREMENT de la tabla `clavesusuario`
---
-ALTER TABLE `clavesusuario`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=2;
---
 -- AUTO_INCREMENT de la tabla `mensaje`
 --
 ALTER TABLE `mensaje`
@@ -256,8 +242,8 @@ ALTER TABLE `usuario`
 -- Filtros para la tabla `clavesusuario`
 --
 ALTER TABLE `clavesusuario`
-  ADD CONSTRAINT `clavesusuario_ibfk_1` FOREIGN KEY (`usuario`) REFERENCES `usuario` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `clavesusuario_ibfk_2` FOREIGN KEY (`clavechat`) REFERENCES `clavesmensajes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `clavesusuario_rest1` FOREIGN KEY (`idusuario`) REFERENCES `usuario` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `clavesusuario_rest2` FOREIGN KEY (`idclavesmensajes`) REFERENCES `clavesmensajes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `mensaje`

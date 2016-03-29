@@ -86,7 +86,7 @@ func comprobarUsuarioBD(nombre string, claveusuario string) bool {
 	}
 
 	//Obtenemos el la clave del usuario con id obtenido
-	rows, err = db.Query("SELECT clave FROM clavesusuario WHERE usuario = " + strconv.Itoa(idusuario))
+	rows, err = db.Query("SELECT claveusuario FROM clavesusuario WHERE idusuario = " + strconv.Itoa(idusuario))
 	if err != nil {
 		panic(err.Error())
 		defer db.Close()
@@ -113,7 +113,7 @@ func comprobarUsuarioBD(nombre string, claveusuario string) bool {
 }
 
 //Creamos nuevo chat en BD
-func crearChatBD(usuarios []string, string nombrechat) bool {
+func crearChatBD(usuarios []string, nombrechat string) bool {
 
 	idusuarios := make([]int, 0, 1)
 
@@ -272,15 +272,45 @@ func guardarMensajeBD(texto string, idchat int, idemisor int, idclave int) bool 
 	return true
 }
 
+//Guardamos la clave de un usuario para leer x mensajes
+func GuardarClaveUsuarioMensajesBD(idclavesmensajes int, claveusuario string, idusuario int) bool {
+
+	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+
+	if err != nil {
+		panic(err.Error())
+		return false
+	}
+	defer db.Close()
+
+	//Preparamos consulta
+	stmtIns, err := db.Prepare("INSERT INTO clavesusuario VALUES(?, ?, ?)")
+	if err != nil {
+		panic(err.Error())
+		return false
+	}
+
+	//Insertamos
+	_, err = stmtIns.Exec(idusuario, idclavesmensajes, claveusuario)
+	if err != nil {
+		panic(err.Error())
+		return false
+	}
+
+	defer stmtIns.Close()
+
+	return true
+}
+
 /*type Mensaje struct {
 	texto     string
 	idusuario int
 	usuario   string
-}*/
+}
 
 func obtenerMensajesBD(idusuario int) []bool {
 
-}
+}*/
 
 func main() {
 	//insertUsuarioBD("maria", "clave1")
@@ -309,5 +339,10 @@ func main() {
 	//Prueba obtener mensajes
 	//test = obtenerMensajeBD("Hola que tal?? :)", 5, 1, 1)
 	//fmt.Println("Mira guardar mensaje:", test)
+	//fmt.Println("-")
+
+	//Prueba insertar clave de un usuario para x mensajes
+	//test = GuardarClaveUsuarioMensajesBD(1, "claveusuario1", 1)
+	//fmt.Println("Mira guardar clave usuario de x mensaje:", test)
 	//fmt.Println("-")
 }
