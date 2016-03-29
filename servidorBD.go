@@ -113,7 +113,7 @@ func comprobarUsuarioBD(nombre string, claveusuario string) bool {
 }
 
 //Creamos nuevo chat en BD
-func crearChatBD(usuarios []string) bool {
+func crearChatBD(usuarios []string, string nombrechat) bool {
 
 	idusuarios := make([]int, 0, 1)
 
@@ -151,14 +151,14 @@ func crearChatBD(usuarios []string) bool {
 	}
 
 	//Preparamos crear el chat
-	stmtIns, err := db.Prepare("INSERT INTO chat VALUES(?)")
+	stmtIns, err := db.Prepare("INSERT INTO chat VALUES(?, ?)")
 	if err != nil {
 		panic(err.Error())
 		return false
 	}
 
 	//Insertamos crear el chat
-	res, err := stmtIns.Exec("DEFAULT")
+	res, err := stmtIns.Exec("DEFAULT", nombrechat)
 	if err != nil {
 		panic(err.Error())
 		return false
@@ -270,6 +270,16 @@ func guardarMensajeBD(texto string, idchat int, idemisor int, idclave int) bool 
 		}
 	}
 	return true
+}
+
+/*type Mensaje struct {
+	texto     string
+	idusuario int
+	usuario   string
+}*/
+
+func obtenerMensajesBD(idusuario int) []bool {
+
 }
 
 func main() {
