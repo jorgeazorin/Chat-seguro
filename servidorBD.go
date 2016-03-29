@@ -302,6 +302,43 @@ func GuardarClaveUsuarioMensajesBD(idclavesmensajes int, claveusuario string, id
 	return true
 }
 
+//Crear nuevo id para nuevo grupo de claves para los mensajes
+func CrearNuevaClaveParaMensajesBD() int64 {
+
+	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+
+	if err != nil {
+		panic(err.Error())
+		return 0
+	}
+	defer db.Close()
+
+	//Preparamos consulta
+	stmtIns, err := db.Prepare("INSERT INTO clavesmensajes VALUES(?)")
+	if err != nil {
+		panic(err.Error())
+		return 0
+	}
+
+	//Insertamos
+	res, err := stmtIns.Exec("DEFAULT")
+	if err != nil {
+		panic(err.Error())
+		return 0
+	}
+
+	//Obtenemos id de lo creado
+	idclavesmensajes, err := res.LastInsertId()
+	if err != nil {
+		panic(err.Error())
+		return 0
+	}
+
+	defer stmtIns.Close()
+
+	return idclavesmensajes
+}
+
 /*type Mensaje struct {
 	texto     string
 	idusuario int
@@ -340,6 +377,11 @@ func main() {
 	//test = obtenerMensajeBD("Hola que tal?? :)", 5, 1, 1)
 	//fmt.Println("Mira guardar mensaje:", test)
 	//fmt.Println("-")
+
+	//Prueba crear nueva clavesmensajes
+	id := CrearNuevaClaveParaMensajesBD()
+	fmt.Println("Mira id clavesmensajes creado:", id)
+	fmt.Println("-")
 
 	//Prueba insertar clave de un usuario para x mensajes
 	//test = GuardarClaveUsuarioMensajesBD(1, "claveusuario1", 1)
