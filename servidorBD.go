@@ -31,8 +31,8 @@ var database = "sds"
 
 //Insertamos a un nuevo usuario en BD
 func insertUsuarioBD(nombre string, clavepubrsa string, claveusuariocifrada string) bool {
-	//db, err := sql.Open("mysql", username+":"+password+"@tcp(:3306)/"+database)
-	//db, err := sql.Open("mysql", username+":"+password+"@"+adress+"/"+database)
+
+	//Conexión BD
 	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
 
 	if err != nil {
@@ -50,6 +50,36 @@ func insertUsuarioBD(nombre string, clavepubrsa string, claveusuariocifrada stri
 
 	//Insertamos
 	_, err = stmtIns.Exec("DEFAULT", nombre, clavepubrsa, claveusuariocifrada)
+	if err != nil {
+		panic(err.Error())
+		return false
+	}
+
+	defer stmtIns.Close()
+
+	return true
+}
+
+func modificarUsuarioBD(idusuario int, clavepubrsa string, claveusuariocifrada string) bool {
+
+	//Conexion BD
+	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+
+	if err != nil {
+		panic(err.Error())
+		return false
+	}
+	defer db.Close()
+
+	//Preparamos crear el chat
+	stmtIns, err := db.Prepare("UPDATE usuario set clavepubrsa=?, claveusuario=? where id=?")
+	if err != nil {
+		panic(err.Error())
+		return false
+	}
+
+	//Insertamos crear el chat
+	_, err = stmtIns.Exec(clavepubrsa, claveusuariocifrada, idusuario)
 	if err != nil {
 		panic(err.Error())
 		return false
@@ -524,10 +554,18 @@ func obtenerMensajesBD(idusuario int) []bool {
 }*/
 
 func main() {
+	var test bool
+
+	//Prueba insertar usuario
 	//insertUsuarioBD("lolo", "clave4rsa", "clave4cifrada")
 
+	//Prueba Modificar Usuario
+	//test = modificarUsuarioBD(15, "clavepubrsa15", "clave15cifrada-")
+	//fmt.Println("Mira modificar usuario:", test)
+	//fmt.Println("-")
+
 	//Prueba comprobar usuario
-	var test bool
+
 	test = comprobarUsuarioBD("pepe", "clave1cifrada")
 	fmt.Println("Mira comprobando usuario:", test)
 	fmt.Println("-")
