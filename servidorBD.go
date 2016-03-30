@@ -379,9 +379,9 @@ func main() {
 	//fmt.Println("-")
 
 	//Prueba crear nueva clavesmensajes
-	id := CrearNuevaClaveParaMensajesBD()
-	fmt.Println("Mira id clavesmensajes creado:", id)
-	fmt.Println("-")
+	//id := CrearNuevaClaveParaMensajesBD()
+	//fmt.Println("Mira id clavesmensajes creado:", id)
+	//fmt.Println("-")
 
 	//Prueba insertar clave de un usuario para x mensajes
 	//test = GuardarClaveUsuarioMensajesBD(1, "claveusuario1", 1)
