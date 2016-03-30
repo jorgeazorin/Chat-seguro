@@ -60,6 +60,40 @@ func insertUsuarioBD(nombre string, clavepubrsa string, claveusuariocifrada stri
 	return true
 }
 
+//Obtenemos nombre de usuario según id usuario
+func getNombreUsuario(id int) string {
+
+	var nombreusuario string
+
+	//Conexión BD
+	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+
+	if err != nil {
+		panic(err.Error())
+		return ""
+	}
+	defer db.Close()
+
+	//Obtenemos el nombre del usuario
+	rows, err := db.Query("SELECT nombre FROM usuario WHERE id = " + strconv.Itoa(id))
+	if err != nil {
+		panic(err.Error())
+		defer db.Close()
+		return ""
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&nombreusuario)
+		if err != nil {
+			panic(err.Error())
+			defer db.Close()
+			return ""
+		}
+	}
+
+	return nombreusuario
+}
+
 func modificarUsuarioBD(idusuario int, clavepubrsa string, claveusuariocifrada string) bool {
 
 	//Conexion BD
@@ -479,6 +513,7 @@ func guardarMensajeBD(texto string, idchat int, idemisor int, idclave int) bool 
 //Guardamos la clave de un usuario para leer x mensajes
 func GuardarClaveUsuarioMensajesBD(idclavesmensajes int, claveusuario string, idusuario int) bool {
 
+	//Conexión BD
 	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
 
 	if err != nil {
@@ -509,6 +544,7 @@ func GuardarClaveUsuarioMensajesBD(idclavesmensajes int, claveusuario string, id
 //Crear nuevo id para nuevo grupo de claves para los mensajes
 func CrearNuevaClaveParaMensajesBD() int64 {
 
+	//Conexión BD
 	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
 
 	if err != nil {
@@ -543,15 +579,32 @@ func CrearNuevaClaveParaMensajesBD() int64 {
 	return idclavesmensajes
 }
 
-/*type Mensaje struct {
-	texto     string
-	idusuario int
-	usuario   string
+//Para guardar un mensaje con sus datos
+type Mensaje struct {
+	texto        string
+	idemisor     int
+	nombreemisor string
 }
 
-func obtenerMensajesBD(idusuario int) []bool {
+//Para guardar un chat con sus datos y mensajes que tenga
+type Chat struct {
+	mensajes []Mensaje
+	nombre   string
+}
 
-}*/
+func obtenerMensajesBD(idusuario int) []Chat {
+
+	chats := make([]Chat, 0, 1)
+	mensajes := make([]Mensaje, 0, 1)
+
+	var chat Chat // Para ir introduciendo chats al slice
+	var mensaje Mensaje //Para ir introduciendo mensajes al slice
+
+	
+	//chats = append(chats, chat)
+
+	return chats
+}
 
 func main() {
 	var test bool
@@ -565,10 +618,13 @@ func main() {
 	//fmt.Println("-")
 
 	//Prueba comprobar usuario
-
 	test = comprobarUsuarioBD("pepe", "clave1cifrada")
 	fmt.Println("Mira comprobando usuario:", test)
 	fmt.Println("-")
+
+	//Probar obtener nombre según id
+	nombreusuario := getNombreUsuario(1)
+	fmt.Println("Mira el nombre del usuario:", nombreusuario)
 
 	//Prueba crear chat
 	usuarios := make([]int, 0, 1)
@@ -617,4 +673,6 @@ func main() {
 	//test = GuardarClaveUsuarioMensajesBD(1, "claveusuario1", 1)
 	//fmt.Println("Mira guardar clave usuario de x mensaje:", test)
 	//fmt.Println("-")
-}
+
+	//Obtener mensajes de un usuario
+	obtenerMensajesBD(15)
