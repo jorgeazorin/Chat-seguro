@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 29-03-2016 a las 22:08:56
+-- Tiempo de generación: 30-03-2016 a las 17:28:16
 -- Versión del servidor: 5.6.25
 -- Versión de PHP: 5.6.11
 
@@ -50,14 +50,15 @@ INSERT INTO `chat` (`id`, `nombre`) VALUES
 
 CREATE TABLE IF NOT EXISTS `clavesmensajes` (
   `id` int(11) NOT NULL
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `clavesmensajes`
 --
 
 INSERT INTO `clavesmensajes` (`id`) VALUES
-(1);
+(1),
+(2);
 
 -- --------------------------------------------------------
 
@@ -70,6 +71,13 @@ CREATE TABLE IF NOT EXISTS `clavesusuario` (
   `idclavesmensajes` int(11) NOT NULL,
   `claveusuario` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Volcado de datos para la tabla `clavesusuario`
+--
+
+INSERT INTO `clavesusuario` (`idusuario`, `idclavesmensajes`, `claveusuario`) VALUES
+(1, 1, 'claveusuario1');
 
 -- --------------------------------------------------------
 
@@ -121,17 +129,18 @@ INSERT INTO `receptoresmensaje` (`idmensaje`, `idreceptor`, `leido`) VALUES
 CREATE TABLE IF NOT EXISTS `usuario` (
   `id` int(11) NOT NULL,
   `nombre` varchar(15) NOT NULL,
-  `clavepubrsa` varchar(50) NOT NULL
+  `clavepubrsa` varchar(50) NOT NULL,
+  `claveusuario` varchar(100) NOT NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `usuario`
 --
 
-INSERT INTO `usuario` (`id`, `nombre`, `clavepubrsa`) VALUES
-(1, 'pepe', 'clave1'),
-(13, 'lucia', 'clave1'),
-(15, 'maria', 'clave1');
+INSERT INTO `usuario` (`id`, `nombre`, `clavepubrsa`, `claveusuario`) VALUES
+(1, 'pepe', 'clave1', 'clave1cifrada'),
+(13, 'lucia', 'clave1', 'clave13cifrada'),
+(15, 'maria', 'clave1', 'clave15cifrada');
 
 -- --------------------------------------------------------
 
@@ -223,7 +232,7 @@ ALTER TABLE `chat`
 -- AUTO_INCREMENT de la tabla `clavesmensajes`
 --
 ALTER TABLE `clavesmensajes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=3;
 --
 -- AUTO_INCREMENT de la tabla `mensaje`
 --

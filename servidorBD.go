@@ -86,7 +86,7 @@ func comprobarUsuarioBD(nombre string, claveusuario string) bool {
 	}
 
 	//Obtenemos el la clave del usuario con id obtenido
-	rows, err = db.Query("SELECT claveusuario FROM clavesusuario WHERE idusuario = " + strconv.Itoa(idusuario))
+	rows, err = db.Query("SELECT claveusuario FROM usuario WHERE id = " + strconv.Itoa(idusuario))
 	if err != nil {
 		panic(err.Error())
 		defer db.Close()
