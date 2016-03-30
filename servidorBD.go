@@ -25,30 +25,39 @@ var password = "sds"
 var adress = ""
 var database = "sds"
 
+/////////
+//USUARIO
+/////////
+
 //Insertamos a un nuevo usuario en BD
-func insertUsuarioBD(nombre string, clavepubrsa string) {
+func insertUsuarioBD(nombre string, clavepubrsa string, claveusuariocifrada string) bool {
 	//db, err := sql.Open("mysql", username+":"+password+"@tcp(:3306)/"+database)
 	//db, err := sql.Open("mysql", username+":"+password+"@"+adress+"/"+database)
 	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
 
 	if err != nil {
 		panic(err.Error())
+		return false
 	}
 	defer db.Close()
 
 	//Preparamos consulta
-	stmtIns, err := db.Prepare("INSERT INTO usuario VALUES(?, ?, ?)")
+	stmtIns, err := db.Prepare("INSERT INTO usuario VALUES(?, ?, ?, ?)")
 	if err != nil {
-		panic(err.Error()) // Error handling
+		panic(err.Error())
+		return false
 	}
 
 	//Insertamos
-	_, err = stmtIns.Exec("DEFAULT", nombre, clavepubrsa)
+	_, err = stmtIns.Exec("DEFAULT", nombre, clavepubrsa, claveusuariocifrada)
 	if err != nil {
-		panic(err.Error()) // proper error handling instead of panic in your app
+		panic(err.Error())
+		return false
 	}
 
 	defer stmtIns.Close()
+
+	return true
 }
 
 // Comprobamos un usuario con su nombre y clave cifrada
@@ -61,6 +70,7 @@ func comprobarUsuarioBD(nombre string, claveusuario string) bool {
 
 	if err != nil {
 		panic(err.Error())
+		return false
 	}
 	defer db.Close()
 
@@ -107,12 +117,14 @@ func comprobarUsuarioBD(nombre string, claveusuario string) bool {
 		return false
 	}
 
-	//	defer db.Close()
-
 	return true
 }
 
-//Creamos nuevo chat en BD
+//////
+//CHAT
+//////
+
+/*/Creamos nuevo chat en BD
 func crearChatBD(usuarios []string, nombrechat string) bool {
 
 	idusuarios := make([]int, 0, 1)
@@ -122,6 +134,7 @@ func crearChatBD(usuarios []string, nombrechat string) bool {
 
 	if err != nil {
 		panic(err.Error())
+		return false
 	}
 	defer db.Close()
 
@@ -194,8 +207,169 @@ func crearChatBD(usuarios []string, nombrechat string) bool {
 	defer stmtIns.Close()
 
 	return true
+}*/
+
+//Creamos nuevo chat en BD
+func crearChatBD(idusuarios []int, nombrechat string) bool {
+
+	//Conexion BD
+	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+
+	if err != nil {
+		panic(err.Error())
+		return false
+	}
+	defer db.Close()
+
+	//Preparamos crear el chat
+	stmtIns, err := db.Prepare("INSERT INTO chat VALUES(?, ?)")
+	if err != nil {
+		panic(err.Error())
+		return false
+	}
+
+	//Insertamos crear el chat
+	res, err := stmtIns.Exec("DEFAULT", nombrechat)
+	if err != nil {
+		panic(err.Error())
+		return false
+	}
+
+	//Obtenemos id del chat creado
+	idchat, err := res.LastInsertId()
+	if err != nil {
+		panic(err.Error())
+		return false
+	}
+	println("Id del chat creado:", idchat)
+
+	defer stmtIns.Close()
+
+	//Insertamos usuarios a dicho chat
+	for i := 0; i < len(idusuarios); i++ {
+		//Preparamos insertar usuario al chat
+		stmtIns, err := db.Prepare("INSERT INTO usuarioschat VALUES(?, ?)")
+		if err != nil {
+			panic(err.Error())
+			return false
+		}
+
+		//Insertamos usuario al chat
+		_, err = stmtIns.Exec(idusuarios[i], idchat)
+		if err != nil {
+			panic(err.Error())
+			return false
+		}
+	}
+
+	defer stmtIns.Close()
+
+	return true
 }
 
+func modificarChatBD(idchat int, nombre string) bool {
+
+	//Conexion BD
+	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+
+	if err != nil {
+		panic(err.Error())
+		return false
+	}
+	defer db.Close()
+
+	//Preparamos crear el chat
+	stmtIns, err := db.Prepare("UPDATE chat set nombre=? where id=?")
+	if err != nil {
+		panic(err.Error())
+		return false
+	}
+
+	//Insertamos crear el chat
+	_, err = stmtIns.Exec(nombre, idchat)
+	if err != nil {
+		panic(err.Error())
+		return false
+	}
+
+	defer stmtIns.Close()
+
+	return true
+}
+
+//Añade una serie de usuarios a un chat
+func addUsuariosChatBD(idchat int, nuevosusuarios []int) bool {
+
+	//Conexion BD
+	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+
+	if err != nil {
+		panic(err.Error())
+		return false
+	}
+	defer db.Close()
+
+	//Insertamos usuarios a dicho chat
+	for i := 0; i < len(nuevosusuarios); i++ {
+		//Preparamos insertar usuario al chat
+		stmtIns, err := db.Prepare("INSERT INTO usuarioschat VALUES(?, ?)")
+		if err != nil {
+			panic(err.Error())
+			return false
+		}
+
+		//Insertamos usuario al chat
+		_, err = stmtIns.Exec(nuevosusuarios[i], idchat)
+		if err != nil {
+			panic(err.Error())
+			return false
+		}
+
+		defer stmtIns.Close()
+	}
+
+	return true
+}
+
+//Elimina una serie de usuarios a un chat
+func removeUsuariosChatBD(idchat int, usuariosexpulsados []int) bool {
+
+	//Conexion BD
+	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+
+	if err != nil {
+		panic(err.Error())
+		return false
+	}
+	defer db.Close()
+
+	//Insertamos usuarios a dicho chat
+	for i := 0; i < len(usuariosexpulsados); i++ {
+		//Preparamos insertar usuario al chat
+		stmtIns, err := db.Prepare("DELETE FROM usuarioschat where idusuario=? and idchat=?")
+		if err != nil {
+			panic(err.Error())
+			return false
+		}
+
+		//Insertamos usuario al chat
+		_, err = stmtIns.Exec(usuariosexpulsados[i], idchat)
+		if err != nil {
+			panic(err.Error())
+			return false
+		}
+
+		defer stmtIns.Close()
+	}
+
+	return true
+}
+
+////////////////////////////
+//MENSAJES Y CLAVES MENSAJES
+////////////////////////////
+
+//Guarda un mensaje para todos los receptores posibles del chat
 func guardarMensajeBD(texto string, idchat int, idemisor int, idclave int) bool {
 
 	var idreceptoraux = -1
@@ -350,7 +524,7 @@ func obtenerMensajesBD(idusuario int) []bool {
 }*/
 
 func main() {
-	//insertUsuarioBD("maria", "clave1")
+	//insertUsuarioBD("lolo", "clave4rsa", "clave4cifrada")
 
 	//Prueba comprobar usuario
 	var test bool
@@ -359,14 +533,32 @@ func main() {
 	fmt.Println("-")
 
 	//Prueba crear chat
-	usuarios := make([]string, 0, 1)
-	usuarios = append(usuarios, "pepe")
-	usuarios = append(usuarios, "lucia")
-	usuarios = append(usuarios, "maria")
-
-	//test = crearChatBD(usuarios)
+	usuarios := make([]int, 0, 1)
+	usuarios = append(usuarios, 1)
+	usuarios = append(usuarios, 2)
+	usuarios = append(usuarios, 3)
+	//test = crearChatBD(usuarios, "")
 	//fmt.Println("Mira crear chat:", test)
 	//fmt.Println("\n")
+
+	//Prueba modificar chat
+	//test = modificarChatBD(5, "grupo molon")
+	//fmt.Println("Mira modificar chat:", test)
+	//fmt.Println("\n")
+
+	//Prueba añadir usuarios a un char
+	nuevosusuarios := make([]int, 0, 1)
+	nuevosusuarios = append(nuevosusuarios, 4)
+	nuevosusuarios = append(nuevosusuarios, 5)
+	//test = addUsuariosChatBD(7, nuevosusuarios)
+	//fmt.Println("Mira añadir nuevos usuarios a chat:", test)
+
+	//Prueba eliminar usuarios de un char
+	usuariosexpulsados := make([]int, 0, 1)
+	usuariosexpulsados = append(usuariosexpulsados, 4)
+	usuariosexpulsados = append(usuariosexpulsados, 5)
+	//test = removeUsuariosChatBD(7, usuariosexpulsados)
+	//fmt.Println("Mira eliminar usuarios a chat:", test)
 
 	//Prueba guardar mensaje
 	//test = guardarMensajeBD("Hola que tal?? :)", 5, 1, 1)

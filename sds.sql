@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 30-03-2016 a las 17:28:16
+-- Tiempo de generación: 30-03-2016 a las 18:54:22
 -- Versión del servidor: 5.6.25
 -- Versión de PHP: 5.6.11
 
@@ -29,7 +29,7 @@ SET time_zone = "+00:00";
 CREATE TABLE IF NOT EXISTS `chat` (
   `id` int(11) NOT NULL,
   `nombre` varchar(50) DEFAULT NULL
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `chat`
@@ -40,7 +40,9 @@ INSERT INTO `chat` (`id`, `nombre`) VALUES
 (2, NULL),
 (3, NULL),
 (4, NULL),
-(5, 'grupo de clase ');
+(5, 'grupo molon'),
+(6, ''),
+(7, '');
 
 -- --------------------------------------------------------
 
@@ -131,16 +133,20 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   `nombre` varchar(15) NOT NULL,
   `clavepubrsa` varchar(50) NOT NULL,
   `claveusuario` varchar(100) NOT NULL
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `usuario`
 --
 
 INSERT INTO `usuario` (`id`, `nombre`, `clavepubrsa`, `claveusuario`) VALUES
-(1, 'pepe', 'clave1', 'clave1cifrada'),
-(13, 'lucia', 'clave1', 'clave13cifrada'),
-(15, 'maria', 'clave1', 'clave15cifrada');
+(1, 'Pepe', 'clave1', 'clave1cifrada'),
+(2, 'Jorge', 'clavepubrsa2', 'clave2cifrada'),
+(3, 'Encarna', 'clavepubrsa3', 'clave3cifrada'),
+(4, 'lolo', 'clave4rsa', 'clave4cifrada'),
+(5, 'leila', 'clave5rsa', 'clave5cifrada'),
+(13, 'Lucia', 'clave1', 'clave13cifrada'),
+(15, 'Maria', 'clave1', 'clave15cifrada');
 
 -- --------------------------------------------------------
 
@@ -164,7 +170,13 @@ INSERT INTO `usuarioschat` (`idusuario`, `idchat`) VALUES
 (13, 2),
 (1, 5),
 (13, 5),
-(15, 5);
+(15, 5),
+(1, 6),
+(2, 6),
+(3, 6),
+(1, 7),
+(2, 7),
+(3, 7);
 
 --
 -- Índices para tablas volcadas
@@ -227,7 +239,7 @@ ALTER TABLE `usuarioschat`
 -- AUTO_INCREMENT de la tabla `chat`
 --
 ALTER TABLE `chat`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=8;
 --
 -- AUTO_INCREMENT de la tabla `clavesmensajes`
 --
@@ -242,7 +254,7 @@ ALTER TABLE `mensaje`
 -- AUTO_INCREMENT de la tabla `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=20;
 --
 -- Restricciones para tablas volcadas
 --
