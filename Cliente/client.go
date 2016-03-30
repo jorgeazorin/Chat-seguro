@@ -1,11 +1,15 @@
 package main
 
 import (
+	"bufio"
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
+	"net"
+	"os"
 )
 
 func main() {
@@ -22,7 +26,9 @@ func main() {
 	}
 	config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 
-	//CONECTAR
+	///////////////////////////////////
+	//    Conectar    /////////////////
+	//////////////////////////////////
 	conn, err := tls.Dial("tcp", "127.0.0.1:443", &config)
 	if err != nil {
 		log.Fatalf("client: dial: %s", err)
@@ -30,17 +36,55 @@ func main() {
 	defer conn.Close()
 	log.Println("client: connected to: ", conn.RemoteAddr())
 
-	message := "Hello\n"
+	///////////////////////////////////
+	//    Login      /////////////////
+	//////////////////////////////////
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("User:")
+	message, _ := reader.ReadString('\n')
 	n, err := io.WriteString(conn, message)
 	if err != nil {
 		log.Fatalf("client: write: %s", err)
 	}
 
+	//Imprime por pantalla lo que envia al servidor
 	log.Printf("client: wrote %q (%d bytes)", message, n)
+
+	//Por si envia algo el servidor
+	go handleServerRead(conn)
+
+	//Enviar mensajes
+	go handleClientWrite(conn)
+
+	//Para que no se cierre la consola
+	for {
+	}
+}
+
+//Si envia algo el servidor a este cliente lo muestra en pantalla
+func handleServerRead(conn net.Conn) {
+	//bucle infinito
 	for {
 		defer conn.Close()
 		reply := make([]byte, 256)
-		n, err = conn.Read(reply)
+		n, _ := conn.Read(reply)
 		log.Printf("client: read %q (%d bytes)", string(reply[:n]), n)
 	}
+}
+
+//SI escribe algo lo envia al servidor
+func handleClientWrite(conn net.Conn) {
+	//bucle infinito
+	for {
+		//Cuando escribe algo y le da a enter
+		reader := bufio.NewReader(os.Stdin)
+		message, _ := reader.ReadString('\n')
+		//Escribe esto en el socket
+		n, err := io.WriteString(conn, message)
+		if err != nil {
+			log.Fatalf("client: write: %s", err)
+		}
+		log.Printf("client: wrote %d bytes", n)
+	}
+
 }
