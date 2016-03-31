@@ -5,11 +5,10 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
-	"io"
 	"io/ioutil"
 	"log"
 	"net"
-	"strings"
+	"strconv"
 	"sync"
 )
 
@@ -26,14 +25,11 @@ type Conexion struct {
 
 */
 type Conexiones struct {
-	v   map[Conexion]int
-	mux sync.Mutex
+	conexiones []Conexion
+	mux        sync.Mutex
 }
 
-/*
-	Estructura del mensaje que vamos a recibir de los clientes
-
-*/
+//	Estructura del mensaje que vamos a recibir de los clientes
 type Mensaje struct {
 	From     string   `json:"From"`
 	To       int      `json:"To"`
@@ -42,11 +38,6 @@ type Mensaje struct {
 	Datos    []string `json:"Datos"`
 	Mensaje  string   `json:"Mensaje"`
 }
-
-/////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
 
 /*
 	Función que guarda un socket en el map de conexiones y que se queda
@@ -58,88 +49,72 @@ func (c *Conexiones) handleClientRead(conexion Conexion) {
 	defer conn.Close()
 
 	///////////////////////////////////
-	//    Login      /////////////////
-	//////////////////////////////////
-	buf := make([]byte, 512)
-	n, _ := conn.Read(buf)
-	login := string(buf[:n])
-	log.Printf("login: " + login)
-	//esto es una especie de basura para probar
-	if strings.Contains(login, "1") {
-		conexion.usuario = 1
-	} else {
-		conexion.usuario = 2
-	}
-
-	///////////////////////////////////
 	//    Añadimos al map la conexión con el usuario
 	//////////////////////////////////
 
 	//bloqueamos la memoria compartida
 	c.mux.Lock()
 	//La añadimos
-	c.v[conexion]++
+	c.conexiones = append(c.conexiones, conexion)
 	//Y claro la debloqueamos
 	c.mux.Unlock()
-	//Enviamos un mensaje al cliente con ok como que el login se ha hecho correcto
-	EnviarMensajeSocket(conexion, "OK")
 
 	///////////////////////////////////
 	//    Bucle infinito que lee cosas que envia el usuario
 	//////////////////////////////////
 	var mensaje Mensaje
 	for {
+		buf := make([]byte, 256)
 		//Lee el mensaje
 		n, err := conn.Read(buf)
-
 		if err != nil {
 			break
 			conn.Close()
 		}
 		json.Unmarshal(buf[:n], &mensaje)
-		log.Printf(mensaje.From)
-		//log.Printf(mensaje.To)
-		log.Printf(mensaje.Mensaje)
-		log.Printf(mensaje.Password)
-		//Envia el mensaje al usuario 2 (esto es para probar)
-		t, connn := c.obtenerConexion(mensaje.To)
-		if t {
-			EnviarMensajeSocket(connn, string(buf[:n]))
-		}
+		c.ProcesarMensaje(conexion, mensaje)
 	}
 }
 
-func (c *Conexiones) obtenerConexion(id int) (bool, Conexion) {
-	var conexion Conexion
-	//Bloqueamos la memoria compartida
-	c.mux.Lock()
-	//buscamos el socket del cliente al que enviar mensaje
-	encontrado := false
-	for k := range c.v {
-		if k.usuario == id {
-			conexion.conexion = k.conexion
-			encontrado = true
-			break
+func (c *Conexiones) ProcesarMensaje(conexion Conexion, mensaje Mensaje) {
+	var ConexionDelVector *Conexion
+	for i := 0; i < len(c.conexiones); i++ {
+		if c.conexiones[i] == conexion {
+			ConexionDelVector = &c.conexiones[i]
 		}
 	}
-	c.mux.Unlock()
-	//Si lo encontramos le enviamos el mensaje
-	return encontrado, conexion
-
+	if mensaje.Funcion == "login" {
+		ServerLogin(mensaje.From, "pass", ConexionDelVector)
+		mesj := Mensaje{}
+		mesj.From = mensaje.From
+		mesj.Mensaje = "Usuario online"
+		for i := 0; i < len(c.conexiones); i++ {
+			EnviarMensajeSocket(c.conexiones[i], mesj)
+		}
+	}
+	if mensaje.Funcion == "enviar" {
+		mesj := Mensaje{}
+		mesj.From = mensaje.From
+		mesj.Mensaje = mensaje.Mensaje
+		mesj.Funcion = "enviar"
+		for i := 0; i < len(c.conexiones); i++ {
+			if c.conexiones[i].conexion != conexion.conexion {
+				EnviarMensajeSocket(c.conexiones[i], mesj)
+			}
+		}
+	}
 }
 
 //FUncion que envia un mensaje a un cliente mediante un id y un string
-func EnviarMensajeSocket(conexion Conexion, s string) {
-	_, err := io.WriteString(conexion.conexion, s)
+func EnviarMensajeSocket(conexion Conexion, s Mensaje) {
+	b, _ := json.Marshal(s)
+	_, err := conexion.conexion.Write(b)
 	if err != nil {
 		log.Fatalf("client: write: %s", err)
 	}
+
 }
 
-/////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
 func main() {
 
 	//Leer los ficheros de los certificados
@@ -182,7 +157,7 @@ func main() {
 		ejecutan una función de c
 
 	*/
-	c := Conexiones{v: make(map[Conexion]int)}
+	c := Conexiones{conexiones: make([]Conexion, 0)}
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
@@ -199,7 +174,8 @@ func main() {
 	}
 }
 
-func ServerLogin(user string, pass string) bool {
+func ServerLogin(user string, pass string, conexion *Conexion) bool {
+	conexion.usuario, _ = strconv.Atoi(user)
 	return true
 }
 
@@ -236,10 +212,9 @@ func ObtenerUsuarios() {
 }
 
 /*
-
--ModificarChatBD(idchat, nombre) OK
--AddUsuarioChatBD(idchat, idusuariosslice) OK
--RemoveUsuarioChatBD(idchat, idusuariosslice) OK
-
--EditarUsuario()
+	-ModificarChatBD(idchat, nombre) OK
+	-AddUsuarioChatBD(idchat, idusuariosslice) OK
+	-RemoveUsuarioChatBD(idchat, idusuariosslice) OK
+	-obtenerchats???
+	-EditarUsuario()
 */

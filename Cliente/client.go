@@ -6,7 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"io"
+	"github.com/andlabs/ui"
 	"io/ioutil"
 	"log"
 	"net"
@@ -23,7 +23,7 @@ type Mensaje struct {
 }
 
 func main() {
-
+	//var window ui.Window
 	//LEER CERTIFICADOS DE LOS ARCHIVOS (ESTOS SON LOS CERTIFICADOS DEL CLIENTE)
 	cert2_b, _ := ioutil.ReadFile("cert2.pem")
 	priv2_b, _ := ioutil.ReadFile("cert2.key")
@@ -52,19 +52,25 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("User:")
 	message, _ := reader.ReadString('\n')
-	n, err := io.WriteString(conn, message)
-	if err != nil {
-		log.Fatalf("client: write: %s", err)
-	}
+	message = message[0 : len(message)-2]
+	mensaje := Mensaje{}
+	mensaje.From = message
+	mensaje.Funcion = "login"
+	mensaje.To = -1
+	//Convertir a json
+	b, _ := json.Marshal(mensaje)
+	log.Printf(string(b))
+	//Escribe json en el socket
+	conn.Write(b)
 
-	//Imprime por pantalla lo que envia al servidor
-	log.Printf("client: wrote %q (%d bytes)", message, n)
-
+	///////////////////////////////////
+	//    Enviar  y recibir      /////
+	//////////////////////////////////
 	//Por si envia algo el servidor
 	go handleServerRead(conn)
 
 	//Enviar mensajes
-	go handleClientWrite(conn)
+	go handleClientWrite(conn, mensaje.From)
 
 	//Para que no se cierre la consola
 	for {
@@ -73,6 +79,7 @@ func main() {
 
 //Si envia algo el servidor a este cliente lo muestra en pantalla
 func handleServerRead(conn net.Conn) {
+	var mensaje Mensaje
 	//bucle infinito
 	for {
 		defer conn.Close()
@@ -82,12 +89,14 @@ func handleServerRead(conn net.Conn) {
 			break
 			conn.Close()
 		}
-		log.Printf("client: read %q (%d bytes)", string(reply[:n]), n)
+		json.Unmarshal(reply[:n], &mensaje)
+		fmt.Println("" + mensaje.From + " -> " + mensaje.Mensaje)
+
 	}
 }
 
 //SI escribe algo lo envia al servidor
-func handleClientWrite(conn net.Conn) {
+func handleClientWrite(conn net.Conn, from string) {
 	mensaje := Mensaje{}
 
 	//bucle infinito
@@ -98,15 +107,14 @@ func handleClientWrite(conn net.Conn) {
 		message, _ := reader.ReadString('\n')
 
 		//Rellenar datos
-		mensaje.From = "1"
+		mensaje.From = from
 		mensaje.Password = "1"
 		mensaje.Funcion = "enviar"
-		mensaje.Mensaje = message
+		mensaje.Mensaje = message[0 : len(message)-2]
 		mensaje.To = 2
 
 		//Convertir a json
 		b, _ := json.Marshal(mensaje)
-		log.Printf(string(b))
 
 		//Escribe json en el socket
 		conn.Write(b)
