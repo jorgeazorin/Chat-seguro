@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"log"
@@ -24,9 +25,22 @@ type Conexion struct {
 	compartida entre los diferentes procesos
 
 */
-type SafeCounter struct {
+type Conexiones struct {
 	v   map[Conexion]int
 	mux sync.Mutex
+}
+
+/*
+	Estructura del mensaje que vamos a recibir de los clientes
+
+*/
+type Mensaje struct {
+	From     string   `json:"From"`
+	To       int      `json:"To"`
+	Password string   `json:"Password"`
+	Funcion  string   `json:"Funcion"`
+	Datos    []string `json:"Datos"`
+	Mensaje  string   `json:"Mensaje"`
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -38,7 +52,7 @@ type SafeCounter struct {
 	Función que guarda un socket en el map de conexiones y que se queda
 	en un bucle infinito por si envia el cliente un mensaje
 */
-func (c *SafeCounter) handleClientRead(conexion Conexion) {
+func (c *Conexiones) handleClientRead(conexion Conexion) {
 
 	conn := conexion.conexion
 	defer conn.Close()
@@ -68,21 +82,34 @@ func (c *SafeCounter) handleClientRead(conexion Conexion) {
 	//Y claro la debloqueamos
 	c.mux.Unlock()
 	//Enviamos un mensaje al cliente con ok como que el login se ha hecho correcto
-	c.handleClientWrite(conexion.usuario, "OK")
+	EnviarMensajeSocket(conexion, "OK")
 
 	///////////////////////////////////
 	//    Bucle infinito que lee cosas que envia el usuario
 	//////////////////////////////////
+	var mensaje Mensaje
 	for {
 		//Lee el mensaje
-		n, _ := conn.Read(buf)
+		n, err := conn.Read(buf)
+
+		if err != nil {
+			break
+			conn.Close()
+		}
+		json.Unmarshal(buf[:n], &mensaje)
+		log.Printf(mensaje.From)
+		//log.Printf(mensaje.To)
+		log.Printf(mensaje.Mensaje)
+		log.Printf(mensaje.Password)
 		//Envia el mensaje al usuario 2 (esto es para probar)
-		c.handleClientWrite(2, string(buf[:n]))
+		t, connn := c.obtenerConexion(mensaje.To)
+		if t {
+			EnviarMensajeSocket(connn, string(buf[:n]))
+		}
 	}
 }
 
-//FUncion que envia un mensaje a un cliente mediante un id y un string
-func (c *SafeCounter) handleClientWrite(id int, s string) {
+func (c *Conexiones) obtenerConexion(id int) (bool, Conexion) {
 	var conexion Conexion
 	//Bloqueamos la memoria compartida
 	c.mux.Lock()
@@ -97,13 +124,16 @@ func (c *SafeCounter) handleClientWrite(id int, s string) {
 	}
 	c.mux.Unlock()
 	//Si lo encontramos le enviamos el mensaje
-	if encontrado {
-		n, err := io.WriteString(conexion.conexion, s)
-		if err != nil {
-			log.Fatalf("client: write: %s", err)
-		}
-	}
+	return encontrado, conexion
 
+}
+
+//FUncion que envia un mensaje a un cliente mediante un id y un string
+func EnviarMensajeSocket(conexion Conexion, s string) {
+	_, err := io.WriteString(conexion.conexion, s)
+	if err != nil {
+		log.Fatalf("client: write: %s", err)
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -152,7 +182,7 @@ func main() {
 		ejecutan una función de c
 
 	*/
-	c := SafeCounter{v: make(map[Conexion]int)}
+	c := Conexiones{v: make(map[Conexion]int)}
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
@@ -168,3 +198,48 @@ func main() {
 		go c.handleClientRead(conexion)
 	}
 }
+
+func ServerLogin(user string, pass string) bool {
+	return true
+}
+
+func EnviarMensajeAChat(texto string, idchat int, idemisor int, idclave int) {
+
+}
+
+func CrearChat(usuarios []string, nombrechat string) {
+
+}
+
+func CrearUsuario(nombre string, clavepubrsa string) {
+
+}
+
+func CrearNuevaClaveParaMensajesBD() {
+
+}
+
+func GuardarClaveUsuarioMensajesBD(idclavesmensajes int, claveusuario string, idusuario int) {
+
+}
+
+func ObtenerChat(usuario string) {
+
+}
+
+func ObtenerMensajesChat(usuario string) {
+
+}
+
+func ObtenerUsuarios() {
+
+}
+
+/*
+
+-ModificarChatBD(idchat, nombre) OK
+-AddUsuarioChatBD(idchat, idusuariosslice) OK
+-RemoveUsuarioChatBD(idchat, idusuariosslice) OK
+
+-EditarUsuario()
+*/

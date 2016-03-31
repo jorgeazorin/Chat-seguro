@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,6 +12,15 @@ import (
 	"net"
 	"os"
 )
+
+type Mensaje struct {
+	From     string   `json:"From"`
+	To       int      `json:"To"`
+	Password string   `json:"Password"`
+	Funcion  string   `json:"Funcion"`
+	Datos    []string `json:"Datos"`
+	Mensaje  string   `json:"Mensaje"`
+}
 
 func main() {
 
@@ -67,24 +77,39 @@ func handleServerRead(conn net.Conn) {
 	for {
 		defer conn.Close()
 		reply := make([]byte, 256)
-		n, _ := conn.Read(reply)
+		n, err := conn.Read(reply)
+		if err != nil {
+			break
+			conn.Close()
+		}
 		log.Printf("client: read %q (%d bytes)", string(reply[:n]), n)
 	}
 }
 
 //SI escribe algo lo envia al servidor
 func handleClientWrite(conn net.Conn) {
+	mensaje := Mensaje{}
+
 	//bucle infinito
 	for {
+		defer conn.Close()
 		//Cuando escribe algo y le da a enter
 		reader := bufio.NewReader(os.Stdin)
 		message, _ := reader.ReadString('\n')
-		//Escribe esto en el socket
-		n, err := io.WriteString(conn, message)
-		if err != nil {
-			log.Fatalf("client: write: %s", err)
-		}
-		log.Printf("client: wrote %d bytes", n)
+
+		//Rellenar datos
+		mensaje.From = "1"
+		mensaje.Password = "1"
+		mensaje.Funcion = "enviar"
+		mensaje.Mensaje = message
+		mensaje.To = 2
+
+		//Convertir a json
+		b, _ := json.Marshal(mensaje)
+		log.Printf(string(b))
+
+		//Escribe json en el socket
+		conn.Write(b)
 	}
 
 }
