@@ -13,10 +13,8 @@ import (
 // como hay muchos hilos se puede estropear si dos acceden al vector a la vez, si no se podria hacer
 //el vector solo en el main e ir pasandolo)
 type Conexiones struct {
-	//Vector con todas las conexiones de sockets online
-	conexiones []Conexion
-	//El mux es para la memoria compartida
-	mux sync.Mutex
+	conexiones []Conexion //Vector con todas las conexiones de sockets online
+	mux        sync.Mutex //El mux es para la memoria compartida
 }
 
 func main() {
@@ -67,7 +65,7 @@ func main() {
 		defer conn.Close()
 		log.Printf("server: accepted from %s", conn.RemoteAddr())
 
-		conexion := Conexion{conexion: conn, conexiones: &conexiones} //Creamos una nueva conexión
+		conexion := Conexion{conexion: conn, conexiones: &conexiones, usuario: Usuario{}} //Creamos una nueva conexión
 		//Añadimos la conxion al vector conexiones bloqueando la memoria compartida
 		conexiones.mux.Lock()
 		conexiones.conexiones = append(conexiones.conexiones, conexion)

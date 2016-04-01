@@ -50,6 +50,33 @@ func getUsuarioBD(user string) Usuario {
 	return usuario
 }
 
+func getUsuariosChatBD(id int) []int {
+	usuarios := []int{}
+	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+	//Obtenemos el nombre del usuario
+	rows, err := db.Query("SELECT idusuario FROM usuarioschat WHERE idchat = " + strconv.Itoa(id))
+	if err != nil {
+		panic(err.Error())
+		defer db.Close()
+	}
+	for rows.Next() {
+		var i int
+		err = rows.Scan(&i)
+		if err != nil {
+			panic(err.Error())
+			defer db.Close()
+		}
+		usuarios = append(usuarios, i)
+
+	}
+	return usuarios
+}
+
 //Insertamos a un nuevo usuario en BD
 func insertUsuarioBD(nombre string, clavepubrsa string, claveusuariocifrada string) bool {
 
@@ -206,7 +233,7 @@ func comprobarUsuarioBD(nombre string, claveusuario string) bool {
 }
 
 //Creamos nuevo chat en BD
-func crearChatBD(idusuarios []int, nombrechat string) bool {
+func crearChatBDBD(idusuarios []int, nombrechat string) bool {
 
 	//Conexion BD
 	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
@@ -263,7 +290,7 @@ func crearChatBD(idusuarios []int, nombrechat string) bool {
 	return true
 }
 
-func modificarChatBD(idchat int, nombre string) bool {
+func modificarChatBDBD(idchat int, nombre string) bool {
 
 	//Conexion BD
 	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
@@ -294,7 +321,7 @@ func modificarChatBD(idchat int, nombre string) bool {
 }
 
 //Añade una serie de usuarios a un chat
-func addUsuariosChatBD(idchat int, nuevosusuarios []int) bool {
+func addUsuariosChatBDBD(idchat int, nuevosusuarios []int) bool {
 
 	//Conexion BD
 	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
@@ -328,7 +355,7 @@ func addUsuariosChatBD(idchat int, nuevosusuarios []int) bool {
 }
 
 //Elimina una serie de usuarios a un chat
-func removeUsuariosChatBD(idchat int, usuariosexpulsados []int) bool {
+func removeUsuariosChatBDBD(idchat int, usuariosexpulsados []int) bool {
 
 	//Conexion BD
 	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
@@ -443,7 +470,7 @@ func guardarMensajeBD(texto string, idchat int, idemisor int, idclave int) bool 
 }
 
 //Guardamos la clave de un usuario para leer x mensajes
-func GuardarClaveUsuarioMensajesBD(idclavesmensajes int, claveusuario string, idusuario int) bool {
+func GuardarClaveUsuarioMensajeBDsBD(idclavesmensajes int, claveusuario string, idusuario int) bool {
 
 	//Conexión BD
 	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
@@ -474,7 +501,7 @@ func GuardarClaveUsuarioMensajesBD(idclavesmensajes int, claveusuario string, id
 }
 
 //Crear nuevo id para nuevo grupo de claves para los mensajes
-func CrearNuevaClaveParaMensajesBD() int64 {
+func CrearNuevaClaveParaMensajeBDsBD() int64 {
 
 	//Conexión BD
 	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
@@ -512,26 +539,26 @@ func CrearNuevaClaveParaMensajesBD() int64 {
 }
 
 //Para guardar un mensaje con sus datos
-type Mensaje struct {
+type MensajeBD struct {
 	texto        string
 	idemisor     int
 	nombreemisor string
 }
 
 //Para guardar un chat con sus datos y mensajes que tenga
-type Chat struct {
-	mensajes []Mensaje
+type ChatBD struct {
+	mensajes []MensajeBD
 	nombre   string
 }
 
 /*
-func obtenerMensajesBD(idusuario int) []Chat {
+func obtenerMensajeBDsBD(idusuario int) []ChatBD {
 
-	chats := make([]Chat, 0, 1)
-	mensajes := make([]Mensaje, 0, 1)
+	chats := make([]ChatBD, 0, 1)
+	mensajes := make([]MensajeBD, 0, 1)
 
-	var chat Chat       // Para ir introduciendo chats al slice
-	var mensaje Mensaje //Para ir introduciendo mensajes al slice
+	var chat ChatBD       // Para ir introduciendo chats al slice
+	var mensaje MensajeBD //Para ir introduciendo mensajes al slice
 
 	//chats = append(chats, chat)
 
@@ -564,12 +591,12 @@ func main() {
 	usuarios = append(usuarios, 1)
 	usuarios = append(usuarios, 2)
 	usuarios = append(usuarios, 3)
-	//test = crearChatBD(usuarios, "")
+	//test = crearChatBDBD(usuarios, "")
 	//fmt.Println("Mira crear chat:", test)
 	//fmt.Println("\n")
 
 	//Prueba modificar chat
-	//test = modificarChatBD(5, "grupo molon")
+	//test = modificarChatBDBD(5, "grupo molon")
 	//fmt.Println("Mira modificar chat:", test)
 	//fmt.Println("\n")
 
@@ -577,38 +604,38 @@ func main() {
 	nuevosusuarios := make([]int, 0, 1)
 	nuevosusuarios = append(nuevosusuarios, 4)
 	nuevosusuarios = append(nuevosusuarios, 5)
-	//test = addUsuariosChatBD(7, nuevosusuarios)
+	//test = addUsuariosChatBDBD(7, nuevosusuarios)
 	//fmt.Println("Mira añadir nuevos usuarios a chat:", test)
 
 	//Prueba eliminar usuarios de un char
 	usuariosexpulsados := make([]int, 0, 1)
 	usuariosexpulsados = append(usuariosexpulsados, 4)
 	usuariosexpulsados = append(usuariosexpulsados, 5)
-	//test = removeUsuariosChatBD(7, usuariosexpulsados)
+	//test = removeUsuariosChatBDBD(7, usuariosexpulsados)
 	//fmt.Println("Mira eliminar usuarios a chat:", test)
 
 	//Prueba guardar mensaje
-	//test = guardarMensajeBD("Hola que tal?? :)", 5, 1, 1)
+	//test = guardarMensajeBDBD("Hola que tal?? :)", 5, 1, 1)
 	//fmt.Println("Mira guardar mensaje:", test)
 	//fmt.Println("-")
 
 	//Prueba obtener mensajes
-	//test = obtenerMensajeBD("Hola que tal?? :)", 5, 1, 1)
+	//test = obtenerMensajeBDBD("Hola que tal?? :)", 5, 1, 1)
 	//fmt.Println("Mira guardar mensaje:", test)
 	//fmt.Println("-")
 
 	//Prueba crear nueva clavesmensajes
-	//id := CrearNuevaClaveParaMensajesBD()
+	//id := CrearNuevaClaveParaMensajeBDsBD()
 	//fmt.Println("Mira id clavesmensajes creado:", id)
 	//fmt.Println("-")
 
 	//Prueba insertar clave de un usuario para x mensajes
-	//test = GuardarClaveUsuarioMensajesBD(1, "claveusuario1", 1)
+	//test = GuardarClaveUsuarioMensajeBDsBD(1, "claveusuario1", 1)
 	//fmt.Println("Mira guardar clave usuario de x mensaje:", test)
 	//fmt.Println("-")
 
 	//Obtener mensajes de un usuario
-	//obtenerMensajesBD(15)
+	//obtenerMensajeBDsBD(15)
 
 
 
@@ -622,7 +649,7 @@ func main() {
 //////
 
 /Creamos nuevo chat en BD
-func crearChatBD(usuarios []string, nombrechat string) bool {
+func crearChatBDBD(usuarios []string, nombrechat string) bool {
 
 	idusuarios := make([]int, 0, 1)
 
