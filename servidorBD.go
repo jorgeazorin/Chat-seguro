@@ -188,91 +188,6 @@ func comprobarUsuarioBD(nombre string, claveusuario string) bool {
 //CHAT
 //////
 
-/*/Creamos nuevo chat en BD
-func crearChatBD(usuarios []string, nombrechat string) bool {
-
-	idusuarios := make([]int, 0, 1)
-
-	//Conexion BD
-	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
-
-	if err != nil {
-		panic(err.Error())
-		return false
-	}
-	defer db.Close()
-
-	//Obtenemos los id de los usuarios según su nombre
-	for i := 0; i < len(usuarios); i++ {
-
-		//Consulta para saber id del usuario
-		rows, err := db.Query("SELECT id FROM usuario WHERE nombre = '" + usuarios[i] + "'")
-		if err != nil {
-			panic(err.Error())
-			defer db.Close()
-			return false
-		}
-
-		//Guardamos id del usuario en slice de ids
-		for rows.Next() {
-			var idusuario int
-			err = rows.Scan(&idusuario)
-			if err != nil {
-				panic(err.Error())
-				defer db.Close()
-				return false
-			}
-
-			idusuarios = append(idusuarios, idusuario)
-		}
-	}
-
-	//Preparamos crear el chat
-	stmtIns, err := db.Prepare("INSERT INTO chat VALUES(?, ?)")
-	if err != nil {
-		panic(err.Error())
-		return false
-	}
-
-	//Insertamos crear el chat
-	res, err := stmtIns.Exec("DEFAULT", nombrechat)
-	if err != nil {
-		panic(err.Error())
-		return false
-	}
-
-	//Obtenemos id del chat creado
-	idchat, err := res.LastInsertId()
-	if err != nil {
-		panic(err.Error())
-		return false
-	}
-	println("Id del chat creado:", idchat)
-
-	defer stmtIns.Close()
-
-	//Insertamos usuarios a dicho chat
-	for i := 0; i < len(idusuarios); i++ {
-		//Preparamos insertar usuario al chat
-		stmtIns, err := db.Prepare("INSERT INTO usuarioschat VALUES(?, ?)")
-		if err != nil {
-			panic(err.Error())
-			return false
-		}
-
-		//Insertamos usuario al chat
-		_, err = stmtIns.Exec(idusuarios[i], idchat)
-		if err != nil {
-			panic(err.Error())
-			return false
-		}
-	}
-
-	defer stmtIns.Close()
-
-	return true
-}*/
-
 //Creamos nuevo chat en BD
 func crearChatBD(idusuarios []int, nombrechat string) bool {
 
@@ -585,6 +500,7 @@ type Mensaje struct {
 	texto        string
 	idemisor     int
 	nombreemisor string
+	leido        bool
 }
 
 //Para guardar un chat con sus datos y mensajes que tenga
@@ -663,6 +579,8 @@ func obtenerChatsUsuarioBD(idusuario int) []Chat {
 		}
 
 		for rows.Next() {
+
+			//Obtenemos los datos del mensaje
 			err = rows.Scan(&mensaje.id, &mensaje.texto, &mensaje.idemisor)
 
 			if err != nil {
@@ -672,6 +590,21 @@ func obtenerChatsUsuarioBD(idusuario int) []Chat {
 			}
 
 			mensaje.nombreemisor = getNombreUsuario(mensaje.idemisor)
+
+			//Para ver si un mensaje aparece como leido o no
+			rows2, err2 := db.Query("SELECT leido from receptoresmensaje where idmensaje = " + strconv.Itoa(mensaje.id))
+			if err2 != nil {
+				panic(err2.Error())
+				defer db.Close()
+				return nil
+			}
+			for rows2.Next() {
+				err2 = rows2.Scan(&mensaje.leido)
+				//Si no aparece, el mensaje es suyo propio, siempre lo habrá leido
+				if err2 != nil {
+					mensaje.leido = true
+				}
+			}
 
 			//Guardamos el mensaje en el array de mensajes
 			mensajes = append(mensajes, mensaje)
@@ -759,12 +692,17 @@ func main() {
 	chats := make([]Chat, 0, 1)
 	chats = obtenerChatsUsuarioBD(15)
 	fmt.Println("-")
+	fmt.Println("Mira mensajes usuario 15 Maria")
 
 	for i := 0; i < len(chats); i++ {
 		fmt.Println("Mira mi chat id", chats[i].id, "es", chats[i].nombre)
 
 		for j := 0; j < len(chats[i].mensajes); j++ {
-			fmt.Println("-Mira mensaje id", chats[i].mensajes[j].id, "es", chats[i].mensajes[j].texto, "de", chats[i].mensajes[j].nombreemisor)
+			if chats[i].mensajes[j].idemisor != 15 {
+				fmt.Println("De", chats[i].mensajes[j].nombreemisor, "-> ", chats[i].mensajes[j].id, ": '", chats[i].mensajes[j].texto, "' / leido:", chats[i].mensajes[j].leido)
+			} else {
+				fmt.Println("De", chats[i].mensajes[j].nombreemisor, "-> ", chats[i].mensajes[j].id, ": '", chats[i].mensajes[j].texto, "' / leido: es un mensaje mio")
+			}
 		}
 	}
 }
