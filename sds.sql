@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 01-04-2016 a las 13:39:47
+-- Tiempo de generación: 01-04-2016 a las 15:11:39
 -- Versión del servidor: 5.6.25
 -- Versión de PHP: 5.6.11
 
@@ -136,7 +136,8 @@ INSERT INTO `receptoresmensaje` (`idmensaje`, `idreceptor`, `leido`) VALUES
 CREATE TABLE IF NOT EXISTS `usuario` (
   `id` int(11) NOT NULL,
   `nombre` varchar(15) NOT NULL,
-  `clavepubrsa` varchar(50) NOT NULL,
+  `clavepubrsa` varchar(100) NOT NULL,
+  `claveprivrsa` varchar(100) NOT NULL,
   `claveusuario` varchar(100) NOT NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=latin1;
 
@@ -144,14 +145,14 @@ CREATE TABLE IF NOT EXISTS `usuario` (
 -- Volcado de datos para la tabla `usuario`
 --
 
-INSERT INTO `usuario` (`id`, `nombre`, `clavepubrsa`, `claveusuario`) VALUES
-(1, 'Pepe', 'clave1', 'clave1cifrada'),
-(2, 'Jorge', 'clavepubrsa2', 'clave2cifrada'),
-(3, 'Encarna', 'clavepubrsa3', 'clave3cifrada'),
-(4, 'lolo', 'clave4rsa', 'clave4cifrada'),
-(5, 'leila', 'clave5rsa', 'clave5cifrada'),
-(13, 'Lucia', 'clave1', 'clave13cifrada'),
-(15, 'Maria', 'clavepubrsa15', 'clave15cifrada-');
+INSERT INTO `usuario` (`id`, `nombre`, `clavepubrsa`, `claveprivrsa`, `claveusuario`) VALUES
+(1, 'Pepe', 'clave1', 'clave1priv', 'clave1cifrada'),
+(2, 'Jorge', 'clavepubrsa2', 'clave2priv', 'clave2cifrada'),
+(3, 'Encarna', 'clavepubrsa3', 'clave3priv', 'clave3cifrada'),
+(4, 'lolo', 'clave4rsa', 'clave4priv', 'clave4cifrada'),
+(5, 'leila', 'clave5rsa', 'clave5priv', 'clave5cifrada'),
+(13, 'Lucia', 'clave1', 'clave13priv', 'clave13cifrada'),
+(15, 'Maria', 'clavepubrsa15', 'clave15priv', 'clave15cifrada-');
 
 -- --------------------------------------------------------
 

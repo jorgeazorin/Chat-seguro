@@ -30,7 +30,7 @@ var database = "sds"
 /////////
 
 //Insertamos a un nuevo usuario en BD
-func insertUsuarioBD(nombre string, clavepubrsa string, claveusuariocifrada string) bool {
+func insertUsuarioBD(nombre string, clavepubrsa string, claveprivrsa string, claveusuariocifrada string) bool {
 
 	//Conexión BD
 	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
@@ -42,14 +42,14 @@ func insertUsuarioBD(nombre string, clavepubrsa string, claveusuariocifrada stri
 	defer db.Close()
 
 	//Preparamos consulta
-	stmtIns, err := db.Prepare("INSERT INTO usuario VALUES(?, ?, ?, ?)")
+	stmtIns, err := db.Prepare("INSERT INTO usuario VALUES(?, ?, ?, ?, ?)")
 	if err != nil {
 		panic(err.Error())
 		return false
 	}
 
 	//Insertamos
-	_, err = stmtIns.Exec("DEFAULT", nombre, clavepubrsa, claveusuariocifrada)
+	_, err = stmtIns.Exec("DEFAULT", nombre, clavepubrsa, claveprivrsa, claveusuariocifrada)
 	if err != nil {
 		panic(err.Error())
 		return false
