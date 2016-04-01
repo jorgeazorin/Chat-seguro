@@ -581,6 +581,7 @@ func CrearNuevaClaveParaMensajesBD() int64 {
 
 //Para guardar un mensaje con sus datos
 type Mensaje struct {
+	id           int
 	texto        string
 	idemisor     int
 	nombreemisor string
@@ -588,20 +589,100 @@ type Mensaje struct {
 
 //Para guardar un chat con sus datos y mensajes que tenga
 type Chat struct {
-	mensajes []Mensaje
+	id       int
 	nombre   string
+	mensajes []Mensaje
 }
 
-func obtenerMensajesBD(idusuario int) []Chat {
+func obtenerChatsUsuarioBD(idusuario int) []Chat {
 
-	chats := make([]Chat, 0, 1)
-	mensajes := make([]Mensaje, 0, 1)
+	chats := make([]Chat, 0, 1)       //Todos los chats del usuario
+	mensajes := make([]Mensaje, 0, 1) //Los mensajes de un chat
 
-	var chat Chat // Para ir introduciendo chats al slice
+	var chat Chat       // Para ir introduciendo chats al slice
 	var mensaje Mensaje //Para ir introduciendo mensajes al slice
 
-	
-	//chats = append(chats, chat)
+	//Conexion BD
+	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+
+	if err != nil {
+		panic(err.Error())
+		return nil
+	}
+	defer db.Close()
+
+	//Obtenemos los id de los chats en los que está el usuario
+	rows, err := db.Query("SELECT idchat FROM usuarioschat WHERE idusuario = " + strconv.Itoa(idusuario))
+	if err != nil {
+		panic(err.Error())
+		defer db.Close()
+		return nil
+	}
+
+	//Guardamos id de cada chat en el slice de chats
+	for rows.Next() {
+		err = rows.Scan(&chat.id)
+
+		if err != nil {
+			panic(err.Error())
+			defer db.Close()
+			return nil
+		}
+		chats = append(chats, chat)
+	}
+
+	//Por cada id de chat obtenemos datos del chat y los mensajes del chat
+	for i := 0; i < len(chats); i++ {
+
+		//De cada chat obtenemos sus datos (nombre...)
+		rows, err := db.Query("SELECT nombre FROM chat WHERE id = " + strconv.Itoa(chats[i].id))
+		if err != nil {
+			panic(err.Error())
+			defer db.Close()
+			return nil
+		}
+
+		for rows.Next() {
+			var nombrechat string
+			err = rows.Scan(&nombrechat)
+
+			if err != nil {
+				chats[i].nombre = ""
+			} else {
+				chats[i].nombre = nombrechat
+			}
+
+		}
+
+		//De cada chat buscamos los datos de los mensajes de dicho chat
+		rows, err = db.Query("SELECT id, texto, emisor FROM mensaje WHERE chat = " + strconv.Itoa(chats[i].id))
+		if err != nil {
+			panic(err.Error())
+			defer db.Close()
+			return nil
+		}
+
+		for rows.Next() {
+			err = rows.Scan(&mensaje.id, &mensaje.texto, &mensaje.idemisor)
+
+			if err != nil {
+				panic(err.Error())
+				defer db.Close()
+				return nil
+			}
+
+			mensaje.nombreemisor = getNombreUsuario(mensaje.idemisor)
+
+			//Guardamos el mensaje en el array de mensajes
+			mensajes = append(mensajes, mensaje)
+		}
+
+		//Añadimos el array de mensajes a este chat
+		chats[i].mensajes = mensajes
+
+		//Vaciamos el array de mensajes, para rellenar el próximo chat
+		mensajes = make([]Mensaje, 0, 1)
+	}
 
 	return chats
 }
@@ -675,4 +756,15 @@ func main() {
 	//fmt.Println("-")
 
 	//Obtener mensajes de un usuario
-	obtenerMensajesBD(15)
+	chats := make([]Chat, 0, 1)
+	chats = obtenerChatsUsuarioBD(15)
+	fmt.Println("-")
+
+	for i := 0; i < len(chats); i++ {
+		fmt.Println("Mira mi chat id", chats[i].id, "es", chats[i].nombre)
+
+		for j := 0; j < len(chats[i].mensajes); j++ {
+			fmt.Println("-Mira mensaje id", chats[i].mensajes[j].id, "es", chats[i].mensajes[j].texto, "de", chats[i].mensajes[j].nombreemisor)
+		}
+	}
+}
