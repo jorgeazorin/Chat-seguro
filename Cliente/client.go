@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"github.com/andlabs/ui"
 	"io/ioutil"
 	"log"
 	"net"
@@ -19,7 +18,7 @@ type Mensaje struct {
 	Password string   `json:"Password"`
 	Funcion  string   `json:"Funcion"`
 	Datos    []string `json:"Datos"`
-	Mensaje  string   `json:"Mensaje"`
+	Mensaje  string   `json:"MensajeSocket"`
 }
 
 func main() {
