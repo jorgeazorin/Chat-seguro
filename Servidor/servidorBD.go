@@ -16,14 +16,39 @@ import (
 )
 
 //var database = "sds"
-var username = "sds"
-var password = "sds"
+var username = "root"
+var password = ""
 var adress = ""
 var database = "sds"
 
 /////////
 //USUARIO
 /////////
+//Obtenemos nombre de usuario según id usuario
+func getUsuarioBD(user string) Usuario {
+	usuario := Usuario{}
+	//Conexión BD
+	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+	//Obtenemos el nombre del usuario
+	rows, err := db.Query("SELECT id, nombre, clavepubrsa, claveusuario FROM usuario WHERE nombre = '" + user + "'")
+	if err != nil {
+		panic(err.Error())
+		defer db.Close()
+	}
+	for rows.Next() {
+		err = rows.Scan(&usuario.id, &usuario.nombre, &usuario.clavePublicaRsa, &usuario.claveusuario)
+		if err != nil {
+			panic(err.Error())
+			defer db.Close()
+		}
+	}
+	return usuario
+}
 
 //Insertamos a un nuevo usuario en BD
 func insertUsuarioBD(nombre string, clavepubrsa string, claveusuariocifrada string) bool {
@@ -486,14 +511,13 @@ func CrearNuevaClaveParaMensajesBD() int64 {
 	return idclavesmensajes
 }
 
-/*
 //Para guardar un mensaje con sus datos
 type Mensaje struct {
 	texto        string
 	idemisor     int
 	nombreemisor string
 }
-*/
+
 //Para guardar un chat con sus datos y mensajes que tenga
 type Chat struct {
 	mensajes []Mensaje

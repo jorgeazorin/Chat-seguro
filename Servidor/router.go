@@ -1,9 +1,11 @@
 package main
 
+import ()
+
 func (conexion *Conexion) ProcesarMensajeSocket(mensaje MensajeSocket) {
 
 	if mensaje.Funcion == "login" {
-		conexion.usuario.obtenerUsuario()
+		conexion.usuario.login(mensaje.From)
 		mesj := MensajeSocket{}
 		mesj.From = conexion.usuario.nombre
 		mesj.MensajeSocket = "Usuario online"

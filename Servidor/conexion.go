@@ -15,25 +15,26 @@ type Conexion struct {
 
 //Struct de los mensajes que se envian por el socket
 type MensajeSocket struct {
-	From          string   `json:"From"`
-	To            int      `json:"To"`
-	Password      string   `json:"Password"`
-	Funcion       string   `json:"Funcion"`
-	Datos         []string `json:"Datos"`
-	MensajeSocket string   `json:"MensajeSocket"`
+	From          string     `json:"From"`
+	To            int        `json:"To"`
+	Password      string     `json:"Password"`
+	Funcion       string     `json:"Funcion"`
+	Datos         [][]string `json:"Datos"`
+	MensajeSocket string     `json:"MensajeSocket"`
 }
 
 //Función que se encarga de leer un socket infinitamente
 func (conexion *Conexion) escuchar() {
-	defer conexion.Close()
+	defer conexion.conexion.Close()
 	var mensaje MensajeSocket //Struct donde se guarda el mensaje que se descodifia
-
+	conexion.usuario = Usuario{}
 	for { // Bucle infinito que lee cosas que envia el usuario
+
 		buf := make([]byte, 256)
-		n, err := conn.Read(buf) //Lee el mensaje
+		n, err := conexion.conexion.Read(buf) //Lee el mensaje
 		if err != nil {
 			break
-			conn.Close()
+			conexion.conexion.Close()
 		}
 		json.Unmarshal(buf[:n], &mensaje)       //Descodificar el mensaje recibido (estaba en json y se pasa a struct)
 		conexion.ProcesarMensajeSocket(mensaje) //Procesa el mensaje, esto lo hace en el archivo router.go

@@ -13,12 +13,12 @@ import (
 )
 
 type Mensaje struct {
-	From     string   `json:"From"`
-	To       int      `json:"To"`
-	Password string   `json:"Password"`
-	Funcion  string   `json:"Funcion"`
-	Datos    []string `json:"Datos"`
-	Mensaje  string   `json:"MensajeSocket"`
+	From     string     `json:"From"`
+	To       int        `json:"To"`
+	Password string     `json:"Password"`
+	Funcion  string     `json:"Funcion"`
+	Datos    [][]string `json:"Datos"`
+	Mensaje  string     `json:"MensajeSocket"`
 }
 
 func main() {
@@ -38,7 +38,7 @@ func main() {
 	///////////////////////////////////
 	//    Conectar    /////////////////
 	//////////////////////////////////
-	conn, err := tls.Dial("tcp", "127.0.0.1:443", &config)
+	conn, err := tls.Dial("tcp", "127.0.0.1:444", &config)
 	if err != nil {
 		log.Fatalf("client: dial: %s", err)
 	}

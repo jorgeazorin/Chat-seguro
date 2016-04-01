@@ -10,8 +10,14 @@ type Usuario struct {
 }
 
 //Funcion para obtener los datos del usuario cuando se loguea
-func (usuario *Usuario) obtenerUsuario() {
-	usuario.nombre = "jogre"
-	usuario.clavePublicaRsa = "clavePublica"
-	usuario.claveUsuarioCifrada = "claveCifrada"
+func (usuario *Usuario) login(nombre string) bool {
+	usuario.nombre = nombre
+	user := getUsuarioBD(nombre)
+	usuario.id = user.id
+	usuario.nombre = user.nombre
+	usuario.clavePublicaRsa = user.clavePublicaRsa
+	usuario.claveUsuarioCifrada = user.claveUsuarioCifrada
+	usuario.claveusuario = user.claveusuario
+	usuario.nombre = user.nombre
+	return true
 }
