@@ -153,62 +153,42 @@ func (bd *BD) modificarUsuarioBD(usuario Usuario) bool {
 }
 
 // Comprobamos un usuario con su nombre y clave cifrada
-func (bd *BD) comprobarUsuarioBD(nombre string, claveusuario string) bool {
+func (bd *BD) comprobarUsuarioBD(nombre string, claveusuario string) (Usuario, bool) {
 
-	var idusuario int
-	var claveusuariobd string
+	var usuario Usuario
+
+	usuario.nombre = nombre
+	usuario.claveusuario = claveusuario
 
 	//Conexión BD
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
 		panic(err.Error())
-		return false
+		return usuario, false
 	}
 	defer db.Close()
 
 	//Obtenemos el id del usuario
-	rows, err := db.Query("SELECT id FROM usuario WHERE nombre = '" + nombre + "'")
+	rows, err := db.Query("SELECT id, clavepubrsa, claveprivrsa FROM usuario WHERE nombre = '" + nombre + "' and claveusuario= '" + claveusuario + "'")
 	if err != nil {
 		panic(err.Error())
 		defer db.Close()
-		return false
+		return usuario, false
 	}
 
 	for rows.Next() {
-		err = rows.Scan(&idusuario)
+		err = rows.Scan(&usuario.id, &usuario.clavepubrsa, &usuario.claveprivrsa)
 		if err != nil {
 			panic(err.Error())
 			defer db.Close()
-			return false
+			return usuario, false
 		}
 	}
 
-	if idusuario == 0 {
-		return false
+	if usuario.id == 0 {
+		return usuario, false
 	}
 
-	//Obtenemos el la clave del usuario con id obtenido
-	rows, err = db.Query("SELECT claveusuario FROM usuario WHERE id = " + strconv.Itoa(idusuario))
-	if err != nil {
-		panic(err.Error())
-		defer db.Close()
-		return false
-	}
-
-	for rows.Next() {
-		err = rows.Scan(&claveusuariobd)
-		if err != nil {
-			panic(err.Error())
-			defer db.Close()
-			return false
-		}
-	}
-
-	//Vemos si claves coinciden
-	if claveusuario != claveusuariobd {
-		return false
-	}
-
-	return true
+	return usuario, true
 }

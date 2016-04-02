@@ -2,7 +2,7 @@
 //MAIN
 //////
 
-package bd
+package main
 
 import (
 	"fmt"
@@ -56,8 +56,9 @@ func main() {
 	fmt.Println("Mira el usuario:", usuario.id, usuario.nombre, usuario.clavepubrsa, usuario.claveprivrsa, usuario.claveusuario)
 
 	//Prueba comprobar usuario
-	test = bd.comprobarUsuarioBD("pepe", "clave1cifrada")
-	fmt.Println("Mira comprobando usuario:", test)
+	var miusuario Usuario
+	miusuario, test = bd.comprobarUsuarioBD("Maria", "clave15cifrada")
+	fmt.Println("Mira comprobando usuario:", test, " tiene:", miusuario.clavepubrsa, miusuario.id)
 	fmt.Println("-")
 
 	//////////
