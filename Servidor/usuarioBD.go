@@ -20,7 +20,13 @@ type Usuario struct {
 
 //Funcion para obtener los datos del usuario cuando se loguea
 func (usuario *Usuario) login(nombre string) bool {
+
+	//Para las operaciones con la BD
 	var bd BD
+	bd.username = "sds"
+	bd.password = "sds"
+	bd.adress = ""
+	bd.database = "sds"
 
 	usuario.nombre = nombre
 	user := bd.getUsuarioBD(nombre)

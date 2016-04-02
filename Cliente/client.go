@@ -49,11 +49,18 @@ func main() {
 	//    Login      /////////////////
 	//////////////////////////////////
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("User:")
-	message, _ := reader.ReadString('\n')
-	message = message[0 : len(message)-2]
+
+	fmt.Print("Usuario:")
+	nombreusuario, _ := reader.ReadString('\n')
+	nombreusuario = nombreusuario[0 : len(nombreusuario)-2]
+
+	fmt.Print("Password:")
+	password, _ := reader.ReadString('\n')
+	password = password[0 : len(password)-2]
+
 	mensaje := Mensaje{}
-	mensaje.From = message
+	mensaje.From = nombreusuario
+	mensaje.Password = password
 	mensaje.Funcion = "login"
 	mensaje.To = -1
 	//Convertir a json

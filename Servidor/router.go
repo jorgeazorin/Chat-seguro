@@ -6,12 +6,23 @@ import (
 
 func (conexion *Conexion) ProcesarMensajeSocket(mensaje MensajeSocket) {
 
-	var bd BD //Para las operaciones con la BD
+	//Para las operaciones con la BD
+	var bd BD
+	bd.username = "sds"
+	bd.password = "sds"
+	bd.adress = ""
+	bd.database = "sds"
 
 	if mensaje.Funcion == "login" {
 
 		//Rellenamos el usuario de la conexión con el login
 		conexion.usuario.login(mensaje.From)
+
+		/*usuario, err := bd.comprobarUsuarioBD(mensaje.From, mensaje.Password)MAL
+		if err == false {
+			log.Println("Login incorrecto.")
+			return
+		}*/
 
 		//Enviamos un mensaje a las demás conexiones mostrando que está diponible el usuario
 		//Preparamos el mensaje que vamos a enviar
