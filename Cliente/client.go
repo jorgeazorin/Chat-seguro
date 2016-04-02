@@ -13,12 +13,12 @@ import (
 )
 
 type Mensaje struct {
-	From     string     `json:"From"`
-	To       int        `json:"To"`
-	Password string     `json:"Password"`
-	Funcion  string     `json:"Funcion"`
-	Datos    [][]string `json:"Datos"`
-	Mensaje  string     `json:"MensajeSocket"`
+	From     string   `json:"From"`
+	To       int      `json:"To"`
+	Password string   `json:"Password"`
+	Funcion  string   `json:"Funcion"`
+	Datos    []string `json:"Datos"`
+	Mensaje  string   `json:"MensajeSocket"`
 }
 
 func main() {
@@ -106,12 +106,13 @@ func handleClientWrite(conn net.Conn, from string) {
 		message, _ := reader.ReadString('\n')
 
 		//Rellenar datos
+		datos := []string{"1"}
 		mensaje.From = from
 		mensaje.Password = "1"
 		mensaje.Funcion = "enviar"
 		mensaje.Mensaje = message[0 : len(message)-2]
 		mensaje.To = 2
-
+		mensaje.Datos = datos
 		//Convertir a json
 		b, _ := json.Marshal(mensaje)
 

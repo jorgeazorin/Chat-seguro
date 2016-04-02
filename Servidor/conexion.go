@@ -10,24 +10,24 @@ import (
 type Conexion struct {
 	conexiones *Conexiones //Esto es el vector con todos los sockets que hay online
 	conexion   net.Conn    //la propia conexión
-	usuario    Usuario     //el usuario que habla por el socket se rellena al hacer el login()
+	usuario    *Usuario    //el usuario que habla por el socket se rellena al hacer el login()
 }
 
 //Struct de los mensajes que se envian por el socket
 type MensajeSocket struct {
-	From          string     `json:"From"`
-	To            int        `json:"To"`
-	Password      string     `json:"Password"`
-	Funcion       string     `json:"Funcion"`
-	Datos         [][]string `json:"Datos"`
-	MensajeSocket string     `json:"MensajeSocket"`
+	From          string   `json:"From"`
+	To            int      `json:"To"`
+	Password      string   `json:"Password"`
+	Funcion       string   `json:"Funcion"`
+	Datos         []string `json:"Datos"`
+	MensajeSocket string   `json:"MensajeSocket"`
 }
 
 //Función que se encarga de leer un socket infinitamente
 func (conexion *Conexion) escuchar() {
 	defer conexion.conexion.Close()
 	var mensaje MensajeSocket //Struct donde se guarda el mensaje que se descodifia
-	conexion.usuario = Usuario{}
+	//conexion.usuario = Usuario{}
 	for { // Bucle infinito que lee cosas que envia el usuario
 
 		buf := make([]byte, 256)
