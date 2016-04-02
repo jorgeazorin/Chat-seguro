@@ -6,15 +6,9 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"strconv"
 )
-
-var username = "sds"
-var password = "sds"
-var adress = ""
-var database = "sds"
 
 type Usuario struct {
 	id           int
@@ -216,39 +210,4 @@ func comprobarUsuarioBD(nombre string, claveusuario string) bool {
 	}
 
 	return true
-}
-
-func main() {
-	var test bool
-
-	//Prueba insertar usuario
-	var uu Usuario
-	uu.nombre = "alex"
-	uu.clavepubrsa = "clavepubrsa"
-	uu.claveprivrsa = "claveprivrsa"
-	uu.claveusuario = "clavecifrada"
-	//insertUsuarioBD(uu)
-
-	//Prueba Modificar Usuario
-	var u Usuario
-	u.id = 15
-	u.clavepubrsa = "clave15pubrsa"
-	u.claveprivrsa = "clave15privrsa"
-	u.claveusuario = "clave15cifrada"
-	test = modificarUsuarioBD(u)
-	fmt.Println("Mira modificar usuario:", test)
-
-	//Probar obtener nombre según id
-	nombreusuario := getNombreUsuario(1)
-	fmt.Println("Mira el nombre del usuario:", nombreusuario)
-
-	//Probar obtener usuario según id
-	usuario := getUsuario(1)
-	fmt.Println("Mira el usuario:", usuario.id, usuario.nombre, usuario.clavepubrsa, usuario.claveprivrsa, usuario.claveusuario)
-
-	//Prueba comprobar usuario
-	test = comprobarUsuarioBD("pepe", "clave1cifrada")
-	fmt.Println("Mira comprobando usuario:", test)
-	fmt.Println("-")
-
 }
