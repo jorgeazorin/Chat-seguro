@@ -75,7 +75,8 @@ func crearChatBD(idusuarios []int, nombrechat string) bool {
 	return true
 }
 
-func modificarChatBD(idchat int, nombre string) bool {
+//Modifica los datos del chat
+func modificarChatBD(chat Chat) bool {
 
 	//Conexion BD
 	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
@@ -94,7 +95,7 @@ func modificarChatBD(idchat int, nombre string) bool {
 	}
 
 	//Insertamos crear el chat
-	_, err = stmtIns.Exec(nombre, idchat)
+	_, err = stmtIns.Exec(chat.nombre, chat.id)
 	if err != nil {
 		panic(err.Error())
 		return false
