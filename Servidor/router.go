@@ -1,6 +1,7 @@
 package main
 
 import (
+	//"log"
 	"strconv"
 )
 
@@ -16,13 +17,13 @@ func (conexion *Conexion) ProcesarMensajeSocket(mensaje MensajeSocket) {
 	if mensaje.Funcion == "login" {
 
 		//Rellenamos el usuario de la conexión con el login
-		conexion.usuario.login(mensaje.From)
+		test := conexion.usuario.login(mensaje.From, mensaje.Password)
 
-		/*usuario, err := bd.comprobarUsuarioBD(mensaje.From, mensaje.Password)MAL
-		if err == false {
-			log.Println("Login incorrecto.")
+		if test == false {
+			mesj := MensajeSocket{From: conexion.usuario.nombre, MensajeSocket: "Login incorrecto"}
+			conexion.EnviarMensajeSocketSocket(mesj)
 			return
-		}*/
+		}
 
 		//Enviamos un mensaje a las demás conexiones mostrando que está diponible el usuario
 		//Preparamos el mensaje que vamos a enviar
