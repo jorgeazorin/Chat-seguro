@@ -65,7 +65,7 @@ func main() {
 		defer conn.Close()
 		log.Printf("server: accepted from %s", conn.RemoteAddr())
 
-		conexion := Conexion{conexion: conn, conexiones: &conexiones, usuario: Usuario{}} //Creamos una nueva conexión
+		conexion := Conexion{conexion: conn, conexiones: &conexiones, usuario: &Usuario{}} //Creamos una nueva conexión
 		//Añadimos la conxion al vector conexiones bloqueando la memoria compartida
 		conexiones.mux.Lock()
 		conexiones.conexiones = append(conexiones.conexiones, conexion)

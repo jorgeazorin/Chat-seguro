@@ -12,17 +12,13 @@ func (conexion *Conexion) ProcesarMensajeSocket(mensaje MensajeSocket) {
 		conexion.usuario.login(mensaje.From)
 
 		//Enviamos un mensaje a las demás conexiones mostrando que está diponible el usuario
-		//También guardamos en el vector de conexiones la conexión cambiada
-
 		//Preparamos el mensaje que vamos a enviar
 		mesj := MensajeSocket{From: conexion.usuario.nombre, MensajeSocket: "Usuario online"}
 
 		//recorremos el vector de conexiones
 		for i := 0; i < len(conexion.conexiones.conexiones); i++ {
-			//si la conexión es la de nuestro socket guardamos los datos del usuario
-			if conexion.conexiones.conexiones[i].conexion == conexion.conexion {
-				conexion.conexiones.conexiones[i].usuario = conexion.usuario
-			} else {
+			//si la conexión es distinta de nuestro socket guardamos los datos del usuario
+			if conexion.conexiones.conexiones[i].conexion != conexion.conexion {
 				//enviamos un mensaje al resto de usuarios conectados
 				conexion.conexiones.conexiones[i].EnviarMensajeSocketSocket(mesj)
 			}
