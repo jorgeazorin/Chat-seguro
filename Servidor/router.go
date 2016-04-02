@@ -6,6 +6,8 @@ import (
 
 func (conexion *Conexion) ProcesarMensajeSocket(mensaje MensajeSocket) {
 
+	var bd BD //Para las operaciones con la BD
+
 	if mensaje.Funcion == "login" {
 
 		//Rellenamos el usuario de la conexión con el login
@@ -28,11 +30,16 @@ func (conexion *Conexion) ProcesarMensajeSocket(mensaje MensajeSocket) {
 
 	if mensaje.Funcion == "enviar" {
 		//Guardamos los mensajes en la BD
-		guardarMensajeBD(mensaje.MensajeSocket, 1, conexion.usuario.id, 1)
+		var m Mensaje
+		m.texto = mensaje.MensajeSocket
+		m.idchat = 1
+		m.idemisor = conexion.usuario.id
+		m.idclave = 1
+		bd.guardarMensajeBD(m)
 
 		//Obtenemos los usuarios que pertenecen en el chat
 		idChat, _ := strconv.Atoi(mensaje.Datos[0])
-		usuarios := getUsuariosChatBD(idChat)
+		usuarios := bd.getUsuariosChatBD(idChat)
 
 		//Enviamos el mensaje a todos los que tienen el socket abierto que esten el chat
 		for i := 0; i < len(conexion.conexiones.conexiones); i++ {

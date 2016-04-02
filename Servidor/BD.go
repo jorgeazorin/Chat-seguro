@@ -5,7 +5,7 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -16,6 +16,7 @@ type BD struct {
 	database string
 }
 
+/*
 func main() {
 	var test bool
 	var bd BD
@@ -135,3 +136,4 @@ func main() {
 	}
 	fmt.Println("-")
 }
+*/
