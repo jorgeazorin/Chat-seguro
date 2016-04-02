@@ -18,10 +18,10 @@ type Chat struct {
 }
 
 //Creamos nuevo chat en BD
-func crearChatBD(idusuarios []int, nombrechat string) bool {
+func (bd *BD) crearChatBD(idusuarios []int, nombrechat string) bool {
 
 	//Conexion BD
-	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
 		panic(err.Error())
@@ -76,10 +76,10 @@ func crearChatBD(idusuarios []int, nombrechat string) bool {
 }
 
 //Modifica los datos del chat
-func modificarChatBD(chat Chat) bool {
+func (bd *BD) modificarChatBD(chat Chat) bool {
 
 	//Conexion BD
-	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
 		panic(err.Error())
@@ -107,10 +107,10 @@ func modificarChatBD(chat Chat) bool {
 }
 
 //Añade una serie de usuarios a un chat
-func addUsuariosChatBD(idchat int, nuevosusuarios []int) bool {
+func (bd *BD) addUsuariosChatBD(idchat int, nuevosusuarios []int) bool {
 
 	//Conexion BD
-	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
 		panic(err.Error())
@@ -141,10 +141,10 @@ func addUsuariosChatBD(idchat int, nuevosusuarios []int) bool {
 }
 
 //Elimina una serie de usuarios a un chat
-func removeUsuariosChatBD(idchat int, usuariosexpulsados []int) bool {
+func (bd *BD) removeUsuariosChatBD(idchat int, usuariosexpulsados []int) bool {
 
 	//Conexion BD
-	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
 		panic(err.Error())
@@ -174,14 +174,14 @@ func removeUsuariosChatBD(idchat int, usuariosexpulsados []int) bool {
 	return true
 }
 
-func obtenerChatsUsuarioBD(idusuario int) []Chat {
+func (bd *BD) obtenerChatsUsuarioBD(idusuario int) []Chat {
 
 	chats := make([]Chat, 0, 1)       //Todos los chats del usuario
 	mensajes := make([]Mensaje, 0, 1) //Los mensajes de un chat
 	var chat Chat                     // Para ir introduciendo chats al slice
 
 	//Conexion BD
-	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
 		panic(err.Error())
@@ -230,7 +230,7 @@ func obtenerChatsUsuarioBD(idusuario int) []Chat {
 		}
 
 		//De cada chat buscamos los datos de los mensajes de dicho chat
-		mensajes = obtenerMensajesChatBD(chats[i].id)
+		mensajes = bd.obtenerMensajesChatBD(chats[i].id)
 
 		//Añadimos el array de mensajes a este chat
 		chats[i].mensajes = mensajes

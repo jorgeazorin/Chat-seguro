@@ -19,10 +19,10 @@ type Usuario struct {
 }
 
 //Insertamos a un nuevo usuario en BD
-func insertUsuarioBD(usuario Usuario) bool {
+func (bd *BD) insertUsuarioBD(usuario Usuario) bool {
 
 	//Conexión BD
-	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
 		panic(err.Error())
@@ -50,12 +50,12 @@ func insertUsuarioBD(usuario Usuario) bool {
 }
 
 //Obtenemos nombre de usuario según id usuario
-func getNombreUsuario(id int) string {
+func (bd *BD) getNombreUsuario(id int) string {
 
 	var nombreusuario string
 
 	//Conexión BD
-	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
 		panic(err.Error())
@@ -84,12 +84,12 @@ func getNombreUsuario(id int) string {
 }
 
 //Obtenemos una instancia de usuario según id usuario
-func getUsuario(id int) Usuario {
+func (bd *BD) getUsuario(id int) Usuario {
 
 	var usuario Usuario
 
 	//Conexión BD
-	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
 		panic(err.Error())
@@ -117,10 +117,10 @@ func getUsuario(id int) Usuario {
 	return usuario
 }
 
-func modificarUsuarioBD(usuario Usuario) bool {
+func (bd *BD) modificarUsuarioBD(usuario Usuario) bool {
 
 	//Conexion BD
-	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
 		panic(err.Error())
@@ -128,7 +128,7 @@ func modificarUsuarioBD(usuario Usuario) bool {
 	}
 	defer db.Close()
 
-	nombreu := getNombreUsuario(usuario.id)
+	nombreu := bd.getNombreUsuario(usuario.id)
 	if nombreu == "" {
 		return false
 	}
@@ -153,12 +153,13 @@ func modificarUsuarioBD(usuario Usuario) bool {
 }
 
 // Comprobamos un usuario con su nombre y clave cifrada
-func comprobarUsuarioBD(nombre string, claveusuario string) bool {
+func (bd *BD) comprobarUsuarioBD(nombre string, claveusuario string) bool {
 
 	var idusuario int
 	var claveusuariobd string
 
-	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+	//Conexión BD
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
 		panic(err.Error())

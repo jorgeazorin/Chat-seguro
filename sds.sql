@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 01-04-2016 a las 16:34:39
+-- Tiempo de generación: 02-04-2016 a las 12:01:13
 -- Versión del servidor: 5.6.25
 -- Versión de PHP: 5.6.11
 
@@ -40,7 +40,7 @@ INSERT INTO `chat` (`id`, `nombre`) VALUES
 (2, NULL),
 (3, NULL),
 (4, NULL),
-(5, 'grupo molon'),
+(5, 'grupo molon :)'),
 (6, ''),
 (7, '');
 
@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS `mensaje` (
   `emisor` int(11) NOT NULL,
   `chat` int(11) NOT NULL,
   `clave` int(11) NOT NULL
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `mensaje`
@@ -105,7 +105,9 @@ INSERT INTO `mensaje` (`id`, `texto`, `emisor`, `chat`, `clave`) VALUES
 (4, 'jajaja si, al final me instale securitychat! ya podemos hablar sin que nos espien!', 1, 5, 1),
 (5, 'Pues ya ves, me siento seguro jejeje', 13, 5, 1),
 (6, 'Hola amigo 1', 15, 1, 1),
-(7, 'Anda amigo 15, que tal andas?? :)', 1, 1, 1);
+(7, 'Anda amigo 15, que tal andas?? :)', 1, 1, 1),
+(8, 'Hola que tal?? :)', 1, 1, 1),
+(9, 'Hola que tal?? :)', 1, 1, 1);
 
 -- --------------------------------------------------------
 
@@ -133,7 +135,9 @@ INSERT INTO `receptoresmensaje` (`idmensaje`, `idreceptor`, `leido`) VALUES
 (5, 1, 1),
 (5, 15, 0),
 (6, 1, 1),
-(7, 15, 0);
+(7, 15, 0),
+(8, 15, 0),
+(9, 15, 0);
 
 -- --------------------------------------------------------
 
@@ -147,7 +151,7 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   `clavepubrsa` varchar(100) NOT NULL,
   `claveprivrsa` varchar(100) NOT NULL,
   `claveusuario` varchar(100) NOT NULL
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `usuario`
@@ -160,7 +164,8 @@ INSERT INTO `usuario` (`id`, `nombre`, `clavepubrsa`, `claveprivrsa`, `claveusua
 (4, 'lolo', 'clave4rsa', 'clave4priv', 'clave4cifrada'),
 (5, 'leila', 'clave5rsa', 'clave5priv', 'clave5cifrada'),
 (13, 'Lucia', 'clave1', 'clave13priv', 'clave13cifrada'),
-(15, 'Maria', 'clavepubrsa15', 'clave15priv', 'clave15cifrada-');
+(15, 'Maria', 'clave15pubrsa', 'clave15privrsa', 'clave15cifrada'),
+(16, 'alex', 'clavepubrsa', 'claveprivrsa', 'clavecifrada');
 
 -- --------------------------------------------------------
 
@@ -263,12 +268,12 @@ ALTER TABLE `clavesmensajes`
 -- AUTO_INCREMENT de la tabla `mensaje`
 --
 ALTER TABLE `mensaje`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=10;
 --
 -- AUTO_INCREMENT de la tabla `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=17;
 --
 -- Restricciones para tablas volcadas
 --

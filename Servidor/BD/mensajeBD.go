@@ -22,13 +22,13 @@ type Mensaje struct {
 }
 
 //Guarda un mensaje para todos los receptores posibles del chat
-func guardarMensajeBD(mensaje Mensaje) bool {
+func (bd *BD) guardarMensajeBD(mensaje Mensaje) bool {
 
 	var idreceptoraux = -1
 	idreceptores := make([]int, 0, 1)
 
 	//Conexion BD
-	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
 		panic(err.Error())
@@ -99,10 +99,10 @@ func guardarMensajeBD(mensaje Mensaje) bool {
 }
 
 //Crear nuevo id para nuevo grupo de claves para siguientes mensajes
-func CrearNuevaClaveMensajesBD() int64 {
+func (bd *BD) CrearNuevaClaveMensajesBD() int64 {
 
 	//Conexión BD
-	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
 		panic(err.Error())
@@ -137,10 +137,10 @@ func CrearNuevaClaveMensajesBD() int64 {
 }
 
 //Guardamos la clave de un usuario para leer x mensajes
-func GuardarClaveUsuarioMensajesBD(idclavesmensajes int, claveusuario string, idusuario int) bool {
+func (bd *BD) GuardarClaveUsuarioMensajesBD(idclavesmensajes int, claveusuario string, idusuario int) bool {
 
 	//Conexión BD
-	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
 		panic(err.Error())
@@ -168,13 +168,13 @@ func GuardarClaveUsuarioMensajesBD(idclavesmensajes int, claveusuario string, id
 }
 
 //Obtenemos todos los mensajes de un chat
-func obtenerMensajesChatBD(idchat int) []Mensaje {
+func (bd *BD) obtenerMensajesChatBD(idchat int) []Mensaje {
 
 	mensajes := make([]Mensaje, 0, 1) //Los mensajes de un chat
 	var mensaje Mensaje               //Para ir introduciendo mensajes al slice
 
 	//Conexion BD
-	db, err := sql.Open("mysql", username+":"+password+"@/"+database)
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
 		panic(err.Error())
@@ -200,7 +200,7 @@ func obtenerMensajesChatBD(idchat int) []Mensaje {
 			return nil
 		}
 
-		mensaje.nombreemisor = getNombreUsuario(mensaje.idemisor)
+		mensaje.nombreemisor = bd.getNombreUsuario(mensaje.idemisor)
 
 		//Para ver si un mensaje aparece como leido o no
 		rows2, err2 := db.Query("SELECT leido from receptoresmensaje where idmensaje = " + strconv.Itoa(mensaje.id))
