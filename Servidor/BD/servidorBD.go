@@ -344,9 +344,9 @@ func removeUsuariosChatBD(idchat int, usuariosexpulsados []int) bool {
 	return true
 }
 
-////////////////////////////
-//MENSAJES Y CLAVES MENSAJES
-////////////////////////////
+//////////
+//MENSAJES
+//////////
 
 //Guarda un mensaje para todos los receptores posibles del chat
 func guardarMensajeBD(texto string, idchat int, idemisor int, idclave int) bool {
