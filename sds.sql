@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 01-04-2016 a las 15:11:39
+-- Tiempo de generación: 01-04-2016 a las 16:34:39
 -- Versión del servidor: 5.6.25
 -- Versión de PHP: 5.6.11
 
@@ -125,7 +125,15 @@ CREATE TABLE IF NOT EXISTS `receptoresmensaje` (
 
 INSERT INTO `receptoresmensaje` (`idmensaje`, `idreceptor`, `leido`) VALUES
 (2, 13, 0),
-(2, 15, 0);
+(2, 15, 0),
+(3, 1, 1),
+(3, 15, 1),
+(4, 13, 1),
+(4, 15, 1),
+(5, 1, 1),
+(5, 15, 0),
+(6, 1, 1),
+(7, 15, 0);
 
 -- --------------------------------------------------------
 
