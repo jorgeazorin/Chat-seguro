@@ -2,7 +2,7 @@ package main
 
 import (
 	//"log"
-	"fmt"
+	//"fmt"
 	"strconv"
 )
 
@@ -51,10 +51,13 @@ func (conexion *Conexion) ProcesarMensajeSocket(mensaje MensajeSocket) {
 		idChat, _ := strconv.Atoi(mensaje.Datos[0])
 		idusuarios := bd.getUsuariosChatBD(idChat)
 
-		//Enviamos el mensaje a todos los usuarios de ese chat con el socket abierto (incluido el emisor)
-		for i := 0; i < len(idusuarios); i++ {
-			fmt.Println("Mira que usuario:", idusuarios[i])
-			conexiones[idusuarios[i]].EnviarMensajeSocketSocket(mensaje)
+		//Enviamos el mensaje a todos los usuarios de ese chat (incluido el emisor)
+		for i := 0; i < 1; i++ {
+			_, ok := conexiones[idusuarios[i]]
+			//Usuarios con el socket abierto
+			if ok {
+				conexiones[idusuarios[i]].EnviarMensajeSocketSocket(mensaje)
+			}
 		}
 
 	}
