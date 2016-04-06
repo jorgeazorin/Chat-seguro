@@ -175,6 +175,40 @@ func (bd *BD) getNombreUsuario(id int) string {
 	return nombreusuario
 }
 
+//Obtenemos nombre de usuario según id usuario
+func (bd *BD) getClavePubUsuario(id int) string {
+
+	var clavepub string
+
+	//Conexión BD
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
+
+	if err != nil {
+		panic(err.Error())
+		return ""
+	}
+	defer db.Close()
+
+	//Obtenemos el nombre del usuario
+	rows, err := db.Query("SELECT clavepubrsa FROM usuario WHERE id = " + strconv.Itoa(id))
+	if err != nil {
+		panic(err.Error())
+		defer db.Close()
+		return ""
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&clavepub)
+		if err != nil {
+			panic(err.Error())
+			defer db.Close()
+			return ""
+		}
+	}
+
+	return clavepub
+}
+
 //Obtenemos una instancia de usuario según id usuario
 func (bd *BD) getUsuario(id int) Usuario {
 
