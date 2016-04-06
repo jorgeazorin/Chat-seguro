@@ -8,9 +8,8 @@ import (
 
 //Struct de conexión tiene el id del usuario y la conexión
 type Conexion struct {
-	conexiones *Conexiones //Esto es el vector con todos los sockets que hay online
-	conexion   net.Conn    //la propia conexión
-	usuario    *Usuario    //el usuario que habla por el socket se rellena al hacer el login()
+	conexion net.Conn //la propia conexión
+	usuario  *Usuario //el usuario que habla por el socket se rellena al hacer el login()
 }
 
 //Struct de los mensajes que se envian por el socket

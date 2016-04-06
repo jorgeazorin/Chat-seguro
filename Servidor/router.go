@@ -2,6 +2,7 @@ package main
 
 import (
 	//"log"
+	"fmt"
 	"strconv"
 )
 
@@ -25,19 +26,16 @@ func (conexion *Conexion) ProcesarMensajeSocket(mensaje MensajeSocket) {
 			return
 		}
 
+		//Añadimos la conexion al map de conexiones bloqueando la memoria compartida
+		conexiones[conexion.usuario.id] = conexion
+
 		//Enviamos un mensaje a las demás conexiones mostrando que está diponible el usuario
 		//Preparamos el mensaje que vamos a enviar
-		mesj := MensajeSocket{From: conexion.usuario.nombre, MensajeSocket: "Usuario online"}
+		mesj := MensajeSocket{From: conexion.usuario.nombre, MensajeSocket: "Logeado correctamente"}
 
-		//recorremos el vector de conexiones
-		for i := 0; i < len(conexion.conexiones.conexiones); i++ {
-			//si la conexión es distinta de nuestro socket guardamos los datos del usuario
-			if conexion.conexiones.conexiones[i].conexion != conexion.conexion {
-				//enviamos un mensaje al resto de usuarios conectados
-				conexion.conexiones.conexiones[i].EnviarMensajeSocketSocket(mesj)
-			}
+		//Enviamos un mensaje
+		conexiones[conexion.usuario.id].EnviarMensajeSocketSocket(mesj)
 
-		}
 	}
 
 	if mensaje.Funcion == "enviar" {
@@ -47,21 +45,18 @@ func (conexion *Conexion) ProcesarMensajeSocket(mensaje MensajeSocket) {
 		m.idchat = 1
 		m.idemisor = conexion.usuario.id
 		m.idclave = 1
-		bd.guardarMensajeBD(m)
+		//bd.guardarMensajeBD(m)
 
 		//Obtenemos los usuarios que pertenecen en el chat
 		idChat, _ := strconv.Atoi(mensaje.Datos[0])
-		usuarios := bd.getUsuariosChatBD(idChat)
+		idusuarios := bd.getUsuariosChatBD(idChat)
 
-		//Enviamos el mensaje a todos los que tienen el socket abierto que esten el chat
-		for i := 0; i < len(conexion.conexiones.conexiones); i++ {
-			for j := 0; j < len(usuarios); j++ {
-				if conexion.conexiones.conexiones[i].usuario.id == usuarios[j] {
-					conexion.conexiones.conexiones[i].EnviarMensajeSocketSocket(mensaje)
-				}
-			}
-
+		//Enviamos el mensaje a todos los usuarios de ese chat con el socket abierto (incluido el emisor)
+		for i := 0; i < len(idusuarios); i++ {
+			fmt.Println("Mira que usuario:", idusuarios[i])
+			conexiones[idusuarios[i]].EnviarMensajeSocketSocket(mensaje)
 		}
+
 	}
 
 }

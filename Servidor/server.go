@@ -6,20 +6,14 @@ import (
 	"crypto/x509"
 	"io/ioutil"
 	"log"
-	"sync"
+	//"sync"
 )
 
-//Struct con las conexiones (esto hay que hacerlo con lo del mux porque, con la memoria compartida,
-// como hay muchos hilos se puede estropear si dos acceden al vector a la vez, si no se podria hacer
-//el vector solo en el main e ir pasandolo)
-type Conexiones struct {
-	conexiones []Conexion //Vector con todas las conexiones de sockets online
-	mux        sync.Mutex //El mux es para la memoria compartida
-}
+var conexiones map[int]*Conexion
 
 func main() {
-	//Vector de conexiones que estará en todo el programa con memoria compartida
-	conexiones := Conexiones{conexiones: make([]Conexion, 0)}
+	//Mapa de conexiones que estará en todo el programa
+	conexiones = make(map[int]*Conexion)
 
 	///////////////////////////////////
 	//              TLS           ////
@@ -48,7 +42,7 @@ func main() {
 	///////////////////////////////////
 	//    ESCUCHAR LAS PETICIONES  ////
 	//////////////////////////////////
-	//escuchar atodos
+	//escuchar a todos
 	service := "0.0.0.0:444"
 	listener, err := tls.Listen("tcp", service, &config)
 	if err != nil {
@@ -65,11 +59,8 @@ func main() {
 		defer conn.Close()
 		log.Printf("server: accepted from %s", conn.RemoteAddr())
 
-		conexion := Conexion{conexion: conn, conexiones: &conexiones, usuario: &Usuario{}} //Creamos una nueva conexión
-		//Añadimos la conxion al vector conexiones bloqueando la memoria compartida
-		conexiones.mux.Lock()
-		conexiones.conexiones = append(conexiones.conexiones, conexion)
-		conexion.conexiones.mux.Unlock()
+		conexion := Conexion{conexion: conn, usuario: &Usuario{}} //Creamos una nueva conexión
+
 		//Escuchamos la conxion paralelamente o como se diga en el archivo conexion.go
 		go conexion.escuchar()
 

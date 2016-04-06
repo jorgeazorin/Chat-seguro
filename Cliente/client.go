@@ -69,6 +69,10 @@ func main() {
 	//Escribe json en el socket
 	conn.Write(b)
 
+	//PRUEBAS
+
+	//FINPRUEBAS
+
 	///////////////////////////////////
 	//    Enviar  y recibir      /////
 	//////////////////////////////////
