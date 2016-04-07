@@ -23,8 +23,8 @@ func (usuario *Usuario) login(nombre string, password string) bool {
 
 	//Para las operaciones con la BD
 	var bd BD
-	bd.username = "sds"
-	bd.password = "sds"
+	bd.username = "root"
+	bd.password = ""
 	bd.adress = ""
 	bd.database = "sds"
 

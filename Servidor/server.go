@@ -4,16 +4,30 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"io/ioutil"
 	"log"
+	"net"
+
 	//"sync"
 )
 
-var conexiones map[int]*Conexion
+var conexiones map[int]net.Conn
+
+//Función que envia un mensaje a un cliente mediante un id y un string
+func EnviarMensajeSocketSocket(conexion net.Conn, s MensajeSocket) {
+
+	b, _ := json.Marshal(s)     //Codifica el mensaje en json
+	_, err := conexion.Write(b) //lo escribe en el socket
+	if err != nil {
+		log.Fatalf("client: write: %s", err)
+	}
+
+}
 
 func main() {
 	//Mapa de conexiones que estará en todo el programa
-	conexiones = make(map[int]*Conexion)
+	conexiones = make(map[int]net.Conn)
 
 	///////////////////////////////////
 	//              TLS           ////
@@ -59,10 +73,28 @@ func main() {
 		defer conn.Close()
 		log.Printf("server: accepted from %s", conn.RemoteAddr())
 
-		conexion := Conexion{conexion: conn, usuario: &Usuario{}} //Creamos una nueva conexión
-
 		//Escuchamos la conxion paralelamente o como se diga en el archivo conexion.go
-		go conexion.escuchar()
+		go func(conn net.Conn) {
+			defer conn.Close()
+			usuario := Usuario{}
+			var mensaje MensajeSocket //Struct donde se guarda el mensaje que se descodifia
+			//conexion.usuario = Usuario{}
+			for { // Bucle infinito que lee cosas que envia el usuario
+
+				buf := make([]byte, 256)
+				n, err := conn.Read(buf) //Lee el mensaje
+				if err != nil {
+					_, ok := conexiones[usuario.id]
+					if ok {
+						delete(conexiones, usuario.id)
+					}
+					conn.Close()
+					break
+				}
+				json.Unmarshal(buf[:n], &mensaje)              //Descodificar el mensaje recibido (estaba en json y se pasa a struct)
+				ProcesarMensajeSocket(mensaje, conn, &usuario) //Procesa el mensaje, esto lo hace en el archivo router.go
+			}
+		}(conn)
 
 	}
 }
