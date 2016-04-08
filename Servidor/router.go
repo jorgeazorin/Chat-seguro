@@ -48,6 +48,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	}
 
 	if mensaje.Funcion == "enviar" {
+
 		//Guardamos los mensajes en la BD
 		var m Mensaje
 		m.texto = mensaje.MensajeSocket
@@ -71,20 +72,29 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	}
 
 	if mensaje.Funcion == "obtenermensajeschat" {
+
 		//Comprobamos si ese usuario está en ese chat
 
 		//Obtenemos los mensajes de ese chat
 		idChat, _ := strconv.Atoi(mensaje.Datos[0])
-		fmt.Println("Esta pidiendo:", idChat)
 
 		mensajes := bd.getMensajesChatBD(idChat)
+
+		for i := 0; i < len(mensajes); i++ {
+			fmt.Println("::::", mensajes[i].id, mensajes[i].texto)
+		}
 
 		//Codificamos los mensajes en json
 		b, _ := json.Marshal(mensajes)
 
+		fmt.Println(b)
+
+		fmt.Println(string(b))
+
 		//Enviamos los mensajes al usuario que los pidió
 		mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: string(b)}
 		EnviarMensajeSocketSocket(conexion, mesj)
+
 	}
 
 }

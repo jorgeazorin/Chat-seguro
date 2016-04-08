@@ -12,13 +12,13 @@ import (
 
 //Para guardar un mensaje con sus datos
 type Mensaje struct {
-	id           int
-	texto        string
-	idemisor     int
-	nombreemisor string
-	leido        bool
-	idchat       int
-	idclave      int
+	id           int    `json:"Id"`
+	texto        string `json:"Texto"`
+	idemisor     int    `json:"Idemisor"`
+	nombreemisor string `json:"Nombreemisor"`
+	leido        bool   `json:"Leido"`
+	idchat       int    `json:"Idchat"`
+	idclave      int    `json:"Idclave"`
 }
 
 //Guarda un mensaje para todos los receptores posibles del chat

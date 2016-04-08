@@ -54,10 +54,7 @@ func main() {
 	//    Login      /////////////////
 	//////////////////////////////////
 	login(conn)
-
-	//PRUEBAS
-	//obtenerMensajesChat(conn, mensaje.From, 1)
-	//FINPRUEBAS
+	obtenerMensajesChat(conn, 1)
 
 	///////////////////////////////////
 	//    Enviar  y recibir      /////
@@ -67,7 +64,7 @@ func main() {
 	go handleServerRead(conn)
 
 	//Enviar mensajes
-	go handleClientWrite(conn, nombre_usuario_from) //	go handleClientWrite(conn, mensaje.From)
+	go handleClientWrite(conn) //	go handleClientWrite(conn, mensaje.From)
 
 	//Para que no se cierre la consola
 	for {
@@ -95,7 +92,7 @@ func handleServerRead(conn net.Conn) {
 }
 
 //SI escribe algo lo envia al servidor
-func handleClientWrite(conn net.Conn, from string) {
+func handleClientWrite(conn net.Conn) {
 	mensaje := Mensaje{}
 
 	//bucle infinito
@@ -108,7 +105,7 @@ func handleClientWrite(conn net.Conn, from string) {
 
 		//Rellenar datos
 		datos := []string{"1"}
-		mensaje.From = from
+		mensaje.From = nombre_usuario_from
 		mensaje.Password = "1"
 		mensaje.Funcion = "enviar"
 		mensaje.Mensaje = message[0 : len(message)-2]
@@ -155,15 +152,15 @@ func login(conn net.Conn) {
 }
 
 //Cliente pide mensajes de un chat
-func obtenerMensajesChat(conn net.Conn, from string, idchat int) {
+func obtenerMensajesChat(conn net.Conn, idchat int) {
 
 	mensaje := Mensaje{}
 
-	defer conn.Close()
+	//defer conn.Close()
 
 	//Rellenar datos
 	datos := []string{strconv.Itoa(idchat)}
-	mensaje.From = from
+	mensaje.From = nombre_usuario_from
 	mensaje.Password = "1"
 	mensaje.Funcion = "obtenermensajeschat"
 	mensaje.Mensaje = ""
@@ -172,7 +169,7 @@ func obtenerMensajesChat(conn net.Conn, from string, idchat int) {
 	//Convertir a json
 	b, _ := json.Marshal(mensaje)
 
-	log.Printf("pedimos mensajes ->", string(b))
+	log.Printf(string(b))
 
 	//Escribe json en el socket
 	conn.Write(b)
