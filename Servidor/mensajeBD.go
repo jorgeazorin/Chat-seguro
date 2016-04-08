@@ -22,7 +22,7 @@ type Mensaje struct {
 }
 
 //Guarda un mensaje para todos los receptores posibles del chat
-func (bd *BD) guardarMensajeBD(mensaje Mensaje) bool {
+func (bd *BD) guardarMensaje(mensaje Mensaje) bool {
 
 	var idreceptoraux = -1
 	idreceptores := make([]int, 0, 1)

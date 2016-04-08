@@ -79,8 +79,6 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		//Comprobamos si ese usuario está en ese chat
 		permitido := bd.usuarioEnChat(usuario.id, idChat)
 
-		fmt.Println("Lo tiene:", permitido)
-
 		if permitido == false {
 			//Enviamos mensaje error
 			mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: "No perteneces al chat de estos mensajes."}
@@ -93,10 +91,17 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 
 		for i := 0; i < len(mensajes); i++ {
 			fmt.Println("::::", mensajes[i].id, mensajes[i].texto)
+
 		}
 
+		//Probamos enviar solo 1... pero no vaaa
+
+		mensaje := Mensaje{}
+		mensaje.id = mensajes[0].id
+		mensaje.texto = mensajes[0].texto
+
 		//Codificamos los mensajes en json
-		b, _ := json.Marshal(mensajes)
+		b, _ := json.Marshal(mensaje)
 
 		fmt.Println(b)
 

@@ -54,7 +54,7 @@ func main() {
 	//    Login      /////////////////
 	//////////////////////////////////
 	login(conn)
-	obtenerMensajesChat(conn, 2)
+	obtenerMensajesChat(conn, 1)
 
 	///////////////////////////////////
 	//    Enviar  y recibir      /////
