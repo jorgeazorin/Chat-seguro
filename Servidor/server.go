@@ -8,17 +8,20 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-
 	//"sync"
 )
 
+//Mapa con las conexiones de los usuarios [ key=nombreusuario: value=conexion del usuario ]
 var conexiones map[int]net.Conn
 
 //Función que envia un mensaje a un cliente mediante un id y un string
 func EnviarMensajeSocketSocket(conexion net.Conn, s MensajeSocket) {
 
-	b, _ := json.Marshal(s)     //Codifica el mensaje en json
-	_, err := conexion.Write(b) //lo escribe en el socket
+	//Codifica el mensaje en json
+	b, _ := json.Marshal(s)
+
+	//Lo escribe en el socket
+	_, err := conexion.Write(b)
 	if err != nil {
 		log.Fatalf("client: write: %s", err)
 	}
@@ -56,33 +59,39 @@ func main() {
 	///////////////////////////////////
 	//    ESCUCHAR LAS PETICIONES  ////
 	//////////////////////////////////
-	//escuchar a todos
+
+	//Escuchar a todos
 	service := "0.0.0.0:444"
 	listener, err := tls.Listen("tcp", service, &config)
 	if err != nil {
-		log.Fatalf("server: listen: %s", err)
+		log.Fatalf("Servidor: escucha: %s", err)
 	}
 
-	log.Print("server: listening")
+	log.Print("Servidor: escuchando")
+
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			log.Printf("server: accept: %s", err)
+			log.Printf("Servidor: acepta: %s", err)
 			break
 		}
 		defer conn.Close()
-		log.Printf("server: accepted from %s", conn.RemoteAddr())
+		log.Printf("Servidor: aceptado de %s", conn.RemoteAddr())
 
-		//Escuchamos la conxion paralelamente o como se diga en el archivo conexion.go
+		//Escuchamos la conxion de forma concurrente en el archivo conexion.go
 		go func(conn net.Conn) {
+
 			defer conn.Close()
 			usuario := Usuario{}
-			var mensaje MensajeSocket //Struct donde se guarda el mensaje que se descodifia
-			//conexion.usuario = Usuario{}
-			for { // Bucle infinito que lee cosas que envia el usuario
+			var mensaje MensajeSocket //Struct se guarda el mensaje a descodificar
 
+			// Bucle infinito que lee cosas que envia el usuario
+			for {
 				buf := make([]byte, 256)
-				n, err := conn.Read(buf) //Lee el mensaje
+
+				//Lee el mensaje
+				n, err := conn.Read(buf)
+
 				if err != nil {
 					_, ok := conexiones[usuario.id]
 					if ok {
@@ -91,10 +100,13 @@ func main() {
 					conn.Close()
 					break
 				}
-				json.Unmarshal(buf[:n], &mensaje)              //Descodificar el mensaje recibido (estaba en json y se pasa a struct)
-				ProcesarMensajeSocket(mensaje, conn, &usuario) //Procesa el mensaje, esto lo hace en el archivo router.go
+
+				//Descodificar el mensaje recibido (estaba en json y se pasa a struct)
+				json.Unmarshal(buf[:n], &mensaje)
+
+				//Procesa el mensaje, esto lo hace en el archivo router.go
+				ProcesarMensajeSocket(mensaje, conn, &usuario)
 			}
 		}(conn)
-
 	}
 }

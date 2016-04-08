@@ -12,6 +12,7 @@ import (
 	"os"
 )
 
+//Struct de los mensajes que se envian por el socket
 type Mensaje struct {
 	From     string   `json:"From"`
 	To       int      `json:"To"`
@@ -22,6 +23,7 @@ type Mensaje struct {
 }
 
 func main() {
+
 	//var window ui.Window
 	//LEER CERTIFICADOS DE LOS ARCHIVOS (ESTOS SON LOS CERTIFICADOS DEL CLIENTE)
 	cert2_b, _ := ioutil.ReadFile("cert2.pem")
@@ -76,6 +78,7 @@ func main() {
 	///////////////////////////////////
 	//    Enviar  y recibir      /////
 	//////////////////////////////////
+
 	//Por si envia algo el servidor
 	go handleServerRead(conn)
 
@@ -90,6 +93,7 @@ func main() {
 //Si envia algo el servidor a este cliente lo muestra en pantalla
 func handleServerRead(conn net.Conn) {
 	var mensaje Mensaje
+
 	//bucle infinito
 	for {
 		defer conn.Close()
@@ -100,6 +104,7 @@ func handleServerRead(conn net.Conn) {
 			conn.Close()
 		}
 		json.Unmarshal(reply[:n], &mensaje)
+
 		fmt.Println("" + mensaje.From + " -> " + mensaje.Mensaje)
 
 	}
@@ -112,6 +117,7 @@ func handleClientWrite(conn net.Conn, from string) {
 	//bucle infinito
 	for {
 		defer conn.Close()
+
 		//Cuando escribe algo y le da a enter
 		reader := bufio.NewReader(os.Stdin)
 		message, _ := reader.ReadString('\n')
@@ -124,6 +130,7 @@ func handleClientWrite(conn net.Conn, from string) {
 		mensaje.Mensaje = message[0 : len(message)-2]
 		mensaje.To = 2
 		mensaje.Datos = datos
+
 		//Convertir a json
 		b, _ := json.Marshal(mensaje)
 
