@@ -241,3 +241,43 @@ func (bd *BD) getChatsUsuarioBD(idusuario int) []Chat {
 
 	return chats
 }
+
+//Ver si un usuario está en un chat
+func (bd *BD) usuarioEnChat(idusuario int, idchat int) bool {
+
+	var count int
+
+	//Conexion BD
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
+
+	if err != nil {
+		panic(err.Error())
+		return false
+	}
+	defer db.Close()
+
+	//Vemos si el usuario esta en el chat
+	rows, err := db.Query("SELECT count(idusuario) FROM usuarioschat WHERE idusuario = " + strconv.Itoa(idusuario) + " and idchat = " + strconv.Itoa(idchat))
+	if err != nil {
+		panic(err.Error())
+		defer db.Close()
+		return false
+	}
+
+	//Guardamos id del usuario
+	for rows.Next() {
+		err = rows.Scan(&count)
+
+		if err != nil {
+			panic(err.Error())
+			defer db.Close()
+			return false
+		}
+	}
+
+	if count != 0 {
+		return true
+	}
+
+	return false
+}

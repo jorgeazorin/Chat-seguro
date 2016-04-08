@@ -73,11 +73,22 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 
 	if mensaje.Funcion == "obtenermensajeschat" {
 
-		//Comprobamos si ese usuario está en ese chat
-
 		//Obtenemos los mensajes de ese chat
 		idChat, _ := strconv.Atoi(mensaje.Datos[0])
 
+		//Comprobamos si ese usuario está en ese chat
+		permitido := bd.usuarioEnChat(usuario.id, idChat)
+
+		fmt.Println("Lo tiene:", permitido)
+
+		if permitido == false {
+			//Enviamos mensaje error
+			mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: "No perteneces al chat de estos mensajes."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+			return
+		}
+
+		//Obtenemos los mensajes
 		mensajes := bd.getMensajesChatBD(idChat)
 
 		for i := 0; i < len(mensajes); i++ {
