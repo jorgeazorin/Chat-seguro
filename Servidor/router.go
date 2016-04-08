@@ -51,10 +51,10 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 
 		//Guardamos los mensajes en la BD
 		var m Mensaje
-		m.texto = mensaje.MensajeSocket
-		m.idchat = 1
-		m.idemisor = usuario.id
-		m.idclave = 1
+		m.Texto = mensaje.MensajeSocket
+		m.Idchat = 1
+		m.Idemisor = usuario.id
+		m.Idclave = 1
 		//bd.guardarMensajeBD(m)
 
 		//Obtenemos los usuarios que pertenecen en el chat
@@ -90,23 +90,21 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		mensajes := bd.getMensajesChatBD(idChat)
 
 		for i := 0; i < len(mensajes); i++ {
-			fmt.Println("::::", mensajes[i].id, mensajes[i].texto)
+			fmt.Println("::::", mensajes[i].Id, mensajes[i].Texto)
 
 		}
 
 		//Probamos enviar solo 1... pero no vaaa
 
-		mensaje := Mensaje{}
-		mensaje.id = mensajes[0].id
-		mensaje.texto = mensajes[0].texto
+		men := Mensaje{}
+		men.Id = mensajes[0].Id
+		men.Texto = mensajes[0].Texto
 
 		//Codificamos los mensajes en json
-		b, _ := json.Marshal(mensaje)
+		b, _ := json.Marshal(men)
 
-		fmt.Println(b)
-
+		//fmt.Println(b)
 		fmt.Println(string(b))
-
 		//Enviamos los mensajes al usuario que los pidió
 		mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: string(b)}
 		EnviarMensajeSocketSocket(conexion, mesj)

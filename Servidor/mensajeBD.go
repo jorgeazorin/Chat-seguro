@@ -12,13 +12,13 @@ import (
 
 //Para guardar un mensaje con sus datos
 type Mensaje struct {
-	id           int    `json:"Id"`
-	texto        string `json:"Texto"`
-	idemisor     int    `json:"Idemisor"`
-	nombreemisor string `json:"Nombreemisor"`
-	leido        bool   `json:"Leido"`
-	idchat       int    `json:"Idchat"`
-	idclave      int    `json:"Idclave"`
+	Id           int    `json:"id"`
+	Texto        string `json:"texto"`
+	Idemisor     int    `json:"idemisor"`
+	Nombreemisor string `json:"nombreemisor"`
+	Leido        bool   `json:"leido"`
+	Idchat       int    `json:"idchat"`
+	Idclave      int    `json:"idclave"`
 }
 
 //Guarda un mensaje para todos los receptores posibles del chat
@@ -37,7 +37,7 @@ func (bd *BD) guardarMensaje(mensaje Mensaje) bool {
 	defer db.Close()
 
 	//Obtenemos los id de los usuarios que recibiráne el mensaje en este chat
-	rows, err := db.Query("SELECT idusuario FROM usuarioschat WHERE idchat = " + strconv.Itoa(mensaje.idchat) + " and idusuario !=" + strconv.Itoa(mensaje.idemisor))
+	rows, err := db.Query("SELECT idusuario FROM usuarioschat WHERE idchat = " + strconv.Itoa(mensaje.Idchat) + " and idusuario !=" + strconv.Itoa(mensaje.Idemisor))
 	if err != nil {
 		panic(err.Error())
 		defer db.Close()
@@ -64,7 +64,7 @@ func (bd *BD) guardarMensaje(mensaje Mensaje) bool {
 	}
 
 	//Insertamos el mensaje
-	res, err := stmtIns.Exec("DEFAULT", mensaje.texto, mensaje.idemisor, mensaje.idchat, mensaje.idclave)
+	res, err := stmtIns.Exec("DEFAULT", mensaje.Texto, mensaje.Idemisor, mensaje.Idchat, mensaje.Idclave)
 	if err != nil {
 		panic(err.Error())
 		return false
@@ -192,7 +192,7 @@ func (bd *BD) getMensajesChatBD(idchat int) []Mensaje {
 
 	for rows.Next() {
 		//Obtenemos los datos del mensaje
-		err = rows.Scan(&mensaje.id, &mensaje.texto, &mensaje.idemisor)
+		err = rows.Scan(&mensaje.Id, &mensaje.Texto, &mensaje.Idemisor)
 
 		if err != nil {
 			panic(err.Error())
@@ -200,20 +200,20 @@ func (bd *BD) getMensajesChatBD(idchat int) []Mensaje {
 			return nil
 		}
 
-		mensaje.nombreemisor = bd.getNombreUsuario(mensaje.idemisor)
+		mensaje.Nombreemisor = bd.getNombreUsuario(mensaje.Idemisor)
 
 		//Para ver si un mensaje aparece como leido o no
-		rows2, err2 := db.Query("SELECT leido from receptoresmensaje where idmensaje = " + strconv.Itoa(mensaje.id))
+		rows2, err2 := db.Query("SELECT leido from receptoresmensaje where idmensaje = " + strconv.Itoa(mensaje.Id))
 		if err2 != nil {
 			panic(err2.Error())
 			defer db.Close()
 			return nil
 		}
 		for rows2.Next() {
-			err2 = rows2.Scan(&mensaje.leido)
+			err2 = rows2.Scan(&mensaje.Leido)
 			//Si no aparece, el mensaje es suyo propio, siempre lo habrá leido
 			if err2 != nil {
-				mensaje.leido = true
+				mensaje.Leido = true
 			}
 		}
 

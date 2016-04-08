@@ -19,7 +19,7 @@ func EnviarMensajeSocketSocket(conexion net.Conn, s MensajeSocket) {
 
 	//Codifica el mensaje en json
 	b, _ := json.Marshal(s)
-
+	//fmt.Println(string(b))
 	//Lo escribe en el socket
 	_, err := conexion.Write(b)
 	if err != nil {
