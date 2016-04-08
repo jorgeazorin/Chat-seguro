@@ -174,7 +174,7 @@ func (bd *BD) removeUsuariosChatBD(idchat int, usuariosexpulsados []int) bool {
 	return true
 }
 
-func (bd *BD) obtenerChatsUsuarioBD(idusuario int) []Chat {
+func (bd *BD) getChatsUsuarioBD(idusuario int) []Chat {
 
 	chats := make([]Chat, 0, 1)       //Todos los chats del usuario
 	mensajes := make([]Mensaje, 0, 1) //Los mensajes de un chat
@@ -230,7 +230,7 @@ func (bd *BD) obtenerChatsUsuarioBD(idusuario int) []Chat {
 		}
 
 		//De cada chat buscamos los datos de los mensajes de dicho chat
-		mensajes = bd.obtenerMensajesChatBD(chats[i].id)
+		mensajes = bd.getMensajesChatBD(chats[i].id)
 
 		//Añadimos el array de mensajes a este chat
 		chats[i].mensajes = mensajes

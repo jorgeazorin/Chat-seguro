@@ -10,6 +10,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strconv"
 )
 
 //Struct de los mensajes que se envian por el socket
@@ -21,6 +22,8 @@ type Mensaje struct {
 	Datos    []string `json:"Datos"`
 	Mensaje  string   `json:"MensajeSocket"`
 }
+
+var nombre_usuario_from string
 
 func main() {
 
@@ -50,29 +53,10 @@ func main() {
 	///////////////////////////////////
 	//    Login      /////////////////
 	//////////////////////////////////
-	reader := bufio.NewReader(os.Stdin)
-
-	fmt.Print("Usuario:")
-	nombreusuario, _ := reader.ReadString('\n')
-	nombreusuario = nombreusuario[0 : len(nombreusuario)-2]
-
-	fmt.Print("Password:")
-	password, _ := reader.ReadString('\n')
-	password = password[0 : len(password)-2]
-
-	mensaje := Mensaje{}
-	mensaje.From = nombreusuario
-	mensaje.Password = password
-	mensaje.Funcion = "login"
-	mensaje.To = -1
-	//Convertir a json
-	b, _ := json.Marshal(mensaje)
-	log.Printf(string(b))
-	//Escribe json en el socket
-	conn.Write(b)
+	login(conn)
 
 	//PRUEBAS
-
+	//obtenerMensajesChat(conn, mensaje.From, 1)
 	//FINPRUEBAS
 
 	///////////////////////////////////
@@ -83,7 +67,7 @@ func main() {
 	go handleServerRead(conn)
 
 	//Enviar mensajes
-	go handleClientWrite(conn, mensaje.From)
+	go handleClientWrite(conn, nombre_usuario_from) //	go handleClientWrite(conn, mensaje.From)
 
 	//Para que no se cierre la consola
 	for {
@@ -137,5 +121,60 @@ func handleClientWrite(conn net.Conn, from string) {
 		//Escribe json en el socket
 		conn.Write(b)
 	}
+
+}
+
+//Cliente realiza login
+func login(conn net.Conn) {
+	reader := bufio.NewReader(os.Stdin)
+
+	//Pedimos los datos
+	fmt.Print("Usuario:")
+	nombreusuario, _ := reader.ReadString('\n')
+	nombreusuario = nombreusuario[0 : len(nombreusuario)-2]
+
+	fmt.Print("Password:")
+	password, _ := reader.ReadString('\n')
+	password = password[0 : len(password)-2]
+
+	mensaje := Mensaje{}
+	mensaje.From = nombreusuario
+	mensaje.Password = password
+	mensaje.Funcion = "login"
+	mensaje.To = -1
+
+	//Rellenamos variable nombre usuario global
+	nombre_usuario_from = nombreusuario
+
+	//Convertir a json
+	b, _ := json.Marshal(mensaje)
+	log.Printf(string(b))
+
+	//Escribe peticion json en el socket
+	conn.Write(b)
+}
+
+//Cliente pide mensajes de un chat
+func obtenerMensajesChat(conn net.Conn, from string, idchat int) {
+
+	mensaje := Mensaje{}
+
+	defer conn.Close()
+
+	//Rellenar datos
+	datos := []string{strconv.Itoa(idchat)}
+	mensaje.From = from
+	mensaje.Password = "1"
+	mensaje.Funcion = "obtenermensajeschat"
+	mensaje.Mensaje = ""
+	mensaje.Datos = datos
+
+	//Convertir a json
+	b, _ := json.Marshal(mensaje)
+
+	log.Printf("pedimos mensajes ->", string(b))
+
+	//Escribe json en el socket
+	conn.Write(b)
 
 }

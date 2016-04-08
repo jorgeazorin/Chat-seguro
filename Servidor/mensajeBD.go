@@ -168,7 +168,7 @@ func (bd *BD) GuardarClaveUsuarioMensajesBD(idclavesmensajes int, claveusuario s
 }
 
 //Obtenemos todos los mensajes de un chat
-func (bd *BD) obtenerMensajesChatBD(idchat int) []Mensaje {
+func (bd *BD) getMensajesChatBD(idchat int) []Mensaje {
 
 	mensajes := make([]Mensaje, 0, 1) //Los mensajes de un chat
 	var mensaje Mensaje               //Para ir introduciendo mensajes al slice

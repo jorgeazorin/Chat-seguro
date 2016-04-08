@@ -120,7 +120,7 @@ func main() {
 
 	//Obtener mensajes de un usuario
 	chats := make([]Chat, 0, 1)
-	chats = bd.obtenerChatsUsuarioBD(15)
+	chats = bd.getChatsUsuarioBD(15)
 	fmt.Println("Mira mensajes usuario 15 Maria")
 
 	for i := 0; i < len(chats); i++ {

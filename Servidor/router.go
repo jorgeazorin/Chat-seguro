@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"net"
 	"strconv"
 )
@@ -29,20 +31,18 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		//Rellenamos el usuario de la conexión con el login
 		test := usuario.login(mensaje.From, mensaje.Password)
 
+		//Si login incorrecto se lo decimos al cliente
 		if test == false {
 			mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: "Login incorrecto"}
 			EnviarMensajeSocketSocket(conexion, mesj)
 			return
 		}
 
-		//Añadimos la conexion al map de conexiones bloqueando la memoria compartida
+		//Si es correcto, aAñadimos la conexion al map de conexiones
 		conexiones[usuario.id] = conexion
 
-		//Enviamos un mensaje a las demás conexiones mostrando que está diponible el usuario
-		//Preparamos el mensaje que vamos a enviar
+		//Enviamos un mensaje de todo OK al usuario logeado
 		mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: "Logeado correctamente"}
-
-		//Enviamos un mensaje
 		EnviarMensajeSocketSocket(conexion, mesj)
 
 	}
@@ -68,6 +68,23 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 			}
 		}
 
+	}
+
+	if mensaje.Funcion == "obtenermensajeschat" {
+		//Comprobamos si ese usuario está en ese chat
+
+		//Obtenemos los mensajes de ese chat
+		idChat, _ := strconv.Atoi(mensaje.Datos[0])
+		fmt.Println("Esta pidiendo:", idChat)
+
+		mensajes := bd.getMensajesChatBD(idChat)
+
+		//Codificamos los mensajes en json
+		b, _ := json.Marshal(mensajes)
+
+		//Enviamos los mensajes al usuario que los pidió
+		mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: string(b)}
+		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
 }
