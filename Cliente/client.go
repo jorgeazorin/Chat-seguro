@@ -10,7 +10,7 @@ import (
 	"log"
 	"net"
 	"os"
-	"strconv"
+	//"strconv"
 )
 
 //Struct de los mensajes que se envian por el socket
@@ -20,6 +20,7 @@ type Mensaje struct {
 	Password string   `json:"Password"`
 	Funcion  string   `json:"Funcion"`
 	Datos    []string `json:"Datos"`
+	Chat     int      `json:"Chat"`
 	Mensaje  string   `json:"MensajeSocket"`
 }
 
@@ -65,7 +66,7 @@ func main() {
 	//////////////////////////////////
 
 	//Enviar mensajes
-	//go handleClientWrite(conn) //	go handleClientWrite(conn, mensaje.From)
+	go handleClientWrite(conn) //	go handleClientWrite(conn, mensaje.From)
 
 	//Para que no se cierre la consola
 	for {
@@ -109,13 +110,14 @@ func handleClientWrite(conn net.Conn) {
 		message, _ := reader.ReadString('\n')
 
 		//Rellenar datos
-		datos := []string{"1"}
 		mensaje.From = nombre_usuario_from
 		mensaje.Password = "1"
 		mensaje.Funcion = "enviar"
 		mensaje.Mensaje = message[0 : len(message)-2]
 		mensaje.To = 2
+		datos := []string{""}
 		mensaje.Datos = datos
+		mensaje.Chat = 1
 
 		//Convertir a json
 		b, _ := json.Marshal(mensaje)
@@ -161,15 +163,12 @@ func obtenerMensajesChat(conn net.Conn, idchat int) {
 
 	mensaje := Mensaje{}
 
-	//defer conn.Close()
-
 	//Rellenar datos
-	datos := []string{strconv.Itoa(idchat)}
+	mensaje.Chat = idchat
 	mensaje.From = nombre_usuario_from
 	mensaje.Password = "1"
 	mensaje.Funcion = "obtenermensajeschat"
 	mensaje.Mensaje = ""
-	mensaje.Datos = datos
 
 	//Convertir a json
 	b, _ := json.Marshal(mensaje)

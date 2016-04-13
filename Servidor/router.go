@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"strconv"
+	//"strconv"
 )
 
 //Struct de los mensajes que se envian por el socket
@@ -14,6 +14,7 @@ type MensajeSocket struct {
 	Password      string   `json:"Password"`
 	Funcion       string   `json:"Funcion"`
 	Datos         []string `json:"Datos"`
+	Chat          int      `json:"Chat"`
 	MensajeSocket string   `json:"MensajeSocket"`
 }
 
@@ -58,7 +59,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		//bd.guardarMensajeBD(m)
 
 		//Obtenemos los usuarios que pertenecen en el chat
-		idChat, _ := strconv.Atoi(mensaje.Datos[0])
+		idChat := mensaje.Chat
 		idusuarios := bd.getUsuariosChatBD(idChat)
 
 		//Enviamos el mensaje a todos los usuarios de ese chat (incluido el emisor)
@@ -74,7 +75,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	if mensaje.Funcion == "obtenermensajeschat" {
 
 		//Obtenemos los mensajes de ese chat
-		idChat, _ := strconv.Atoi(mensaje.Datos[0])
+		idChat := mensaje.Chat
 
 		//Comprobamos si ese usuario está en ese chat
 		permitido := bd.usuarioEnChat(usuario.id, idChat)
@@ -108,10 +109,11 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
+	//Añadimos usuarios al chat
 	if mensaje.Funcion == "anyadirusuariochat" {
 
 		//Obtenemos los mensajes de ese chat
-		idChat, _ := strconv.Atoi(mensaje.Datos[0])
+		idChat := mensaje.Chat
 
 		//Comprobamos si ese usuario está en ese chat
 		permitido := bd.usuarioEnChat(usuario.id, idChat)
@@ -122,6 +124,8 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 			EnviarMensajeSocketSocket(conexion, mesj)
 			return
 		}
+
+		//idusuarios := mensaje.
 
 	}
 
