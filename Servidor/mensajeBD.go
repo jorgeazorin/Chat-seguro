@@ -182,7 +182,7 @@ func (bd *BD) getMensajesChatBD(idchat int) []Mensaje {
 	}
 	defer db.Close()
 
-	//De cada chat buscamos los datos de los mensajes de dicho chat
+	//De el chat buscamos los datos de los mensajes de dicho chat
 	rows, err := db.Query("SELECT id, texto, emisor FROM mensaje WHERE chat = " + strconv.Itoa(idchat))
 	if err != nil {
 		panic(err.Error())

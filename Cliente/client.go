@@ -50,6 +50,9 @@ func main() {
 	defer conn.Close()
 	log.Println("client: connected to: ", conn.RemoteAddr())
 
+	//Por si envia algo el servidor
+	go handleServerRead(conn)
+
 	///////////////////////////////////
 	//    Login      /////////////////
 	//////////////////////////////////
@@ -60,11 +63,8 @@ func main() {
 	//    Enviar  y recibir      /////
 	//////////////////////////////////
 
-	//Por si envia algo el servidor
-	go handleServerRead(conn)
-
 	//Enviar mensajes
-	go handleClientWrite(conn) //	go handleClientWrite(conn, mensaje.From)
+	//go handleClientWrite(conn) //	go handleClientWrite(conn, mensaje.From)
 
 	//Para que no se cierre la consola
 	for {

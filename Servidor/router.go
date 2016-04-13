@@ -88,26 +88,41 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 
 		//Obtenemos los mensajes
 		mensajes := bd.getMensajesChatBD(idChat)
+		datos := make([]string, 0, 1)
 
 		for i := 0; i < len(mensajes); i++ {
 			fmt.Println("::::", mensajes[i].Id, mensajes[i].Texto)
 
+			men := Mensaje{}
+			men.Id = mensajes[i].Id
+			men.Texto = mensajes[i].Texto
+
+			//Codificamos los mensajes en json
+			b, _ := json.Marshal(men)
+			fmt.Println("")
+
+			datos = append(datos, string(b))
 		}
 
-		//Probamos enviar solo 1... pero no vaaa
-
-		men := Mensaje{}
-		men.Id = mensajes[0].Id
-		men.Texto = mensajes[0].Texto
-
-		//Codificamos los mensajes en json
-		b, _ := json.Marshal(men)
-
-		//fmt.Println(b)
-		fmt.Println(string(b))
 		//Enviamos los mensajes al usuario que los pidió
-		mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: string(b)}
+		mesj := MensajeSocket{From: usuario.nombre, Datos: datos, MensajeSocket: "Mensajes recibidos:"}
 		EnviarMensajeSocketSocket(conexion, mesj)
+	}
+
+	if mensaje.Funcion == "anyadirusuariochat" {
+
+		//Obtenemos los mensajes de ese chat
+		idChat, _ := strconv.Atoi(mensaje.Datos[0])
+
+		//Comprobamos si ese usuario está en ese chat
+		permitido := bd.usuarioEnChat(usuario.id, idChat)
+
+		if permitido == false {
+			//Enviamos mensaje error
+			mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: "No tienes permiso para realizar esta acción, noperteneces al chat de estos mensajes."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+			return
+		}
 
 	}
 
