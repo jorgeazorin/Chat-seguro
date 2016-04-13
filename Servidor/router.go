@@ -181,4 +181,23 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
+	//Eliminamos usuarios del chat
+	if mensaje.Funcion == "getclavepubusuario" {
+
+		//Obtenemos id del usuario
+		idusuario, _ := strconv.Atoi(mensaje.Datos[0])
+
+		clavepub := bd.getClavePubUsuario(idusuario)
+
+		if clavepub == "" {
+			mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: "Error al obtener clave del usuario."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+			return
+		}
+
+		//Enviamos mensaje contestación
+		mesj := MensajeSocket{From: usuario.nombre, Datos: []string{clavepub}, MensajeSocket: "Clave obtenida correctamente."}
+		EnviarMensajeSocketSocket(conexion, mesj)
+	}
+
 }

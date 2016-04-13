@@ -86,7 +86,7 @@ func (bd *BD) comprobarUsuarioBD(nombre string, claveusuario string) (Usuario, b
 	return usuario, true
 }
 
-//Obtenemos nombre de usuario según id usuario
+//Obtenemos usuario según id usuario
 func (bd *BD) getUsuarioBD(user string) Usuario {
 	usuario := Usuario{}
 	//Conexión BD
@@ -176,7 +176,7 @@ func (bd *BD) getNombreUsuario(id int) string {
 	return nombreusuario
 }
 
-//Obtenemos nombre de usuario según id usuario
+//Obtenemos clave pub de usuario según id usuario
 func (bd *BD) getClavePubUsuario(id int) string {
 
 	var clavepub string

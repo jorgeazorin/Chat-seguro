@@ -10,7 +10,7 @@ import (
 	"log"
 	"net"
 	"os"
-	//"strconv"
+	"strconv"
 )
 
 //Struct de los mensajes que se envian por el socket
@@ -59,11 +59,11 @@ func main() {
 	//////////////////////////////////
 	login(conn)
 	obtenerMensajesChat(conn, 1)
-
 	//Usuario 1 en el chat 7 al usuario 15
-	agregarUsuariosChat(conn, 7, []string{"15"})
+	//agregarUsuariosChat(conn, 7, []string{"15"})
 	//Usuario 1 en el chat 7 al usuario 15
-	eliminarUsuariosChat(conn, 7, []string{"15"})
+	//eliminarUsuariosChat(conn, 7, []string{"15"})
+	getClavePubUsuario(conn, 1)
 
 	///////////////////////////////////
 	//    Enviar  y recibir      /////
@@ -218,6 +218,28 @@ func eliminarUsuariosChat(conn net.Conn, idchat int, usuarios []string) {
 	mensaje.Funcion = "eliminarusuarioschat"
 	mensaje.Mensaje = ""
 	mensaje.Datos = usuarios
+
+	//Convertir a json
+	b, _ := json.Marshal(mensaje)
+
+	log.Printf(string(b))
+
+	//Escribe json en el socket
+	conn.Write(b)
+}
+
+//Cliente pide clave pública de un usuario
+func getClavePubUsuario(conn net.Conn, idusuario int) {
+
+	mensaje := Mensaje{}
+
+	//Rellenar datos
+	mensaje.From = nombre_usuario_from
+	mensaje.Password = "1"
+	mensaje.Funcion = "getclavepubusuario"
+	mensaje.Mensaje = ""
+	cadena_idusuario := strconv.Itoa(idusuario)
+	mensaje.Datos = []string{cadena_idusuario}
 
 	//Convertir a json
 	b, _ := json.Marshal(mensaje)
