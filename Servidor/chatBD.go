@@ -6,6 +6,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"strconv"
 )
@@ -24,7 +25,7 @@ func (bd *BD) crearChatBD(idusuarios []int, nombrechat string) bool {
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 	defer db.Close()
@@ -32,21 +33,21 @@ func (bd *BD) crearChatBD(idusuarios []int, nombrechat string) bool {
 	//Preparamos crear el chat
 	stmtIns, err := db.Prepare("INSERT INTO chat VALUES(?, ?)")
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 
 	//Insertamos crear el chat
 	res, err := stmtIns.Exec("DEFAULT", nombrechat)
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 
 	//Obtenemos id del chat creado
 	idchat, err := res.LastInsertId()
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 	println("Id del chat creado:", idchat)
@@ -58,14 +59,14 @@ func (bd *BD) crearChatBD(idusuarios []int, nombrechat string) bool {
 		//Preparamos insertar usuario al chat
 		stmtIns, err := db.Prepare("INSERT INTO usuarioschat VALUES(?, ?)")
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(err.Error())
 			return false
 		}
 
 		//Insertamos usuario al chat
 		_, err = stmtIns.Exec(idusuarios[i], idchat)
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(err.Error())
 			return false
 		}
 	}
@@ -82,7 +83,7 @@ func (bd *BD) modificarChatBD(chat Chat) bool {
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 	defer db.Close()
@@ -90,14 +91,14 @@ func (bd *BD) modificarChatBD(chat Chat) bool {
 	//Preparamos crear el chat
 	stmtIns, err := db.Prepare("UPDATE chat set nombre=? where id=?")
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 
 	//Insertamos crear el chat
 	_, err = stmtIns.Exec(chat.nombre, chat.id)
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 
@@ -113,7 +114,7 @@ func (bd *BD) addUsuariosChatBD(idchat int, nuevosusuarios []int) bool {
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 	defer db.Close()
@@ -123,14 +124,14 @@ func (bd *BD) addUsuariosChatBD(idchat int, nuevosusuarios []int) bool {
 		//Preparamos insertar usuario al chat
 		stmtIns, err := db.Prepare("INSERT INTO usuarioschat VALUES(?, ?)")
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(err.Error())
 			return false
 		}
 
 		//Insertamos usuario al chat
 		_, err = stmtIns.Exec(nuevosusuarios[i], idchat)
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(err.Error())
 			return false
 		}
 
@@ -147,7 +148,7 @@ func (bd *BD) removeUsuariosChatBD(idchat int, usuariosexpulsados []int) bool {
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 	defer db.Close()
@@ -157,14 +158,14 @@ func (bd *BD) removeUsuariosChatBD(idchat int, usuariosexpulsados []int) bool {
 		//Preparamos insertar usuario al chat
 		stmtIns, err := db.Prepare("DELETE FROM usuarioschat where idusuario=? and idchat=?")
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(err.Error())
 			return false
 		}
 
 		//Insertamos usuario al chat
 		_, err = stmtIns.Exec(usuariosexpulsados[i], idchat)
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(err.Error())
 			return false
 		}
 
@@ -184,7 +185,7 @@ func (bd *BD) getChatsUsuarioBD(idusuario int) []Chat {
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return nil
 	}
 	defer db.Close()
@@ -192,7 +193,7 @@ func (bd *BD) getChatsUsuarioBD(idusuario int) []Chat {
 	//Obtenemos los id de los chats en los que está el usuario
 	rows, err := db.Query("SELECT idchat FROM usuarioschat WHERE idusuario = " + strconv.Itoa(idusuario))
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		defer db.Close()
 		return nil
 	}
@@ -201,7 +202,7 @@ func (bd *BD) getChatsUsuarioBD(idusuario int) []Chat {
 		err = rows.Scan(&chat.id)
 
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(err.Error())
 			defer db.Close()
 			return nil
 		}
@@ -214,7 +215,7 @@ func (bd *BD) getChatsUsuarioBD(idusuario int) []Chat {
 		//De cada chat obtenemos sus datos (nombre...)
 		rows, err := db.Query("SELECT nombre FROM chat WHERE id = " + strconv.Itoa(chats[i].id))
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(err.Error())
 			defer db.Close()
 			return nil
 		}
@@ -251,7 +252,7 @@ func (bd *BD) usuarioEnChat(idusuario int, idchat int) bool {
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 	defer db.Close()
@@ -259,7 +260,7 @@ func (bd *BD) usuarioEnChat(idusuario int, idchat int) bool {
 	//Vemos si el usuario esta en el chat
 	rows, err := db.Query("SELECT count(idusuario) FROM usuarioschat WHERE idusuario = " + strconv.Itoa(idusuario) + " and idchat = " + strconv.Itoa(idchat))
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		defer db.Close()
 		return false
 	}
@@ -269,7 +270,7 @@ func (bd *BD) usuarioEnChat(idusuario int, idchat int) bool {
 		err = rows.Scan(&count)
 
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(err.Error())
 			defer db.Close()
 			return false
 		}

@@ -6,6 +6,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"strconv"
 )
@@ -31,7 +32,7 @@ func (bd *BD) guardarMensaje(mensaje Mensaje) bool {
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 	defer db.Close()
@@ -39,7 +40,7 @@ func (bd *BD) guardarMensaje(mensaje Mensaje) bool {
 	//Obtenemos los id de los usuarios que recibiráne el mensaje en este chat
 	rows, err := db.Query("SELECT idusuario FROM usuarioschat WHERE idchat = " + strconv.Itoa(mensaje.Idchat) + " and idusuario !=" + strconv.Itoa(mensaje.Idemisor))
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		defer db.Close()
 		return false
 	}
@@ -49,7 +50,7 @@ func (bd *BD) guardarMensaje(mensaje Mensaje) bool {
 		err = rows.Scan(&idreceptoraux)
 
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(err.Error())
 			defer db.Close()
 			return false
 		}
@@ -59,21 +60,21 @@ func (bd *BD) guardarMensaje(mensaje Mensaje) bool {
 	//Preparamos la creación del mensaje
 	stmtIns, err := db.Prepare("INSERT INTO mensaje VALUES(?, ?, ?, ?, ?)")
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 
 	//Insertamos el mensaje
 	res, err := stmtIns.Exec("DEFAULT", mensaje.Texto, mensaje.Idemisor, mensaje.Idchat, mensaje.Idclave)
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 
 	//Obtenemos id del mensaje creado
 	idmensaje, err := res.LastInsertId()
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 	println("Id del mensaje creado:", idmensaje)
@@ -84,14 +85,14 @@ func (bd *BD) guardarMensaje(mensaje Mensaje) bool {
 		//Preparamos la insercion del receptor del mensaje
 		stmtIns, err := db.Prepare("INSERT INTO receptoresmensaje VALUES(?, ?, ?)")
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(err.Error())
 			return false
 		}
 
 		//Insertamos el receptor con el mensaje
 		_, err = stmtIns.Exec(idmensaje, idreceptores[i], "DEFAULT")
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(err.Error())
 			return false
 		}
 	}
@@ -105,7 +106,7 @@ func (bd *BD) CrearNuevaClaveMensajesBD() int64 {
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return 0
 	}
 	defer db.Close()
@@ -113,21 +114,21 @@ func (bd *BD) CrearNuevaClaveMensajesBD() int64 {
 	//Preparamos consulta
 	stmtIns, err := db.Prepare("INSERT INTO clavesmensajes VALUES(?)")
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return 0
 	}
 
 	//Insertamos
 	res, err := stmtIns.Exec("DEFAULT")
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return 0
 	}
 
 	//Obtenemos id de lo creado
 	idclavesmensajes, err := res.LastInsertId()
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return 0
 	}
 
@@ -143,7 +144,7 @@ func (bd *BD) GuardarClaveUsuarioMensajesBD(idclavesmensajes int, claveusuario s
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 	defer db.Close()
@@ -151,14 +152,14 @@ func (bd *BD) GuardarClaveUsuarioMensajesBD(idclavesmensajes int, claveusuario s
 	//Preparamos consulta
 	stmtIns, err := db.Prepare("INSERT INTO clavesusuario VALUES(?, ?, ?)")
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 
 	//Insertamos
 	_, err = stmtIns.Exec(idusuario, idclavesmensajes, claveusuario)
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 
@@ -177,7 +178,7 @@ func (bd *BD) getMensajesChatBD(idchat int) []Mensaje {
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return nil
 	}
 	defer db.Close()
@@ -185,7 +186,7 @@ func (bd *BD) getMensajesChatBD(idchat int) []Mensaje {
 	//De el chat buscamos los datos de los mensajes de dicho chat
 	rows, err := db.Query("SELECT id, texto, emisor FROM mensaje WHERE chat = " + strconv.Itoa(idchat))
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		defer db.Close()
 		return nil
 	}
@@ -195,7 +196,7 @@ func (bd *BD) getMensajesChatBD(idchat int) []Mensaje {
 		err = rows.Scan(&mensaje.Id, &mensaje.Texto, &mensaje.Idemisor)
 
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(err.Error())
 			defer db.Close()
 			return nil
 		}
@@ -205,7 +206,7 @@ func (bd *BD) getMensajesChatBD(idchat int) []Mensaje {
 		//Para ver si un mensaje aparece como leido o no
 		rows2, err2 := db.Query("SELECT leido from receptoresmensaje where idmensaje = " + strconv.Itoa(mensaje.Id))
 		if err2 != nil {
-			panic(err2.Error())
+			fmt.Println(err2.Error())
 			defer db.Close()
 			return nil
 		}

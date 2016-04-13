@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	//"strconv"
+	"strconv"
 )
 
 //Struct de los mensajes que se envian por el socket
@@ -109,8 +109,8 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
-	//Añadimos usuarios al chat
-	if mensaje.Funcion == "anyadirusuariochat" {
+	//Agregamos usuarios al chat
+	if mensaje.Funcion == "agregarusuarioschat" {
 
 		//Obtenemos los mensajes de ese chat
 		idChat := mensaje.Chat
@@ -125,8 +125,60 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 			return
 		}
 
-		//idusuarios := mensaje.
+		idusuarios := make([]int, 0, 1)
+		for i := 0; i < len(mensaje.Datos); i++ {
+			idusuario, _ := strconv.Atoi(mensaje.Datos[i])
+			idusuarios = append(idusuarios, idusuario)
+		}
 
+		//Los agregamos llamando a la BD
+		test := bd.addUsuariosChatBD(idChat, idusuarios)
+		fmt.Println("Mira:", test)
+		if test == false {
+			mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: "Hubo un error al realizar la operación."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+			return
+		}
+
+		//Enviamos mensaje contestación
+		mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: "Operación realizada correctamente."}
+		EnviarMensajeSocketSocket(conexion, mesj)
+	}
+
+	//Eliminamos usuarios del chat
+	if mensaje.Funcion == "eliminarusuarioschat" {
+
+		//Obtenemos los mensajes de ese chat
+		idChat := mensaje.Chat
+
+		//Comprobamos si ese usuario está en ese chat
+		permitido := bd.usuarioEnChat(usuario.id, idChat)
+
+		if permitido == false {
+			//Enviamos mensaje error
+			mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: "No tienes permiso para realizar esta acción, noperteneces al chat de estos mensajes."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+			return
+		}
+
+		idusuarios := make([]int, 0, 1)
+		for i := 0; i < len(mensaje.Datos); i++ {
+			idusuario, _ := strconv.Atoi(mensaje.Datos[i])
+			idusuarios = append(idusuarios, idusuario)
+		}
+
+		//Los eliminamos llamando a la BD
+		test := bd.removeUsuariosChatBD(idChat, idusuarios)
+
+		if test == false {
+			mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: "Hubo un error al realizar la operación."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+			return
+		}
+
+		//Enviamos mensaje contestación
+		mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: "Operación realizada correctamente."}
+		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
 }

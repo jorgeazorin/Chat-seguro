@@ -6,6 +6,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"strconv"
 )
@@ -56,7 +57,7 @@ func (bd *BD) comprobarUsuarioBD(nombre string, claveusuario string) (Usuario, b
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return usuario, false
 	}
 	defer db.Close()
@@ -64,7 +65,7 @@ func (bd *BD) comprobarUsuarioBD(nombre string, claveusuario string) (Usuario, b
 	//Obtenemos el id del usuario
 	rows, err := db.Query("SELECT id, clavepubrsa, claveprivrsa FROM usuario WHERE nombre = '" + nombre + "' and claveusuario= '" + claveusuario + "'")
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		defer db.Close()
 		return usuario, false
 	}
@@ -72,7 +73,7 @@ func (bd *BD) comprobarUsuarioBD(nombre string, claveusuario string) (Usuario, b
 	for rows.Next() {
 		err = rows.Scan(&usuario.id, &usuario.clavepubrsa, &usuario.claveprivrsa)
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(err.Error())
 			defer db.Close()
 			return usuario, false
 		}
@@ -92,19 +93,19 @@ func (bd *BD) getUsuarioBD(user string) Usuario {
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 	}
 	defer db.Close()
 	//Obtenemos el nombre del usuario
 	rows, err := db.Query("SELECT id, nombre, clavepubrsa, claveprivrsa, claveusuario FROM usuario WHERE nombre = '" + user + "'")
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		defer db.Close()
 	}
 	for rows.Next() {
 		err = rows.Scan(&usuario.id, &usuario.nombre, &usuario.clavepubrsa, &usuario.claveprivrsa, &usuario.claveusuario)
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(err.Error())
 			defer db.Close()
 		}
 	}
@@ -119,20 +120,20 @@ func (bd *BD) getUsuariosChatBD(id int) []int {
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 	}
 	defer db.Close()
 	//Obtenemos el nombre del usuario
 	rows, err := db.Query("SELECT idusuario FROM usuarioschat WHERE idchat = " + strconv.Itoa(id))
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		defer db.Close()
 	}
 	for rows.Next() {
 		var i int
 		err = rows.Scan(&i)
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(err.Error())
 			defer db.Close()
 		}
 		usuarios = append(usuarios, i)
@@ -150,7 +151,7 @@ func (bd *BD) getNombreUsuario(id int) string {
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return ""
 	}
 	defer db.Close()
@@ -158,7 +159,7 @@ func (bd *BD) getNombreUsuario(id int) string {
 	//Obtenemos el nombre del usuario
 	rows, err := db.Query("SELECT nombre FROM usuario WHERE id = " + strconv.Itoa(id))
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		defer db.Close()
 		return ""
 	}
@@ -166,7 +167,7 @@ func (bd *BD) getNombreUsuario(id int) string {
 	for rows.Next() {
 		err = rows.Scan(&nombreusuario)
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(err.Error())
 			defer db.Close()
 			return ""
 		}
@@ -184,7 +185,7 @@ func (bd *BD) getClavePubUsuario(id int) string {
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return ""
 	}
 	defer db.Close()
@@ -192,7 +193,7 @@ func (bd *BD) getClavePubUsuario(id int) string {
 	//Obtenemos el nombre del usuario
 	rows, err := db.Query("SELECT clavepubrsa FROM usuario WHERE id = " + strconv.Itoa(id))
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		defer db.Close()
 		return ""
 	}
@@ -200,7 +201,7 @@ func (bd *BD) getClavePubUsuario(id int) string {
 	for rows.Next() {
 		err = rows.Scan(&clavepub)
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(err.Error())
 			defer db.Close()
 			return ""
 		}
@@ -218,7 +219,7 @@ func (bd *BD) getUsuario(id int) Usuario {
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return usuario
 	}
 	defer db.Close()
@@ -226,7 +227,7 @@ func (bd *BD) getUsuario(id int) Usuario {
 	//Obtenemos el nombre del usuario
 	rows, err := db.Query("SELECT id, nombre, clavepubrsa, claveprivrsa, claveusuario FROM usuario WHERE id = " + strconv.Itoa(id))
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		defer db.Close()
 		return usuario
 	}
@@ -234,7 +235,7 @@ func (bd *BD) getUsuario(id int) Usuario {
 	for rows.Next() {
 		err = rows.Scan(&usuario.id, &usuario.nombre, &usuario.clavepubrsa, &usuario.claveprivrsa, &usuario.claveusuario)
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(err.Error())
 			defer db.Close()
 			return usuario
 		}
@@ -249,7 +250,7 @@ func (bd *BD) modificarUsuarioBD(usuario Usuario) bool {
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 	defer db.Close()
@@ -262,14 +263,14 @@ func (bd *BD) modificarUsuarioBD(usuario Usuario) bool {
 	//Preparamos crear el chat
 	stmtIns, err := db.Prepare("UPDATE usuario set clavepubrsa=?, claveprivrsa=?, claveusuario=? where id=?")
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 
 	//Insertamos crear el chat
 	_, err = stmtIns.Exec(usuario.clavepubrsa, usuario.claveprivrsa, usuario.claveusuario, usuario.id)
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 
@@ -285,7 +286,7 @@ func (bd *BD) insertUsuarioBD(usuario Usuario) bool {
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 	defer db.Close()
@@ -293,14 +294,14 @@ func (bd *BD) insertUsuarioBD(usuario Usuario) bool {
 	//Preparamos consulta
 	stmtIns, err := db.Prepare("INSERT INTO usuario VALUES(?, ?, ?, ?, ?)")
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 
 	//Insertamos
 	_, err = stmtIns.Exec("DEFAULT", usuario.nombre, usuario.clavepubrsa, usuario.claveprivrsa, usuario.claveusuario)
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
 		return false
 	}
 

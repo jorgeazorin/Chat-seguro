@@ -55,11 +55,15 @@ func main() {
 	go handleServerRead(conn)
 
 	///////////////////////////////////
-	//    Login      /////////////////
+	//    PRUEBAS    /////////////////
 	//////////////////////////////////
 	login(conn)
-	log.Println("holaa")
 	obtenerMensajesChat(conn, 1)
+
+	//Usuario 1 en el chat 7 al usuario 15
+	agregarUsuariosChat(conn, 7, []string{"15"})
+	//Usuario 1 en el chat 7 al usuario 15
+	eliminarUsuariosChat(conn, 7, []string{"15"})
 
 	///////////////////////////////////
 	//    Enviar  y recibir      /////
@@ -178,4 +182,48 @@ func obtenerMensajesChat(conn net.Conn, idchat int) {
 	//Escribe json en el socket
 	conn.Write(b)
 
+}
+
+//Cliente pide añadir usuarios a un chat
+func agregarUsuariosChat(conn net.Conn, idchat int, usuarios []string) {
+
+	mensaje := Mensaje{}
+
+	//Rellenar datos
+	mensaje.Chat = idchat
+	mensaje.From = nombre_usuario_from
+	mensaje.Password = "1"
+	mensaje.Funcion = "agregarusuarioschat"
+	mensaje.Mensaje = ""
+	mensaje.Datos = usuarios
+
+	//Convertir a json
+	b, _ := json.Marshal(mensaje)
+
+	log.Printf(string(b))
+
+	//Escribe json en el socket
+	conn.Write(b)
+}
+
+//Cliente pide eliminar usuarios en un chat
+func eliminarUsuariosChat(conn net.Conn, idchat int, usuarios []string) {
+
+	mensaje := Mensaje{}
+
+	//Rellenar datos
+	mensaje.Chat = idchat
+	mensaje.From = nombre_usuario_from
+	mensaje.Password = "1"
+	mensaje.Funcion = "eliminarusuarioschat"
+	mensaje.Mensaje = ""
+	mensaje.Datos = usuarios
+
+	//Convertir a json
+	b, _ := json.Marshal(mensaje)
+
+	log.Printf(string(b))
+
+	//Escribe json en el socket
+	conn.Write(b)
 }
