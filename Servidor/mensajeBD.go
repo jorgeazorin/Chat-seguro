@@ -224,3 +224,78 @@ func (bd *BD) getMensajesChatBD(idchat int) []Mensaje {
 
 	return mensajes
 }
+
+//Obtiene la clave cifrada con la que se cifran los mensajes
+func (bd *BD) getClaveMensaje(idmensaje int) (string, bool) {
+
+	var clavemensaje string
+
+	//Conexion BD
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return "", false
+	}
+	defer db.Close()
+
+	//De el chat buscamos los datos de los mensajes de dicho chat
+	rows, err := db.Query("SELECT claveusuario FROM mensaje, clavesusuario WHERE id = " + strconv.Itoa(idmensaje))
+	if err != nil {
+		fmt.Println(err.Error())
+		defer db.Close()
+		return "", false
+	}
+
+	for rows.Next() {
+		//Obtenemos los datos del mensaje
+		err = rows.Scan(&clavemensaje)
+
+		if err != nil {
+			fmt.Println(err.Error())
+			defer db.Close()
+			return "", false
+		}
+
+	}
+
+	return clavemensaje, true
+}
+
+//Obtiene los datos de un mensaje
+func (bd *BD) getMensaje(idmensaje int) (Mensaje, bool) {
+
+	var mensaje Mensaje
+	mensaje.Id = idmensaje
+
+	//Conexion BD
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return mensaje, false
+	}
+	defer db.Close()
+
+	//De el chat buscamos los datos de los mensajes de dicho chat
+	rows, err := db.Query("SELECT texto, emisor, chat, clave FROM mensaje WHERE id = " + strconv.Itoa(idmensaje))
+	if err != nil {
+		fmt.Println(err.Error())
+		defer db.Close()
+		return mensaje, false
+	}
+
+	for rows.Next() {
+		//Obtenemos los datos del mensaje
+		err = rows.Scan(&mensaje.Texto, &mensaje.Idemisor, &mensaje.Idchat, &mensaje.Idclave)
+
+		if err != nil {
+			fmt.Println(err.Error())
+			defer db.Close()
+			return mensaje, false
+		}
+
+	}
+
+	return mensaje, true
+}
