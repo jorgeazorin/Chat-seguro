@@ -99,7 +99,6 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 
 			//Codificamos los mensajes en json
 			b, _ := json.Marshal(men)
-			fmt.Println("")
 
 			datos = append(datos, string(b))
 		}

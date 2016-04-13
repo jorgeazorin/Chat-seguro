@@ -57,6 +57,7 @@ func main() {
 	//    Login      /////////////////
 	//////////////////////////////////
 	login(conn)
+	log.Println("holaa")
 	obtenerMensajesChat(conn, 1)
 
 	///////////////////////////////////
@@ -78,7 +79,7 @@ func handleServerRead(conn net.Conn) {
 	//bucle infinito
 	for {
 		defer conn.Close()
-		reply := make([]byte, 256)
+		reply := make([]byte, 524288) //256
 		n, err := conn.Read(reply)
 		if err != nil {
 			break
@@ -86,7 +87,11 @@ func handleServerRead(conn net.Conn) {
 		}
 		json.Unmarshal(reply[:n], &mensaje)
 
-		fmt.Println("" + mensaje.From + " -> " + mensaje.Mensaje)
+		fmt.Println("" + mensaje.From + " -> " + mensaje.Mensaje + " Datos: ->")
+
+		for i := 0; i < len(mensaje.Datos); i++ {
+			fmt.Println("dato:", i, "->", mensaje.Datos[i])
+		}
 
 	}
 }
