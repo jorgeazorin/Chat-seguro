@@ -66,6 +66,8 @@ func main() {
 	getClavePubUsuario(conn, 1)
 	getClaveMensaje(conn, 2)
 	getClaveCifrarMensajeChat(conn, 1)
+	//CrearNuevaClaveMensajes(conn)
+	//asociarNuevaClaveUsuarioConIdNuevoConjuntoClaves(conn, 1, "minuevaclavemaria")
 
 	///////////////////////////////////
 	//    Enviar  y recibir      /////
@@ -284,6 +286,46 @@ func getClaveCifrarMensajeChat(conn net.Conn, idchat int) {
 	mensaje.Funcion = "getclavecifrarmensajechat"
 	cadena_idchat := strconv.Itoa(idchat)
 	mensaje.Datos = []string{cadena_idchat}
+
+	//Convertir a json
+	b, _ := json.Marshal(mensaje)
+
+	log.Printf(string(b))
+
+	//Escribe json en el socket
+	conn.Write(b)
+}
+
+//Cliente crea nuevo id clave para un nuevo conjunto de claves
+func CrearNuevaClaveMensajes(conn net.Conn) {
+
+	mensaje := Mensaje{}
+
+	//Rellenar datos
+	mensaje.From = nombre_usuario_from
+	mensaje.Password = "1"
+	mensaje.Funcion = "crearnuevoidparanuevaclavemensajes"
+
+	//Convertir a json
+	b, _ := json.Marshal(mensaje)
+
+	log.Printf(string(b))
+
+	//Escribe json en el socket
+	conn.Write(b)
+}
+
+//Asocia nueva clave de un usuario con el id que indica ese nuevo conjunto de claves
+func asociarNuevaClaveUsuarioConIdNuevoConjuntoClaves(conn net.Conn, idconjuntoclaves int, claveusuario string) {
+
+	mensaje := Mensaje{}
+
+	//Rellenar datos
+	mensaje.From = nombre_usuario_from
+	mensaje.Password = "1"
+	mensaje.Funcion = "asociarnuevaclaveusuarioconidnuevoconjuntoclaves"
+	cadena_idconjuntoclaves := strconv.Itoa(idconjuntoclaves)
+	mensaje.Datos = []string{cadena_idconjuntoclaves, claveusuario}
 
 	//Convertir a json
 	b, _ := json.Marshal(mensaje)

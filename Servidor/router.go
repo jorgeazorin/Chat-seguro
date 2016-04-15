@@ -227,4 +227,41 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
+	//Crear una nueva clave para cifrar mensajes
+	if mensaje.Funcion == "crearnuevoidparanuevaclavemensajes" {
+
+		idclavemensajes := bd.CrearNuevaClaveMensajesBD()
+
+		if idclavemensajes == 0 {
+			mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: "Error al crear id para nuevo conjunto de claves."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+			return
+		}
+
+		cadena_idclavemensajes := strconv.FormatInt(idclavemensajes, 10)
+
+		//Enviamos mensaje contestación
+		mesj := MensajeSocket{From: usuario.nombre, Datos: []string{cadena_idclavemensajes}, MensajeSocket: "Id nuevo conjunto claves creado correctamente."}
+		EnviarMensajeSocketSocket(conexion, mesj)
+	}
+
+	//Asocia nueva clave de un usuario con el id que indica ese nuevo conjunto de claves
+	if mensaje.Funcion == "asociarnuevaclaveusuarioconidnuevoconjuntoclaves" {
+
+		idconjuntoclaves, _ := strconv.Atoi(mensaje.Datos[0])
+		claveusuario := mensaje.Datos[1]
+
+		test := bd.GuardarClaveUsuarioMensajesBD(idconjuntoclaves, claveusuario, usuario.id)
+
+		if test == false {
+			mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: "Error al asociar la clave del usuario con el id del conjunto de claves."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+			return
+		}
+
+		//Enviamos mensaje contestación
+		mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: "Clave usuario asociada a id del conjunto de claves."}
+		EnviarMensajeSocketSocket(conexion, mesj)
+	}
+
 }
