@@ -299,3 +299,40 @@ func (bd *BD) getMensaje(idmensaje int) (Mensaje, bool) {
 
 	return mensaje, true
 }
+
+//Obtiene la última clave (con la que se están cifrando ahora los mensajes)
+func (bd *BD) getLastKeyMensaje(idchat int, idusuario int) (string, bool) {
+
+	var clave string
+
+	//Conexion BD
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return "", false
+	}
+	defer db.Close()
+
+	//De el chat buscamos los datos de los mensajes de dicho chat
+	rows, err := db.Query("SELECT claveusuario FROM clavesusuario, mensaje WHERE idusuario = " + strconv.Itoa(idusuario) + " AND chat = " + strconv.Itoa(idchat) + " AND clave = (select max(clave) from clavesusuario, mensaje WHERE idusuario = " + strconv.Itoa(idusuario) + " AND chat = " + strconv.Itoa(idchat) + ")")
+	if err != nil {
+		fmt.Println(err.Error())
+		defer db.Close()
+		return "", false
+	}
+
+	for rows.Next() {
+		//Obtenemos los datos del mensaje
+		err = rows.Scan(&clave)
+
+		if err != nil {
+			fmt.Println(err.Error())
+			defer db.Close()
+			return "", false
+		}
+
+	}
+
+	return clave, true
+}

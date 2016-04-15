@@ -65,6 +65,7 @@ func main() {
 	//eliminarUsuariosChat(conn, 7, []string{"15"})
 	getClavePubUsuario(conn, 1)
 	getClaveMensaje(conn, 2)
+	getClaveCifrarMensajeChat(conn, 1)
 
 	///////////////////////////////////
 	//    Enviar  y recibir      /////
@@ -262,6 +263,27 @@ func getClaveMensaje(conn net.Conn, idmensaje int) {
 	mensaje.Funcion = "getclavemensaje"
 	cadena_idmensaje := strconv.Itoa(idmensaje)
 	mensaje.Datos = []string{cadena_idmensaje}
+
+	//Convertir a json
+	b, _ := json.Marshal(mensaje)
+
+	log.Printf(string(b))
+
+	//Escribe json en el socket
+	conn.Write(b)
+}
+
+//Cliente pide clave cifrada para descifrar mensajes
+func getClaveCifrarMensajeChat(conn net.Conn, idchat int) {
+
+	mensaje := Mensaje{}
+
+	//Rellenar datos
+	mensaje.From = nombre_usuario_from
+	mensaje.Password = "1"
+	mensaje.Funcion = "getclavecifrarmensajechat"
+	cadena_idchat := strconv.Itoa(idchat)
+	mensaje.Datos = []string{cadena_idchat}
 
 	//Convertir a json
 	b, _ := json.Marshal(mensaje)

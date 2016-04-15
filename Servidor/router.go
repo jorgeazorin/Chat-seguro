@@ -201,13 +201,12 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	}
 
 	//Obtenemos clave cifrada de un mensaje
-	if mensaje.Funcion == "getclavemensaje" {
+	if mensaje.Funcion == "getclavecifrarmensajechat" {
 
 		//Obtenemos id del mensaje
-		idmensaje, _ := strconv.Atoi(mensaje.Datos[0])
+		idchat, _ := strconv.Atoi(mensaje.Datos[0])
 
-		result_mensaje, _ := bd.getMensaje(idmensaje)
-		prueba := bd.usuarioEnChat(usuario.id, result_mensaje.Idchat)
+		prueba := bd.usuarioEnChat(usuario.id, idchat)
 
 		if prueba == false {
 			mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: "No tienes permiso de acceso a los datos de este mensaje."}
@@ -215,16 +214,16 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 			return
 		}
 
-		clavemensaje, test := bd.getClaveMensaje(idmensaje)
+		clavemensaje, test := bd.getLastKeyMensaje(idchat, usuario.id)
 
 		if test == false {
-			mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: "Error al obtener clave del mensaje."}
+			mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: "Error al obtener clave para cifrar mensajes."}
 			EnviarMensajeSocketSocket(conexion, mesj)
 			return
 		}
 
 		//Enviamos mensaje contestación
-		mesj := MensajeSocket{From: usuario.nombre, Datos: []string{clavemensaje}, MensajeSocket: "Clave mensaje obtenida correctamente."}
+		mesj := MensajeSocket{From: usuario.nombre, Datos: []string{clavemensaje}, MensajeSocket: "Clave para mensajes obtenida correctamente."}
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
