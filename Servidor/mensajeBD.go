@@ -13,13 +13,13 @@ import (
 
 //Para guardar un mensaje con sus datos
 type Mensaje struct {
-	Id           int    `json:"id"`
-	Texto        string `json:"texto"`
-	Idemisor     int    `json:"idemisor"`
-	Nombreemisor string `json:"nombreemisor"`
-	Leido        bool   `json:"leido"`
-	Idchat       int    `json:"idchat"`
-	Idclave      int    `json:"idclave"`
+	Id           int    `json:"Id"`
+	Texto        string `json:"Texto"`
+	Idemisor     int    `json:"Idemisor"`
+	Nombreemisor string `json:"Nombreemisor"`
+	Leido        bool   `json:"Leido"`
+	Idchat       int    `json:"Idchat"`
+	Idclave      int    `json:"Idclave"`
 }
 
 //Guarda un mensaje para todos los receptores posibles del chat
@@ -335,4 +335,21 @@ func (bd *BD) getLastKeyMensaje(idchat int, idusuario int) (string, bool) {
 	}
 
 	return clave, true
+}
+
+func (bd *BD) marcarLeido(idMensaje int) {
+	//Conexion BD
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	defer db.Close()
+
+	//De el chat buscamos los datos de los mensajes de dicho chat
+	_, err = db.Query("UPDATE `receptoresmensaje` SET `leido`=true WHERE `idmensaje`=" + strconv.Itoa(idMensaje))
+	if err != nil {
+		fmt.Println(err.Error())
+		defer db.Close()
+	}
 }

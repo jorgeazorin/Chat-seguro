@@ -93,9 +93,9 @@ func main() {
 				n, err := conn.Read(buf)
 
 				if err != nil {
-					_, ok := conexiones[usuario.id]
+					_, ok := conexiones[usuario.Id]
 					if ok {
-						delete(conexiones, usuario.id)
+						delete(conexiones, usuario.Id)
 					}
 					conn.Close()
 					break

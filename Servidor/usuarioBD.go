@@ -12,11 +12,11 @@ import (
 )
 
 type Usuario struct {
-	id           int
-	nombre       string
-	clavepubrsa  string
-	claveprivrsa string
-	claveusuario string
+	Id           int    `json:"Id"`
+	Nombre       string `json:"Nombre"`
+	Clavepubrsa  string `json:"Clavepubrsa"`
+	Claveprivrsa string `json:"Claveprivrsa"`
+	Claveusuario string `json:"Claveusuario"`
 }
 
 //Funcion para obtener los datos del usuario cuando se loguea
@@ -29,19 +29,19 @@ func (usuario *Usuario) login(nombre string, password string) bool {
 	bd.adress = ""
 	bd.database = "sds"
 
-	usuario.nombre = nombre
+	usuario.Nombre = nombre
 	user, test := bd.comprobarUsuarioBD(nombre, password)
 
 	if test == false {
 		return false
 	}
 
-	usuario.id = user.id
-	usuario.nombre = user.nombre
-	usuario.clavepubrsa = user.clavepubrsa
-	usuario.claveprivrsa = user.claveprivrsa
-	usuario.claveusuario = user.claveusuario
-	usuario.nombre = user.nombre
+	usuario.Id = user.Id
+	usuario.Nombre = user.Nombre
+	usuario.Clavepubrsa = user.Clavepubrsa
+	usuario.Claveprivrsa = user.Claveprivrsa
+	usuario.Claveusuario = user.Claveusuario
+	usuario.Nombre = user.Nombre
 	return true
 }
 
@@ -50,8 +50,8 @@ func (bd *BD) comprobarUsuarioBD(nombre string, claveusuario string) (Usuario, b
 
 	var usuario Usuario
 
-	usuario.nombre = nombre
-	usuario.claveusuario = claveusuario
+	usuario.Nombre = nombre
+	usuario.Claveusuario = claveusuario
 
 	//Conexión BD
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
@@ -71,7 +71,7 @@ func (bd *BD) comprobarUsuarioBD(nombre string, claveusuario string) (Usuario, b
 	}
 
 	for rows.Next() {
-		err = rows.Scan(&usuario.id, &usuario.clavepubrsa, &usuario.claveprivrsa)
+		err = rows.Scan(&usuario.Id, &usuario.Clavepubrsa, &usuario.Claveprivrsa)
 		if err != nil {
 			fmt.Println(err.Error())
 			defer db.Close()
@@ -79,7 +79,7 @@ func (bd *BD) comprobarUsuarioBD(nombre string, claveusuario string) (Usuario, b
 		}
 	}
 
-	if usuario.id == 0 {
+	if usuario.Id == 0 {
 		return usuario, false
 	}
 
@@ -103,7 +103,7 @@ func (bd *BD) getUsuarioBD(user string) Usuario {
 		defer db.Close()
 	}
 	for rows.Next() {
-		err = rows.Scan(&usuario.id, &usuario.nombre, &usuario.clavepubrsa, &usuario.claveprivrsa, &usuario.claveusuario)
+		err = rows.Scan(&usuario.Id, &usuario.Nombre, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &usuario.Claveusuario)
 		if err != nil {
 			fmt.Println(err.Error())
 			defer db.Close()
@@ -233,7 +233,7 @@ func (bd *BD) getUsuario(id int) Usuario {
 	}
 
 	for rows.Next() {
-		err = rows.Scan(&usuario.id, &usuario.nombre, &usuario.clavepubrsa, &usuario.claveprivrsa, &usuario.claveusuario)
+		err = rows.Scan(&usuario.Id, &usuario.Nombre, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &usuario.Claveusuario)
 		if err != nil {
 			fmt.Println(err.Error())
 			defer db.Close()
@@ -255,7 +255,7 @@ func (bd *BD) modificarUsuarioBD(usuario Usuario) bool {
 	}
 	defer db.Close()
 
-	nombreu := bd.getNombreUsuario(usuario.id)
+	nombreu := bd.getNombreUsuario(usuario.Id)
 	if nombreu == "" {
 		return false
 	}
@@ -268,7 +268,7 @@ func (bd *BD) modificarUsuarioBD(usuario Usuario) bool {
 	}
 
 	//Insertamos crear el chat
-	_, err = stmtIns.Exec(usuario.clavepubrsa, usuario.claveprivrsa, usuario.claveusuario, usuario.id)
+	_, err = stmtIns.Exec(usuario.Clavepubrsa, usuario.Claveprivrsa, usuario.Claveusuario, usuario.Id)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -299,7 +299,7 @@ func (bd *BD) insertUsuarioBD(usuario Usuario) bool {
 	}
 
 	//Insertamos
-	_, err = stmtIns.Exec("DEFAULT", usuario.nombre, usuario.clavepubrsa, usuario.claveprivrsa, usuario.claveusuario)
+	_, err = stmtIns.Exec("DEFAULT", usuario.Nombre, usuario.Clavepubrsa, usuario.Claveprivrsa, usuario.Claveusuario)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -308,4 +308,44 @@ func (bd *BD) insertUsuarioBD(usuario Usuario) bool {
 	defer stmtIns.Close()
 
 	return true
+}
+
+func (bd *BD) getClaves(usuario int) []string {
+	claves := make([]string, 0, 1) //Los mensajes de un chat
+
+	//Conexion BD
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil
+	}
+	defer db.Close()
+
+	//De el chat buscamos los datos de los mensajes de dicho chat
+	rows, err := db.Query("SELECT `idusuario`,`idclavesmensajes` FROM `clavesusuario` WHERE `idusuario`= " + strconv.Itoa(usuario))
+	if err != nil {
+		fmt.Println(err.Error())
+		defer db.Close()
+		return nil
+	}
+
+	var clave string
+	var id string
+
+	for rows.Next() {
+		//Obtenemos los datos del mensaje
+		err = rows.Scan(&clave, &id)
+
+		if err != nil {
+			fmt.Println(err.Error())
+			defer db.Close()
+			return nil
+		}
+
+		//Guardamos el mensaje en el array de mensajes
+		claves = append(claves, id+":"+clave)
+	}
+
+	return claves
 }

@@ -13,9 +13,9 @@ import (
 
 //Para guardar un chat con sus datos y mensajes que tenga
 type Chat struct {
-	id       int
-	nombre   string
-	mensajes []Mensaje
+	Id       int       `json:"Id"`
+	Nombre   string    `json:"Nombre"`
+	Mensajes []Mensaje `json:"Mensajes"`
 }
 
 //Creamos nuevo chat en BD
@@ -96,7 +96,7 @@ func (bd *BD) modificarChatBD(chat Chat) bool {
 	}
 
 	//Insertamos crear el chat
-	_, err = stmtIns.Exec(chat.nombre, chat.id)
+	_, err = stmtIns.Exec(chat.Nombre, chat.Id)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -199,7 +199,7 @@ func (bd *BD) getChatsUsuarioBD(idusuario int) []Chat {
 	}
 	//Guardamos id de cada chat en el slice de chats
 	for rows.Next() {
-		err = rows.Scan(&chat.id)
+		err = rows.Scan(&chat.Id)
 
 		if err != nil {
 			fmt.Println(err.Error())
@@ -213,7 +213,7 @@ func (bd *BD) getChatsUsuarioBD(idusuario int) []Chat {
 	for i := 0; i < len(chats); i++ {
 
 		//De cada chat obtenemos sus datos (nombre...)
-		rows, err := db.Query("SELECT nombre FROM chat WHERE id = " + strconv.Itoa(chats[i].id))
+		rows, err := db.Query("SELECT nombre FROM chat WHERE id = " + strconv.Itoa(chats[i].Id))
 		if err != nil {
 			fmt.Println(err.Error())
 			defer db.Close()
@@ -224,17 +224,17 @@ func (bd *BD) getChatsUsuarioBD(idusuario int) []Chat {
 			err = rows.Scan(&nombrechat)
 
 			if err != nil {
-				chats[i].nombre = ""
+				chats[i].Nombre = ""
 			} else {
-				chats[i].nombre = nombrechat
+				chats[i].Nombre = nombrechat
 			}
 		}
 
 		//De cada chat buscamos los datos de los mensajes de dicho chat
-		mensajes = bd.getMensajesChatBD(chats[i].id)
+		mensajes = bd.getMensajesChatBD(chats[i].Id)
 
 		//Añadimos el array de mensajes a este chat
-		chats[i].mensajes = mensajes
+		chats[i].Mensajes = mensajes
 
 		//Vaciamos el array de mensajes, para rellenar el próximo chat
 		mensajes = make([]Mensaje, 0, 1)
