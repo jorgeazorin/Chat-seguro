@@ -26,6 +26,15 @@ type Mensaje struct {
 
 var nombre_usuario_from string
 
+//Para pasar los datos de un usuario
+type Usuario struct {
+	id           int
+	nombre       string
+	clavepubrsa  string
+	claveprivrsa string
+	claveusuario string
+}
+
 func main() {
 
 	//var window ui.Window
@@ -68,6 +77,12 @@ func main() {
 	getClaveCifrarMensajeChat(conn, 1)
 	//CrearNuevaClaveMensajes(conn)
 	//asociarNuevaClaveUsuarioConIdNuevoConjuntoClaves(conn, 1, "minuevaclavemaria")
+	var u Usuario
+	u.nombre = "Prueba"
+	u.clavepubrsa = "Prueba"
+	u.claveprivrsa = "Prueba"
+	u.claveusuario = "Prueba"
+	registrarUsuario(conn, u)
 
 	///////////////////////////////////
 	//    Enviar  y recibir      /////
@@ -326,6 +341,27 @@ func asociarNuevaClaveUsuarioConIdNuevoConjuntoClaves(conn net.Conn, idconjuntoc
 	mensaje.Funcion = "asociarnuevaclaveusuarioconidnuevoconjuntoclaves"
 	cadena_idconjuntoclaves := strconv.Itoa(idconjuntoclaves)
 	mensaje.Datos = []string{cadena_idconjuntoclaves, claveusuario}
+
+	//Convertir a json
+	b, _ := json.Marshal(mensaje)
+
+	log.Printf(string(b))
+
+	//Escribe json en el socket
+	conn.Write(b)
+}
+
+//Registrar a un usuario
+func registrarUsuario(conn net.Conn, usuario Usuario) {
+
+	mensaje := Mensaje{}
+
+	//Rellenar datos
+	mensaje.From = nombre_usuario_from
+	mensaje.Password = "1"
+	mensaje.Funcion = "registrarusuario"
+
+	mensaje.Datos = []string{usuario.nombre, usuario.clavepubrsa, usuario.claveprivrsa, usuario.claveusuario}
 
 	//Convertir a json
 	b, _ := json.Marshal(mensaje)

@@ -264,4 +264,33 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
+	//Crea un usuario llamando a la BD
+	if mensaje.Funcion == "registrarusuario" {
+
+		var usuarionuevo Usuario
+
+		usuarionuevo.nombre = mensaje.Datos[0]
+		usuarionuevo.clavepubrsa = mensaje.Datos[1]
+		usuarionuevo.claveprivrsa = mensaje.Datos[2]
+		usuarionuevo.claveusuario = mensaje.Datos[3]
+
+		if usuario.id != 1 {
+			mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: "Error, no tienes permiso para registrar a un usuario."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+			return
+		}
+
+		test := bd.insertUsuarioBD(usuarionuevo)
+
+		if test == false {
+			mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: "Error al intentar registrar al usuario."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+			return
+		}
+
+		//Enviamos mensaje contestación
+		mesj := MensajeSocket{From: usuario.nombre, MensajeSocket: "Usuario registrado correctamente"}
+		EnviarMensajeSocketSocket(conexion, mesj)
+	}
+
 }
