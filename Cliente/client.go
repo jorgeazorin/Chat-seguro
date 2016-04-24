@@ -2,10 +2,13 @@ package main
 
 import (
 	"bufio"
+	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"golang.org/x/crypto/scrypt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
@@ -28,15 +31,19 @@ var nombre_usuario_from string
 
 //Para pasar los datos de un usuario
 type Usuario struct {
-	id           int
-	nombre       string
-	clavepubrsa  string
-	claveprivrsa string
-	claveusuario string
+	id             int
+	nombre         string
+	clavepubrsa    string
+	claveprivrsa   string
+	claveusuario   string
+	clavedescifrar string
 }
+
+var ClientUsuario Usuario
 
 func main() {
 
+	generarClaves("string")
 	//var window ui.Window
 	//LEER CERTIFICADOS DE LOS ARCHIVOS (ESTOS SON LOS CERTIFICADOS DEL CLIENTE)
 	cert2_b, _ := ioutil.ReadFile("cert2.pem")
@@ -149,6 +156,48 @@ func handleClientWrite(conn net.Conn) {
 		conn.Write(b)
 	}
 
+}
+
+func generarClaves(clave string) {
+
+	salt := make([]byte, 32)
+	_, err := io.ReadFull(rand.Reader, salt)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dk, _ := scrypt.Key([]byte(clave), salt, 16384, 8, 1, 64)
+	log.Println(dk[0 : len(dk)/2])
+	log.Println(dk[len(dk)/2 : len(dk)])
+	ClientUsuario.claveusuario = string(dk[0 : len(dk)/2])
+	ClientUsuario.clavedescifrar = string(dk[len(dk)/2 : len(dk)])
+	log.Println("Clave descifrar ", ClientUsuario.clavedescifrar)
+	log.Println("Clave usuario ", ClientUsuario.claveusuario)
+
+}
+
+//Registrar a un usuario
+func registrarUsuario(conn net.Conn, usuario Usuario) {
+
+	mensaje := Mensaje{}
+
+	//Rellenar datos
+	mensaje.From = nombre_usuario_from
+	mensaje.Password = "1"
+	mensaje.Funcion = "registrarusuario"
+
+	//ClientUsuario.
+	//usaurio.claveusuario[0 : len(usuario.claveusuario)/2]
+
+	mensaje.Datos = []string{usuario.nombre, usuario.clavepubrsa, usuario.claveprivrsa, usuario.claveusuario}
+
+	//Convertir a json
+	b, _ := json.Marshal(mensaje)
+
+	log.Printf(string(b))
+
+	//Escribe json en el socket
+	conn.Write(b)
 }
 
 //Cliente realiza login
@@ -341,27 +390,6 @@ func asociarNuevaClaveUsuarioConIdNuevoConjuntoClaves(conn net.Conn, idconjuntoc
 	mensaje.Funcion = "asociarnuevaclaveusuarioconidnuevoconjuntoclaves"
 	cadena_idconjuntoclaves := strconv.Itoa(idconjuntoclaves)
 	mensaje.Datos = []string{cadena_idconjuntoclaves, claveusuario}
-
-	//Convertir a json
-	b, _ := json.Marshal(mensaje)
-
-	log.Printf(string(b))
-
-	//Escribe json en el socket
-	conn.Write(b)
-}
-
-//Registrar a un usuario
-func registrarUsuario(conn net.Conn, usuario Usuario) {
-
-	mensaje := Mensaje{}
-
-	//Rellenar datos
-	mensaje.From = nombre_usuario_from
-	mensaje.Password = "1"
-	mensaje.Funcion = "registrarusuario"
-
-	mensaje.Datos = []string{usuario.nombre, usuario.clavepubrsa, usuario.claveprivrsa, usuario.claveusuario}
 
 	//Convertir a json
 	b, _ := json.Marshal(mensaje)

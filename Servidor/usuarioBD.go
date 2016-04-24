@@ -17,6 +17,7 @@ type Usuario struct {
 	Clavepubrsa  string `json:"Clavepubrsa"`
 	Claveprivrsa string `json:"Claveprivrsa"`
 	Claveusuario string `json:"Claveusuario"`
+	Salt         []byte `json:"Salt"`
 }
 
 //Funcion para obtener los datos del usuario cuando se loguea
@@ -292,14 +293,14 @@ func (bd *BD) insertUsuarioBD(usuario Usuario) bool {
 	defer db.Close()
 
 	//Preparamos consulta
-	stmtIns, err := db.Prepare("INSERT INTO usuario VALUES(?, ?, ?, ?, ?)")
+	stmtIns, err := db.Prepare("INSERT INTO usuario VALUES(?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
 	}
 
 	//Insertamos
-	_, err = stmtIns.Exec("DEFAULT", usuario.Nombre, usuario.Clavepubrsa, usuario.Claveprivrsa, usuario.Claveusuario)
+	_, err = stmtIns.Exec("DEFAULT", usuario.Nombre, usuario.Clavepubrsa, usuario.Claveprivrsa, usuario.Claveusuario, usuario.Salt)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
