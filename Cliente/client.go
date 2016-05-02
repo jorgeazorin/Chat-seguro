@@ -163,14 +163,13 @@ func handleClientWrite(conn net.Conn) {
 
 }
 
+//Genera hash de la clave, la divide en 2 para login y cifrado.
+//La del login con salt se le aplica bcrypt
 func generarClaves(clave string) {
 
 	//Hash con SHA-2 (256) para la contraseña en general
 	clavebytes := []byte(clave)
 	clavebytesconsha2 := sha256.Sum256(clavebytes)
-
-	//fmt.Println("Mira la clave:", clavebytesconsha2)
-	//claveconsha2 := string(clavebytesconsha2[:])
 
 	//Dividimos dicho HASH
 	clavehashlogin := clavebytesconsha2[0 : len(clavebytesconsha2)/2]
@@ -189,10 +188,6 @@ func generarClaves(clave string) {
 	ClientUsuario.clavelogin = clavebcryptlogin
 	ClientUsuario.clavecifrado = clavehashcifrado
 	ClientUsuario.salt = salt
-
-	/*fmt.Println("Mira la clave login:", clavebcryptlogin)
-	fmt.Println("Mira la clave sha:", salt)
-	fmt.Println("Mira la clave cifrado:", clavehashcifrado)*/
 }
 
 //Registrar a un usuario

@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 02-05-2016 a las 19:53:23
+-- Tiempo de generación: 02-05-2016 a las 23:03:00
 -- Versión del servidor: 5.6.25
 -- Versión de PHP: 5.6.11
 
@@ -162,26 +162,26 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   `nombre` varchar(15) NOT NULL,
   `clavepubrsa` varchar(255) NOT NULL,
   `claveprivrsa` varchar(255) NOT NULL,
-  `clavelogin` varchar(255) NOT NULL,
+  `clavelogin` blob NOT NULL,
   `salt` blob NOT NULL,
-  `clavecifrado` varchar(255) NOT NULL
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=latin1;
+  `clavecifrado` blob NOT NULL
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `usuario`
 --
 
 INSERT INTO `usuario` (`id`, `nombre`, `clavepubrsa`, `claveprivrsa`, `clavelogin`, `salt`, `clavecifrado`) VALUES
-(1, 'Pepe', 'clave1', 'clave1priv', 'p', '', ''),
-(2, 'Jorge', 'clavepubrsa2', 'clave2priv', 'j', '', ''),
-(3, 'Encarna', 'clavepubrsa3', 'clave3priv', 'clave3cifrada', '', ''),
-(4, 'lolo', 'clave4rsa', 'clave4priv', 'clave4cifrada', '', ''),
-(5, 'leila', 'clave5rsa', 'clave5priv', 'clave5cifrada', '', ''),
-(13, 'Lucia', 'clave1', 'clave13priv', 'clave13cifrada', '', ''),
-(15, 'Maria', 'clave15pubrsa', 'clave15privrsa', 'm', '', ''),
-(16, 'alex', 'clavepubrsa', 'claveprivrsa', 'clavecifrada', '', ''),
-(17, 'Marta', 'clavepubrsa', 'claveprivrsa', 'clavecifrada', '', ''),
-(20, 'Prueba', 'Prueba', 'Prueba', 'S?;??!????TD???)`W\0??y?????öo?{?H??{?i?k&??~?bW?|?	??', 0xdba822dab2efbfbd091c0f7d32efbfbd5eefbfbd6defbfbdefbfbd656fefbfbd1defbfbd165eefbfbdd39b40efbfbdefbfbd7131, '?E???<?QN\0`E?2');
+(1, 'Pepe', 'clave1', 'clave1priv', 0x70, '', ''),
+(2, 'Jorge', 'clavepubrsa2', 'clave2priv', 0x6a, '', ''),
+(3, 'Encarna', 'clavepubrsa3', 'clave3priv', 0x636c6176653363696672616461, '', ''),
+(4, 'lolo', 'clave4rsa', 'clave4priv', 0x636c6176653463696672616461, '', ''),
+(5, 'leila', 'clave5rsa', 'clave5priv', 0x636c6176653563696672616461, '', ''),
+(13, 'Lucia', 'clave1', 'clave13priv', 0x636c617665313363696672616461, '', ''),
+(15, 'Maria', 'clave15pubrsa', 'clave15privrsa', 0x6d, '', ''),
+(16, 'alex', 'clavepubrsa', 'claveprivrsa', 0x636c61766563696672616461, '', ''),
+(17, 'Marta', 'clavepubrsa', 'claveprivrsa', 0x636c61766563696672616461, '', ''),
+(25, 'Prueba', 'Prueba', 'Prueba', 0x8d589a6b39e18b69ff8d02cd239d2716265feed354ddbebe962da0251cf8c70ebb06ad7c2279ff5882e96db5483e3a497eda81b26de37d1a1dd44c02375366fc, 0xde9b8b325ee0a76887a235cba2a30bcfde8d29cef7425fa7b051881e96b6dfb1, 0x1e8545c0bbb13c8b514e006045be320f);
 
 -- --------------------------------------------------------
 
@@ -289,7 +289,7 @@ ALTER TABLE `mensaje`
 -- AUTO_INCREMENT de la tabla `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=21;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=26;
 --
 -- Restricciones para tablas volcadas
 --
