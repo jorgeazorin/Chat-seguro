@@ -87,7 +87,7 @@ func main() {
 
 			// Bucle infinito que lee cosas que envia el usuario
 			for {
-				buf := make([]byte, 524288)
+				buf := make([]byte, 1048576) //256
 
 				//Lee el mensaje
 				n, err := conn.Read(buf)

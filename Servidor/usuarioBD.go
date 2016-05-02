@@ -5,10 +5,13 @@
 package main
 
 import (
+	//"crypto/sha256"
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	//"golang.org/x/crypto/scrypt"
 	"strconv"
+	//"strings"
 )
 
 type Usuario struct {
@@ -16,9 +19,9 @@ type Usuario struct {
 	Nombre       string `json:"Nombre"`
 	Clavepubrsa  string `json:"Clavepubrsa"`
 	Claveprivrsa string `json:"Claveprivrsa"`
-	Clavelogin   string `json:"Clavelogin"`
-	Salt         string `json:"Salt"`
-	Clavecifrado string `json:"Clavecifrado"`
+	Clavelogin   []byte `json:"Clavelogin"`
+	Salt         []byte `json:"Salt"`
+	Clavecifrado []byte `json:"Clavecifrado"`
 }
 
 //Funcion para obtener los datos del usuario cuando se loguea
@@ -48,12 +51,10 @@ func (usuario *Usuario) login(nombre string, password string) bool {
 }
 
 // Comprobamos un usuario con su nombre y clave cifrada
-func (bd *BD) comprobarUsuarioBD(nombre string, clavelogin string) (Usuario, bool) {
+func (bd *BD) comprobarUsuarioBD(nombre string, clave string) (Usuario, bool) {
 
 	var usuario Usuario
-
 	usuario.Nombre = nombre
-	usuario.Clavelogin = clavelogin
 
 	//Conexión BD
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
@@ -64,16 +65,20 @@ func (bd *BD) comprobarUsuarioBD(nombre string, clavelogin string) (Usuario, boo
 	}
 	defer db.Close()
 
-	//Obtenemos el id del usuario
-	rows, err := db.Query("SELECT id, clavepubrsa, claveprivrsa FROM usuario WHERE nombre = '" + nombre + "' and clavelogin= '" + clavelogin + "'")
+	//Obtenemos los datos del usuario según su nombre
+	rows, err := db.Query("SELECT id, clavepubrsa, claveprivrsa, clavelogin, salt, clavecifrado FROM usuario WHERE nombre = '" + nombre + "'")
 	if err != nil {
 		fmt.Println(err.Error())
 		defer db.Close()
 		return usuario, false
 	}
 
+	var clavelogin []byte
+	var salt []byte
+	var clavecifrado []byte
+
 	for rows.Next() {
-		err = rows.Scan(&usuario.Id, &usuario.Clavepubrsa, &usuario.Claveprivrsa)
+		err = rows.Scan(&usuario.Id, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &clavelogin, &salt, &clavecifrado)
 		if err != nil {
 			fmt.Println(err.Error())
 			defer db.Close()
@@ -81,9 +86,54 @@ func (bd *BD) comprobarUsuarioBD(nombre string, clavelogin string) (Usuario, boo
 		}
 	}
 
-	if usuario.Id == 0 {
+	fmt.Println("MIRA:", clavecifrado)
+
+	//Obtenemos los datos del usuario según su nombre
+	rows, err = db.Query("SELECT id, clavepubrsa, claveprivrsa, clavelogin, salt, clavecifrado FROM usuario WHERE nombre = '" + nombre + "'")
+	if err != nil {
+		fmt.Println(err.Error())
+		defer db.Close()
 		return usuario, false
 	}
+
+	for rows.Next() {
+		err = rows.Scan(&usuario.Id, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &usuario.Clavelogin, &usuario.Salt, &usuario.Clavecifrado)
+		if err != nil {
+			fmt.Println(err.Error())
+			defer db.Close()
+			return usuario, false
+		}
+	}
+
+	/*/Comprobamos las claves
+
+	//Hash con SHA-2 (256) para la contraseña en general
+	clavebytes := []byte(clave)
+	clavebytesconsha2 := sha256.Sum256(clavebytes)
+
+	//fmt.Println("Mira la clave:", clavebytesconsha2)
+	claveconsha2 := string(clavebytesconsha2[:])
+
+	//Dividimos dicho HASH
+	clavehashlogin := string(claveconsha2[0 : len(claveconsha2)/2])
+	clavehashcifrado := string(claveconsha2[len(claveconsha2)/2 : len(claveconsha2)])
+
+	fmt.Println("Mira la clave:", claveconsha2)
+	fmt.Println("Mira la clave1:", clavehashlogin)
+	fmt.Println("Mira la clave2:", clavehashcifrado)
+
+	//Si la clave cifrado no coincide ya es falso
+	if strings.Compare(clavehashcifrado, usuario.Clavecifrado) != 0 {
+		return usuario, false
+	}
+
+	//La parte del login hacemos BCRYPT con SALT de la BD
+	clavebcryptlogin, _ := scrypt.Key([]byte(clavehashlogin), []byte(usuario.Salt), 16384, 8, 1, 64)
+
+	if strings.Compare(string(clavebcryptlogin), usuario.Clavelogin) != 0 {
+		fmt.Println("Mal2", string(clavebcryptlogin), usuario.Clavelogin)
+		return usuario, false
+	}*/
 
 	return usuario, true
 }

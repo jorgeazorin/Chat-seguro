@@ -19,13 +19,14 @@ import (
 
 //Struct de los mensajes que se envian por el socket
 type Mensaje struct {
-	From     string   `json:"From"`
-	To       int      `json:"To"`
-	Password string   `json:"Password"`
-	Funcion  string   `json:"Funcion"`
-	Datos    []string `json:"Datos"`
-	Chat     int      `json:"Chat"`
-	Mensaje  string   `json:"MensajeSocket"`
+	From        string   `json:"From"`
+	To          int      `json:"To"`
+	Password    string   `json:"Password"`
+	Funcion     string   `json:"Funcion"`
+	Datos       []string `json:"Datos"`
+	DatosClaves [][]byte `json:"DatosClaves"`
+	Chat        int      `json:"Chat"`
+	Mensaje     string   `json:"MensajeSocket"`
 }
 
 var nombre_usuario_from string
@@ -36,9 +37,9 @@ type Usuario struct {
 	nombre       string
 	clavepubrsa  string
 	claveprivrsa string
-	clavelogin   string
-	salt         string
-	clavecifrado string
+	clavelogin   []byte
+	salt         []byte
+	clavecifrado []byte
 }
 
 var ClientUsuario Usuario
@@ -76,7 +77,7 @@ func main() {
 	//////////////////////////////////
 
 	login(conn)
-	obtenerMensajesChat(conn, 1)
+	//obtenerMensajesChat(conn, 1)
 
 	//Usuario 1 en el chat 7 al usuario 15
 	//agregarUsuariosChat(conn, 7, []string{"15"})
@@ -93,7 +94,7 @@ func main() {
 	u.nombre = "Prueba"
 	u.clavepubrsa = "Prueba"
 	u.claveprivrsa = "Prueba"
-	registrarUsuario(conn, u, "miclave1")
+	//registrarUsuario(conn, u, "miclave1")
 
 	///////////////////////////////////
 	//    Enviar  y recibir      /////
@@ -114,7 +115,7 @@ func handleServerRead(conn net.Conn) {
 	//bucle infinito
 	for {
 		defer conn.Close()
-		reply := make([]byte, 524288) //256
+		reply := make([]byte, 1048576) //256
 		n, err := conn.Read(reply)
 		if err != nil {
 			break
@@ -168,16 +169,12 @@ func generarClaves(clave string) {
 	clavebytes := []byte(clave)
 	clavebytesconsha2 := sha256.Sum256(clavebytes)
 
-	fmt.Println("Mira la clave:", clavebytesconsha2)
-	claveconsha2 := string(clavebytesconsha2[:])
+	//fmt.Println("Mira la clave:", clavebytesconsha2)
+	//claveconsha2 := string(clavebytesconsha2[:])
 
 	//Dividimos dicho HASH
-	clavehashlogin := string(claveconsha2[0 : len(claveconsha2)/2])
-	clavehashcifrado := string(claveconsha2[len(claveconsha2)/2 : len(claveconsha2)])
-
-	fmt.Println("Mira la clave:", claveconsha2)
-	fmt.Println("Mira la clave1:", clavehashlogin)
-	fmt.Println("Mira la clave2:", clavehashcifrado)
+	clavehashlogin := clavebytesconsha2[0 : len(clavebytesconsha2)/2]
+	clavehashcifrado := clavebytesconsha2[len(clavebytesconsha2)/2 : len(clavebytesconsha2)]
 
 	//La parte del login hacemos BCRYPT con SALT
 	salt := make([]byte, 32)
@@ -186,12 +183,16 @@ func generarClaves(clave string) {
 		log.Fatal(err)
 	}
 
-	clavebcryptlogin, _ := scrypt.Key([]byte(clavehashlogin), salt, 16384, 8, 1, 64)
+	clavebcryptlogin, _ := scrypt.Key(clavehashlogin, salt, 16384, 8, 1, 64)
 
 	//Guardamos los datos en una variable
-	ClientUsuario.clavelogin = string(clavebcryptlogin)
+	ClientUsuario.clavelogin = clavebcryptlogin
 	ClientUsuario.clavecifrado = clavehashcifrado
-	ClientUsuario.salt = string(salt)
+	ClientUsuario.salt = salt
+
+	/*fmt.Println("Mira la clave login:", clavebcryptlogin)
+	fmt.Println("Mira la clave sha:", salt)
+	fmt.Println("Mira la clave cifrado:", clavehashcifrado)*/
 }
 
 //Registrar a un usuario
@@ -208,7 +209,12 @@ func registrarUsuario(conn net.Conn, usuario Usuario, clave string) {
 	generarClaves(clave)
 
 	//Debemos guardar la SALT con la que hacemos la clave del login, la clave del login y la clavehashcifrado
-	mensaje.Datos = []string{usuario.nombre, usuario.clavepubrsa, usuario.claveprivrsa, ClientUsuario.clavelogin, ClientUsuario.salt, ClientUsuario.clavecifrado}
+	fmt.Println("Mira la clave login:", []byte(string(ClientUsuario.clavelogin)))
+	fmt.Println("Mira la clave sha:", []byte(string(ClientUsuario.salt)))
+	fmt.Println("Mira la clave cifrado:", ClientUsuario.clavecifrado)
+
+	mensaje.Datos = []string{usuario.nombre, usuario.clavepubrsa, usuario.claveprivrsa}
+	mensaje.DatosClaves = [][]byte{ClientUsuario.clavelogin, ClientUsuario.salt, ClientUsuario.clavecifrado}
 
 	//Convertir a json
 	b, _ := json.Marshal(mensaje)

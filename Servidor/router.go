@@ -14,6 +14,7 @@ type MensajeSocket struct {
 	Password      string   `json:"Password"`
 	Funcion       string   `json:"Funcion"`
 	Datos         []string `json:"Datos"`
+	DatosClaves   [][]byte `json:"DatosClaves"`
 	Chat          int      `json:"Chat"`
 	MensajeSocket string   `json:"MensajeSocket"`
 }
@@ -278,15 +279,19 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		usuarionuevo.Nombre = mensaje.Datos[0]
 		usuarionuevo.Clavepubrsa = mensaje.Datos[1]
 		usuarionuevo.Claveprivrsa = mensaje.Datos[2]
-		usuarionuevo.Clavelogin = mensaje.Datos[3]
-		usuarionuevo.Salt = mensaje.Datos[4]
-		usuarionuevo.Clavecifrado = mensaje.Datos[5]
+		usuarionuevo.Clavelogin = mensaje.DatosClaves[0]
+		usuarionuevo.Salt = mensaje.DatosClaves[1]
+		usuarionuevo.Clavecifrado = mensaje.DatosClaves[2]
 
-		if usuario.Id != 1 {
+		fmt.Println("1 login:", usuarionuevo.Clavelogin)
+		fmt.Println("2 salt:", usuarionuevo.Salt)
+		fmt.Println("3 cifrado:", usuarionuevo.Clavecifrado)
+
+		/*if usuario.Id != 1 {
 			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Error, no tienes permiso para registrar a un usuario."}
 			EnviarMensajeSocketSocket(conexion, mesj)
 			return
-		}
+		}*/
 
 		test := bd.insertUsuarioBD(usuarionuevo)
 
@@ -356,7 +361,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	}
 
 	if mensaje.Funcion == "modificarusuario" {
-		usuarioAux := Usuario{Id: usuario.Id, Nombre: usuario.Nombre, Claveprivrsa: mensaje.Datos[0], Clavepubrsa: mensaje.Datos[1], Clavelogin: mensaje.Datos[2]}
+		usuarioAux := Usuario{Id: usuario.Id, Nombre: usuario.Nombre, Claveprivrsa: mensaje.Datos[0], Clavepubrsa: mensaje.Datos[1], Clavelogin: []byte(mensaje.Datos[2])}
 		boolean := bd.modificarUsuarioBD(usuarioAux)
 		if boolean {
 			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Usuario cambiado correctamente"}
