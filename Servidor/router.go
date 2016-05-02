@@ -278,7 +278,9 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		usuarionuevo.Nombre = mensaje.Datos[0]
 		usuarionuevo.Clavepubrsa = mensaje.Datos[1]
 		usuarionuevo.Claveprivrsa = mensaje.Datos[2]
-		usuarionuevo.Claveusuario = mensaje.Datos[3]
+		usuarionuevo.Clavelogin = mensaje.Datos[3]
+		usuarionuevo.Salt = mensaje.Datos[4]
+		usuarionuevo.Clavecifrado = mensaje.Datos[5]
 
 		if usuario.Id != 1 {
 			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Error, no tienes permiso para registrar a un usuario."}
@@ -354,7 +356,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	}
 
 	if mensaje.Funcion == "modificarusuario" {
-		usuarioAux := Usuario{Id: usuario.Id, Nombre: usuario.Nombre, Claveprivrsa: mensaje.Datos[0], Clavepubrsa: mensaje.Datos[1], Claveusuario: mensaje.Datos[2]}
+		usuarioAux := Usuario{Id: usuario.Id, Nombre: usuario.Nombre, Claveprivrsa: mensaje.Datos[0], Clavepubrsa: mensaje.Datos[1], Clavelogin: mensaje.Datos[2]}
 		boolean := bd.modificarUsuarioBD(usuarioAux)
 		if boolean {
 			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Usuario cambiado correctamente"}

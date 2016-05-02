@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"crypto/rand"
+	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
@@ -31,19 +32,19 @@ var nombre_usuario_from string
 
 //Para pasar los datos de un usuario
 type Usuario struct {
-	id             int
-	nombre         string
-	clavepubrsa    string
-	claveprivrsa   string
-	claveusuario   string
-	clavedescifrar string
+	id           int
+	nombre       string
+	clavepubrsa  string
+	claveprivrsa string
+	clavelogin   string
+	salt         string
+	clavecifrado string
 }
 
 var ClientUsuario Usuario
 
 func main() {
 
-	generarClaves("string")
 	//var window ui.Window
 	//LEER CERTIFICADOS DE LOS ARCHIVOS (ESTOS SON LOS CERTIFICADOS DEL CLIENTE)
 	cert2_b, _ := ioutil.ReadFile("cert2.pem")
@@ -73,23 +74,26 @@ func main() {
 	///////////////////////////////////
 	//    PRUEBAS    /////////////////
 	//////////////////////////////////
+
 	login(conn)
 	obtenerMensajesChat(conn, 1)
+
 	//Usuario 1 en el chat 7 al usuario 15
 	//agregarUsuariosChat(conn, 7, []string{"15"})
 	//Usuario 1 en el chat 7 al usuario 15
 	//eliminarUsuariosChat(conn, 7, []string{"15"})
-	getClavePubUsuario(conn, 1)
-	getClaveMensaje(conn, 2)
-	getClaveCifrarMensajeChat(conn, 1)
+
+	//getClavePubUsuario(conn, 1)
+	//getClaveMensaje(conn, 2)
+	//getClaveCifrarMensajeChat(conn, 1)
+
 	//CrearNuevaClaveMensajes(conn)
 	//asociarNuevaClaveUsuarioConIdNuevoConjuntoClaves(conn, 1, "minuevaclavemaria")
 	var u Usuario
 	u.nombre = "Prueba"
 	u.clavepubrsa = "Prueba"
 	u.claveprivrsa = "Prueba"
-	u.claveusuario = "Prueba"
-	registrarUsuario(conn, u)
+	registrarUsuario(conn, u, "miclave1")
 
 	///////////////////////////////////
 	//    Enviar  y recibir      /////
@@ -160,24 +164,38 @@ func handleClientWrite(conn net.Conn) {
 
 func generarClaves(clave string) {
 
+	//Hash con SHA-2 (256) para la contraseña en general
+	clavebytes := []byte(clave)
+	clavebytesconsha2 := sha256.Sum256(clavebytes)
+
+	fmt.Println("Mira la clave:", clavebytesconsha2)
+	claveconsha2 := string(clavebytesconsha2[:])
+
+	//Dividimos dicho HASH
+	clavehashlogin := string(claveconsha2[0 : len(claveconsha2)/2])
+	clavehashcifrado := string(claveconsha2[len(claveconsha2)/2 : len(claveconsha2)])
+
+	fmt.Println("Mira la clave:", claveconsha2)
+	fmt.Println("Mira la clave1:", clavehashlogin)
+	fmt.Println("Mira la clave2:", clavehashcifrado)
+
+	//La parte del login hacemos BCRYPT con SALT
 	salt := make([]byte, 32)
 	_, err := io.ReadFull(rand.Reader, salt)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	dk, _ := scrypt.Key([]byte(clave), salt, 16384, 8, 1, 64)
-	log.Println(dk[0 : len(dk)/2])
-	log.Println(dk[len(dk)/2 : len(dk)])
-	ClientUsuario.claveusuario = string(dk[0 : len(dk)/2])
-	ClientUsuario.clavedescifrar = string(dk[len(dk)/2 : len(dk)])
-	log.Println("Clave descifrar ", ClientUsuario.clavedescifrar)
-	log.Println("Clave usuario ", ClientUsuario.claveusuario)
+	clavebcryptlogin, _ := scrypt.Key([]byte(clavehashlogin), salt, 16384, 8, 1, 64)
 
+	//Guardamos los datos en una variable
+	ClientUsuario.clavelogin = string(clavebcryptlogin)
+	ClientUsuario.clavecifrado = clavehashcifrado
+	ClientUsuario.salt = string(salt)
 }
 
 //Registrar a un usuario
-func registrarUsuario(conn net.Conn, usuario Usuario) {
+func registrarUsuario(conn net.Conn, usuario Usuario, clave string) {
 
 	mensaje := Mensaje{}
 
@@ -186,10 +204,11 @@ func registrarUsuario(conn net.Conn, usuario Usuario) {
 	mensaje.Password = "1"
 	mensaje.Funcion = "registrarusuario"
 
-	//ClientUsuario.
-	//usaurio.claveusuario[0 : len(usuario.claveusuario)/2]
+	//Generamos las claves
+	generarClaves(clave)
 
-	mensaje.Datos = []string{usuario.nombre, usuario.clavepubrsa, usuario.claveprivrsa, usuario.claveusuario}
+	//Debemos guardar la SALT con la que hacemos la clave del login, la clave del login y la clavehashcifrado
+	mensaje.Datos = []string{usuario.nombre, usuario.clavepubrsa, usuario.claveprivrsa, ClientUsuario.clavelogin, ClientUsuario.salt, ClientUsuario.clavecifrado}
 
 	//Convertir a json
 	b, _ := json.Marshal(mensaje)

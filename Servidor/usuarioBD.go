@@ -16,8 +16,9 @@ type Usuario struct {
 	Nombre       string `json:"Nombre"`
 	Clavepubrsa  string `json:"Clavepubrsa"`
 	Claveprivrsa string `json:"Claveprivrsa"`
-	Claveusuario string `json:"Claveusuario"`
-	Salt         []byte `json:"Salt"`
+	Clavelogin   string `json:"Clavelogin"`
+	Salt         string `json:"Salt"`
+	Clavecifrado string `json:"Clavecifrado"`
 }
 
 //Funcion para obtener los datos del usuario cuando se loguea
@@ -41,18 +42,18 @@ func (usuario *Usuario) login(nombre string, password string) bool {
 	usuario.Nombre = user.Nombre
 	usuario.Clavepubrsa = user.Clavepubrsa
 	usuario.Claveprivrsa = user.Claveprivrsa
-	usuario.Claveusuario = user.Claveusuario
+	usuario.Clavelogin = user.Clavelogin
 	usuario.Nombre = user.Nombre
 	return true
 }
 
 // Comprobamos un usuario con su nombre y clave cifrada
-func (bd *BD) comprobarUsuarioBD(nombre string, claveusuario string) (Usuario, bool) {
+func (bd *BD) comprobarUsuarioBD(nombre string, clavelogin string) (Usuario, bool) {
 
 	var usuario Usuario
 
 	usuario.Nombre = nombre
-	usuario.Claveusuario = claveusuario
+	usuario.Clavelogin = clavelogin
 
 	//Conexión BD
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
@@ -64,7 +65,7 @@ func (bd *BD) comprobarUsuarioBD(nombre string, claveusuario string) (Usuario, b
 	defer db.Close()
 
 	//Obtenemos el id del usuario
-	rows, err := db.Query("SELECT id, clavepubrsa, claveprivrsa FROM usuario WHERE nombre = '" + nombre + "' and claveusuario= '" + claveusuario + "'")
+	rows, err := db.Query("SELECT id, clavepubrsa, claveprivrsa FROM usuario WHERE nombre = '" + nombre + "' and clavelogin= '" + clavelogin + "'")
 	if err != nil {
 		fmt.Println(err.Error())
 		defer db.Close()
@@ -98,13 +99,13 @@ func (bd *BD) getUsuarioBD(user string) Usuario {
 	}
 	defer db.Close()
 	//Obtenemos el nombre del usuario
-	rows, err := db.Query("SELECT id, nombre, clavepubrsa, claveprivrsa, claveusuario FROM usuario WHERE nombre = '" + user + "'")
+	rows, err := db.Query("SELECT id, nombre, clavepubrsa, claveprivrsa, clavelogin FROM usuario WHERE nombre = '" + user + "'")
 	if err != nil {
 		fmt.Println(err.Error())
 		defer db.Close()
 	}
 	for rows.Next() {
-		err = rows.Scan(&usuario.Id, &usuario.Nombre, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &usuario.Claveusuario)
+		err = rows.Scan(&usuario.Id, &usuario.Nombre, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &usuario.Clavelogin)
 		if err != nil {
 			fmt.Println(err.Error())
 			defer db.Close()
@@ -226,7 +227,7 @@ func (bd *BD) getUsuario(id int) Usuario {
 	defer db.Close()
 
 	//Obtenemos el nombre del usuario
-	rows, err := db.Query("SELECT id, nombre, clavepubrsa, claveprivrsa, claveusuario FROM usuario WHERE id = " + strconv.Itoa(id))
+	rows, err := db.Query("SELECT id, nombre, clavepubrsa, claveprivrsa, clavelogin FROM usuario WHERE id = " + strconv.Itoa(id))
 	if err != nil {
 		fmt.Println(err.Error())
 		defer db.Close()
@@ -234,7 +235,7 @@ func (bd *BD) getUsuario(id int) Usuario {
 	}
 
 	for rows.Next() {
-		err = rows.Scan(&usuario.Id, &usuario.Nombre, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &usuario.Claveusuario)
+		err = rows.Scan(&usuario.Id, &usuario.Nombre, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &usuario.Clavelogin)
 		if err != nil {
 			fmt.Println(err.Error())
 			defer db.Close()
@@ -262,14 +263,14 @@ func (bd *BD) modificarUsuarioBD(usuario Usuario) bool {
 	}
 
 	//Preparamos crear el chat
-	stmtIns, err := db.Prepare("UPDATE usuario set clavepubrsa=?, claveprivrsa=?, claveusuario=? where id=?")
+	stmtIns, err := db.Prepare("UPDATE usuario set clavepubrsa=?, claveprivrsa=?, clavelogin=? where id=?")
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
 	}
 
 	//Insertamos crear el chat
-	_, err = stmtIns.Exec(usuario.Clavepubrsa, usuario.Claveprivrsa, usuario.Claveusuario, usuario.Id)
+	_, err = stmtIns.Exec(usuario.Clavepubrsa, usuario.Claveprivrsa, usuario.Clavelogin, usuario.Id)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -293,14 +294,14 @@ func (bd *BD) insertUsuarioBD(usuario Usuario) bool {
 	defer db.Close()
 
 	//Preparamos consulta
-	stmtIns, err := db.Prepare("INSERT INTO usuario VALUES(?, ?, ?, ?, ?, ?)")
+	stmtIns, err := db.Prepare("INSERT INTO usuario VALUES(?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
 	}
 
 	//Insertamos
-	_, err = stmtIns.Exec("DEFAULT", usuario.Nombre, usuario.Clavepubrsa, usuario.Claveprivrsa, usuario.Claveusuario, usuario.Salt)
+	_, err = stmtIns.Exec("DEFAULT", usuario.Nombre, usuario.Clavepubrsa, usuario.Claveprivrsa, usuario.Clavelogin, usuario.Salt, usuario.Clavecifrado)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
