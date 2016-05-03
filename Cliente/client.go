@@ -89,7 +89,7 @@ func main() {
 	//getClaveCifrarMensajeChat(conn, 1)
 
 	//CrearNuevaClaveMensajes(conn)
-	//asociarNuevaClaveUsuarioConIdNuevoConjuntoClaves(conn, 1, "minuevaclavemaria")
+	//nuevaClaveUsuarioConIdConjuntoClaves(conn, 1, "minuevaclavemaria")
 	var u Usuario
 	u.nombre = "Prueba"
 	u.clavepubrsa = "Prueba"
@@ -190,36 +190,6 @@ func generarClaves(clave string) {
 	ClientUsuario.salt = salt
 }
 
-//Registrar a un usuario
-func registrarUsuario(conn net.Conn, usuario Usuario, clave string) {
-
-	mensaje := Mensaje{}
-
-	//Rellenar datos
-	mensaje.From = nombre_usuario_from
-	mensaje.Password = "1"
-	mensaje.Funcion = "registrarusuario"
-
-	//Generamos las claves
-	generarClaves(clave)
-
-	//Debemos guardar la SALT con la que hacemos la clave del login, la clave del login y la clavehashcifrado
-	fmt.Println("Mira la clave login:", []byte(string(ClientUsuario.clavelogin)))
-	fmt.Println("Mira la clave sha:", []byte(string(ClientUsuario.salt)))
-	fmt.Println("Mira la clave cifrado:", ClientUsuario.clavecifrado)
-
-	mensaje.Datos = []string{usuario.nombre, usuario.clavepubrsa, usuario.claveprivrsa}
-	mensaje.DatosClaves = [][]byte{ClientUsuario.clavelogin, ClientUsuario.salt, ClientUsuario.clavecifrado}
-
-	//Convertir a json
-	b, _ := json.Marshal(mensaje)
-
-	log.Printf(string(b))
-
-	//Escribe json en el socket
-	conn.Write(b)
-}
-
 //Cliente realiza login
 func login(conn net.Conn) {
 	reader := bufio.NewReader(os.Stdin)
@@ -247,6 +217,36 @@ func login(conn net.Conn) {
 	log.Printf(string(b))
 
 	//Escribe peticion json en el socket
+	conn.Write(b)
+}
+
+//Registrar a un usuario
+func registrarUsuario(conn net.Conn, usuario Usuario, clave string) {
+
+	mensaje := Mensaje{}
+
+	//Rellenar datos
+	mensaje.From = nombre_usuario_from
+	mensaje.Password = "1"
+	mensaje.Funcion = "registrarusuario"
+
+	//Generamos las claves
+	generarClaves(clave)
+
+	//Debemos guardar la SALT con la que hacemos la clave del login, la clave del login y la clavehashcifrado
+	fmt.Println("Mira la clave login:", []byte(string(ClientUsuario.clavelogin)))
+	fmt.Println("Mira la clave sha:", []byte(string(ClientUsuario.salt)))
+	fmt.Println("Mira la clave cifrado:", ClientUsuario.clavecifrado)
+
+	mensaje.Datos = []string{usuario.nombre, usuario.clavepubrsa, usuario.claveprivrsa}
+	mensaje.DatosClaves = [][]byte{ClientUsuario.clavelogin, ClientUsuario.salt, ClientUsuario.clavecifrado}
+
+	//Convertir a json
+	b, _ := json.Marshal(mensaje)
+
+	log.Printf(string(b))
+
+	//Escribe json en el socket
 	conn.Write(b)
 }
 
@@ -346,7 +346,7 @@ func getClaveMensaje(conn net.Conn, idmensaje int) {
 	//Rellenar datos
 	mensaje.From = nombre_usuario_from
 	mensaje.Password = "1"
-	mensaje.Funcion = "getclavemensaje"
+	mensaje.Funcion = "getclavesmensajes"
 	cadena_idmensaje := strconv.Itoa(idmensaje)
 	mensaje.Datos = []string{cadena_idmensaje}
 
@@ -400,14 +400,14 @@ func CrearNuevaClaveMensajes(conn net.Conn) {
 }
 
 //Asocia nueva clave de un usuario con el id que indica ese nuevo conjunto de claves
-func asociarNuevaClaveUsuarioConIdNuevoConjuntoClaves(conn net.Conn, idconjuntoclaves int, claveusuario string) {
+func nuevaClaveUsuarioConIdConjuntoClaves(conn net.Conn, idconjuntoclaves int, claveusuario string) {
 
 	mensaje := Mensaje{}
 
 	//Rellenar datos
 	mensaje.From = nombre_usuario_from
 	mensaje.Password = "1"
-	mensaje.Funcion = "asociarnuevaclaveusuarioconidnuevoconjuntoclaves"
+	mensaje.Funcion = "nuevaclaveusuarioconidconjuntoclaves"
 	cadena_idconjuntoclaves := strconv.Itoa(idconjuntoclaves)
 	mensaje.Datos = []string{cadena_idconjuntoclaves, claveusuario}
 

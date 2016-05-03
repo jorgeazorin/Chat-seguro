@@ -110,7 +110,7 @@ func (bd *BD) comprobarUsuarioBD(nombre string, clave string) (Usuario, bool) {
 }
 
 //Obtenemos usuario según id usuario
-func (bd *BD) getUsuarioBD(user string) Usuario {
+func (bd *BD) getUsuarioByNombreBD(user string) Usuario {
 	usuario := Usuario{}
 	//Conexión BD
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
@@ -120,13 +120,13 @@ func (bd *BD) getUsuarioBD(user string) Usuario {
 	}
 	defer db.Close()
 	//Obtenemos el nombre del usuario
-	rows, err := db.Query("SELECT id, nombre, clavepubrsa, claveprivrsa, clavelogin FROM usuario WHERE nombre = '" + user + "'")
+	rows, err := db.Query("SELECT id, nombre, clavepubrsa, claveprivrsa, clavelogin, salt, clavecifrado FROM usuario WHERE nombre = '" + user + "'")
 	if err != nil {
 		fmt.Println(err.Error())
 		defer db.Close()
 	}
 	for rows.Next() {
-		err = rows.Scan(&usuario.Id, &usuario.Nombre, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &usuario.Clavelogin)
+		err = rows.Scan(&usuario.Id, &usuario.Nombre, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &usuario.Clavelogin, &usuario.Salt, &usuario.Clavecifrado)
 		if err != nil {
 			fmt.Println(err.Error())
 			defer db.Close()
@@ -135,34 +135,38 @@ func (bd *BD) getUsuarioBD(user string) Usuario {
 	return usuario
 }
 
-//Obtener los id de usuarios de un chat
-func (bd *BD) getUsuariosChatBD(id int) []int {
-	usuarios := []int{}
+//Obtenemos una instancia de usuario según id usuario
+func (bd *BD) getUsuarioById(id int) Usuario {
+
+	var usuario Usuario
 
 	//Conexión BD
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
 		fmt.Println(err.Error())
+		return usuario
 	}
 	defer db.Close()
+
 	//Obtenemos el nombre del usuario
-	rows, err := db.Query("SELECT idusuario FROM usuarioschat WHERE idchat = " + strconv.Itoa(id))
+	rows, err := db.Query("SELECT id, nombre, clavepubrsa, claveprivrsa, clavelogin, salt, clavecifrado FROM usuario WHERE id = " + strconv.Itoa(id))
 	if err != nil {
 		fmt.Println(err.Error())
 		defer db.Close()
+		return usuario
 	}
+
 	for rows.Next() {
-		var i int
-		err = rows.Scan(&i)
+		err = rows.Scan(&usuario.Id, &usuario.Nombre, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &usuario.Clavelogin, &usuario.Salt, &usuario.Clavecifrado)
 		if err != nil {
 			fmt.Println(err.Error())
 			defer db.Close()
+			return usuario
 		}
-		usuarios = append(usuarios, i)
-
 	}
-	return usuarios
+
+	return usuario
 }
 
 //Obtenemos nombre de usuario según id usuario
@@ -233,73 +237,34 @@ func (bd *BD) getClavePubUsuario(id int) string {
 	return clavepub
 }
 
-//Obtenemos una instancia de usuario según id usuario
-func (bd *BD) getUsuario(id int) Usuario {
-
-	var usuario Usuario
+//Obtener los id de usuarios de un chat
+func (bd *BD) getUsuariosChatBD(id int) []int {
+	usuarios := []int{}
 
 	//Conexión BD
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
 		fmt.Println(err.Error())
-		return usuario
 	}
 	defer db.Close()
-
 	//Obtenemos el nombre del usuario
-	rows, err := db.Query("SELECT id, nombre, clavepubrsa, claveprivrsa, clavelogin FROM usuario WHERE id = " + strconv.Itoa(id))
+	rows, err := db.Query("SELECT idusuario FROM usuarioschat WHERE idchat = " + strconv.Itoa(id))
 	if err != nil {
 		fmt.Println(err.Error())
 		defer db.Close()
-		return usuario
 	}
-
 	for rows.Next() {
-		err = rows.Scan(&usuario.Id, &usuario.Nombre, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &usuario.Clavelogin)
+		var i int
+		err = rows.Scan(&i)
 		if err != nil {
 			fmt.Println(err.Error())
 			defer db.Close()
-			return usuario
 		}
+		usuarios = append(usuarios, i)
+
 	}
-
-	return usuario
-}
-
-func (bd *BD) modificarUsuarioBD(usuario Usuario) bool {
-
-	//Conexion BD
-	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return false
-	}
-	defer db.Close()
-
-	nombreu := bd.getNombreUsuario(usuario.Id)
-	if nombreu == "" {
-		return false
-	}
-
-	//Preparamos crear el chat
-	stmtIns, err := db.Prepare("UPDATE usuario set clavepubrsa=?, claveprivrsa=?, clavelogin=? where id=?")
-	if err != nil {
-		fmt.Println(err.Error())
-		return false
-	}
-
-	//Insertamos crear el chat
-	_, err = stmtIns.Exec(usuario.Clavepubrsa, usuario.Claveprivrsa, usuario.Clavelogin, usuario.Id)
-	if err != nil {
-		fmt.Println(err.Error())
-		return false
-	}
-
-	defer stmtIns.Close()
-
-	return true
+	return usuarios
 }
 
 //Insertamos a un nuevo usuario en BD
@@ -333,7 +298,43 @@ func (bd *BD) insertUsuarioBD(usuario Usuario) bool {
 	return true
 }
 
-func (bd *BD) getClaves(usuario int) []string {
+//Modificamos los datos de un usuario
+func (bd *BD) modificarUsuarioBD(usuario Usuario) bool {
+
+	//Conexion BD
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	defer db.Close()
+
+	nombreu := bd.getNombreUsuario(usuario.Id)
+	if nombreu == "" {
+		return false
+	}
+
+	//Preparamos crear el chat
+	stmtIns, err := db.Prepare("UPDATE usuario set clavepubrsa=?, claveprivrsa=?, clavelogin=?, salt=?, clavecifrado=? where id=?")
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+
+	//Insertamos crear el chat
+	_, err = stmtIns.Exec(usuario.Clavepubrsa, usuario.Claveprivrsa, usuario.Clavelogin, usuario.Salt, usuario.Clavecifrado, usuario.Id)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+
+	defer stmtIns.Close()
+
+	return true
+}
+
+func (bd *BD) getClavesMensajes(usuario int) []string {
 	claves := make([]string, 0, 1) //Los mensajes de un chat
 
 	//Conexion BD

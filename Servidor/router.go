@@ -34,6 +34,9 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	bd.adress = ""
 	bd.database = "sds"
 
+	////////////////
+	//INICIAR SESIÓN
+	////////////////
 	if mensaje.Funcion == "login" {
 
 		//Rellenamos el usuario de la conexión con el login
@@ -55,6 +58,46 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 
 	}
 
+	///////////////////
+	//REGISTRAR USUARIO
+	///////////////////
+	if mensaje.Funcion == "registrarusuario" {
+
+		var usuarionuevo Usuario
+
+		usuarionuevo.Nombre = mensaje.Datos[0]
+		usuarionuevo.Clavepubrsa = mensaje.Datos[1]
+		usuarionuevo.Claveprivrsa = mensaje.Datos[2]
+		usuarionuevo.Clavelogin = mensaje.DatosClaves[0]
+		usuarionuevo.Salt = mensaje.DatosClaves[1]
+		usuarionuevo.Clavecifrado = mensaje.DatosClaves[2]
+
+		fmt.Println("1 login:", usuarionuevo.Clavelogin)
+		fmt.Println("2 salt:", usuarionuevo.Salt)
+		fmt.Println("3 cifrado:", usuarionuevo.Clavecifrado)
+
+		/*if usuario.Id != 1 {
+			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Error, no tienes permiso para registrar a un usuario."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+			return
+		}*/
+
+		test := bd.insertUsuarioBD(usuarionuevo)
+
+		if test == false {
+			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Error al intentar registrar al usuario."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+			return
+		}
+
+		//Enviamos mensaje contestación
+		mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Usuario registrado correctamente"}
+		EnviarMensajeSocketSocket(conexion, mesj)
+	}
+
+	////////////////////////
+	//CREAR MENSAJE Y ENVIAR
+	////////////////////////
 	if mensaje.Funcion == "enviar" {
 
 		//Guardamos los mensajes en la BD
@@ -79,6 +122,9 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 
 	}
 
+	/////////////////////////////
+	//OBTENER MENSAJES DE UN CHAT
+	/////////////////////////////
 	if mensaje.Funcion == "obtenermensajeschat" {
 
 		//Obtenemos los mensajes de ese chat
@@ -116,7 +162,9 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
-	//Agregamos usuarios al chat
+	////////////////////////////
+	//AGREGAMOS USUARIOS AL CHAT
+	////////////////////////////
 	if mensaje.Funcion == "agregarusuarioschat" {
 
 		//Obtenemos los mensajes de ese chat
@@ -152,7 +200,9 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
-	//Eliminamos usuarios del chat
+	/////////////////////////////
+	//ELIMINAMOS USUARIOS AL CHAT
+	/////////////////////////////
 	if mensaje.Funcion == "eliminarusuarioschat" {
 
 		//Obtenemos los mensajes de ese chat
@@ -188,7 +238,9 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
-	//Obtenemos clave pub de un usuario
+	//////////////////////////////////
+	//OBTENER CLAVE PÚBLICA DE USUARIO
+	//////////////////////////////////
 	if mensaje.Funcion == "getclavepubusuario" {
 
 		//Obtenemos id del usuario
@@ -207,7 +259,9 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
-	//Obtenemos clave cifrada de un mensaje
+	////////////////////////////////////////////
+	//OBTENER CLAVE PARA CIFRAR MENSAJES DE CHAT
+	////////////////////////////////////////////
 	if mensaje.Funcion == "getclavecifrarmensajechat" {
 
 		//Obtenemos id del mensaje
@@ -234,7 +288,9 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
-	//Crear una nueva clave para cifrar mensajes
+	//////////////////////////////////
+	//NUEVA CLAVE PARA CIFRAR MENSAJES
+	//////////////////////////////////
 	if mensaje.Funcion == "crearnuevoidparanuevaclavemensajes" {
 
 		idclavemensajes := bd.CrearNuevaClaveMensajesBD()
@@ -252,8 +308,10 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
-	//Asocia nueva clave de un usuario con el id que indica ese nuevo conjunto de claves
-	if mensaje.Funcion == "asociarnuevaclaveusuarioconidnuevoconjuntoclaves" {
+	////////////////////////////////////////////
+	//NUEVA CLAVE USUARIO CON ID CONJUNTO CLAVES
+	////////////////////////////////////////////
+	if mensaje.Funcion == "nuevaclaveusuarioconidconjuntoclaves" {
 
 		idconjuntoclaves, _ := strconv.Atoi(mensaje.Datos[0])
 		claveusuario := mensaje.Datos[1]
@@ -271,41 +329,9 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
-	//Crea un usuario llamando a la BD
-	if mensaje.Funcion == "registrarusuario" {
-
-		var usuarionuevo Usuario
-
-		usuarionuevo.Nombre = mensaje.Datos[0]
-		usuarionuevo.Clavepubrsa = mensaje.Datos[1]
-		usuarionuevo.Claveprivrsa = mensaje.Datos[2]
-		usuarionuevo.Clavelogin = mensaje.DatosClaves[0]
-		usuarionuevo.Salt = mensaje.DatosClaves[1]
-		usuarionuevo.Clavecifrado = mensaje.DatosClaves[2]
-
-		fmt.Println("1 login:", usuarionuevo.Clavelogin)
-		fmt.Println("2 salt:", usuarionuevo.Salt)
-		fmt.Println("3 cifrado:", usuarionuevo.Clavecifrado)
-
-		/*if usuario.Id != 1 {
-			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Error, no tienes permiso para registrar a un usuario."}
-			EnviarMensajeSocketSocket(conexion, mesj)
-			return
-		}*/
-
-		test := bd.insertUsuarioBD(usuarionuevo)
-
-		if test == false {
-			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Error al intentar registrar al usuario."}
-			EnviarMensajeSocketSocket(conexion, mesj)
-			return
-		}
-
-		//Enviamos mensaje contestación
-		mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Usuario registrado correctamente"}
-		EnviarMensajeSocketSocket(conexion, mesj)
-	}
-
+	///////////////////
+	//OBTENER LOS CHATS
+	///////////////////
 	if mensaje.Funcion == "obtenerchats" {
 		chats := bd.getChatsUsuarioBD(usuario.Id)
 
@@ -324,13 +350,17 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		EnviarMensajeSocketSocket(conexion, mesj)
 
 	}
+
+	///////////////////////////
+	//MARCAR MENSAJE COMO LEIDO
+	///////////////////////////
 	if mensaje.Funcion == "marcarmensajeleido" {
 		i, _ := strconv.Atoi(mensaje.Datos[0])
 		bd.marcarLeido(i)
 	}
 
-	if mensaje.Funcion == "obtenerclaves" {
-		claves := bd.getClaves(usuario.Id)
+	if mensaje.Funcion == "getclavesmensajes" {
+		claves := bd.getClavesMensajes(usuario.Id)
 
 		datos := make([]string, 0, 1)
 
@@ -346,9 +376,12 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
+	/////////////////////////////////
+	//OBTENER TODOS DATOS DEL USUARIO
+	/////////////////////////////////
 	if mensaje.Funcion == "obtenerTodo" {
 		todoslosdatos := TodosLosDatos{}
-		todoslosdatos.Claves = bd.getClaves(usuario.Id)
+		todoslosdatos.Claves = bd.getClavesMensajes(usuario.Id)
 		todoslosdatos.Usuario.Claveprivrsa = usuario.Claveprivrsa
 		todoslosdatos.Usuario.Clavepubrsa = usuario.Clavepubrsa
 		todoslosdatos.Usuario.Nombre = usuario.Nombre
@@ -360,6 +393,9 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
+	////////////////
+	//EDITAR USUARIO
+	////////////////
 	if mensaje.Funcion == "modificarusuario" {
 		usuarioAux := Usuario{Id: usuario.Id, Nombre: usuario.Nombre, Claveprivrsa: mensaje.Datos[0], Clavepubrsa: mensaje.Datos[1], Clavelogin: []byte(mensaje.Datos[2])}
 		boolean := bd.modificarUsuarioBD(usuarioAux)
@@ -372,6 +408,9 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		}
 	}
 
+	/////////////
+	//EDITAR CHAT
+	/////////////
 	if mensaje.Funcion == "modificarchat" {
 		i, err := strconv.Atoi(mensaje.Datos[0])
 
