@@ -32,13 +32,13 @@ var nombre_usuario_from string
 
 //Para pasar los datos de un usuario
 type Usuario struct {
-	id           int
-	nombre       string
-	clavepubrsa  string
-	claveprivrsa string
-	clavelogin   []byte
-	salt         []byte
-	clavecifrado []byte
+	id               int
+	nombre           string
+	clavepubrsa      string
+	claveprivrsa     string
+	claveenclaro     string
+	clavehashcifrado []byte
+	clavehashlogin   []byte
 }
 
 var ClientUsuario Usuario
@@ -182,8 +182,8 @@ func generarHashClaves(clave string) {
 	clavehashlogin := clavebytesconsha2[0 : len(clavebytesconsha2)/2]
 	clavehashcifrado := clavebytesconsha2[len(clavebytesconsha2)/2 : len(clavebytesconsha2)]
 
-	ClientUsuario.clavecifrado = clavehashcifrado
-	ClientUsuario.clavelogin = clavehashlogin
+	ClientUsuario.clavehashcifrado = clavehashcifrado
+	ClientUsuario.clavehashlogin = clavehashlogin
 }
 
 //Registrar a un usuario
@@ -199,7 +199,7 @@ func registrarUsuario(conn net.Conn, usuario Usuario, clave string) {
 	generarHashClaves(clave)
 
 	mensaje.Datos = []string{usuario.nombre, usuario.clavepubrsa, usuario.claveprivrsa}
-	mensaje.DatosClaves = [][]byte{ClientUsuario.clavelogin}
+	mensaje.DatosClaves = [][]byte{ClientUsuario.clavehashlogin}
 
 	//Convertir a json
 	b, _ := json.Marshal(mensaje)
@@ -228,7 +228,7 @@ func login(conn net.Conn) {
 
 	mensaje := Mensaje{}
 	mensaje.From = nombreusuario
-	mensaje.DatosClaves = [][]byte{ClientUsuario.clavelogin}
+	mensaje.DatosClaves = [][]byte{ClientUsuario.clavehashlogin}
 	mensaje.Funcion = "login"
 	mensaje.To = -1
 
@@ -399,7 +399,7 @@ func CrearNuevaClaveMensajes(conn net.Conn) {
 func cifrarAES(datos string, clave []byte) (cipher.Block, bool) {
 
 	fmt.Println("mira la clave:", clave)
-	fmt.Println("mira la :", ClientUsuario.clavecifrado)
+	fmt.Println("mira la :", ClientUsuario.clavehashcifrado)
 	fmt.Println("mira la :", ClientUsuario.nombre)
 
 	var nulo cipher.Block
@@ -423,7 +423,7 @@ func descifrarAES(datos cipher.Block, clave []byte) {
 func nuevaClaveUsuarioConIdConjuntoClaves(conn net.Conn, idconjuntoclaves int, clavemensajes string) {
 
 	//Cifrar la clave para los mensajes
-	clavecifradamensajes, err := cifrarAES(clavemensajes, ClientUsuario.clavecifrado)
+	clavecifradamensajes, err := cifrarAES(clavemensajes, ClientUsuario.clavehashcifrado)
 
 	if err == true {
 		fmt.Println("Error al generar clave con cifrado AES")
