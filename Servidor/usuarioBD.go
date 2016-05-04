@@ -5,11 +5,13 @@
 package main
 
 import (
-	"crypto/sha256"
+	"crypto/rand"
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"golang.org/x/crypto/scrypt"
+	"io"
+	"log"
 	"strconv"
 )
 
@@ -23,52 +25,70 @@ type Usuario struct {
 	Clavecifrado []byte `json:"Clavecifrado"`
 }
 
-//Genera hash de la clave, la divide en 2 para login y cifrado.
-//La del login con la salt le aplica bcrypt
-func generarClaves(clave string, salt []byte) ([]byte, []byte) {
-
-	//Hash con SHA-2 (256) para la contraseña en general
-	clavebytes := []byte(clave)
-	clavebytesconsha2 := sha256.Sum256(clavebytes)
-
-	//Dividimos dicho HASH
-	clavehashlogin := clavebytesconsha2[0 : len(clavebytesconsha2)/2]
-	clavehashcifrado := clavebytesconsha2[len(clavebytesconsha2)/2 : len(clavebytesconsha2)]
+//Generar clave con scrypt dada una salt
+func generarClaveLoginConSalt(clavehashlogin []byte, salt []byte) []byte {
 
 	//La parte del login hacemos BCRYPT con SALT que nos dan
 	clavebcryptlogin, _ := scrypt.Key(clavehashlogin, salt, 16384, 8, 1, 64)
 
-	return clavebcryptlogin, clavehashcifrado
+	return clavebcryptlogin
 }
 
-//Funcion para obtener los datos del usuario cuando se loguea
-func (usuario *Usuario) login(nombre string, password string) bool {
+//Generar clave con scrypt generando una salt
+func generarClaveLoginClaves(clavehashlogin []byte) ([]byte, []byte) {
 
-	//Para las operaciones con la BD
-	var bd BD
-	bd.username = "root"
-	bd.password = ""
-	bd.adress = ""
-	bd.database = "sds"
-
-	usuario.Nombre = nombre
-	user, test := bd.comprobarUsuarioBD(nombre, password)
-
-	if test == false {
-		return false
+	//La parte del login hacemos BCRYPT con SALT
+	salt := make([]byte, 32)
+	_, err := io.ReadFull(rand.Reader, salt)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	usuario.Id = user.Id
-	usuario.Nombre = user.Nombre
-	usuario.Clavepubrsa = user.Clavepubrsa
-	usuario.Claveprivrsa = user.Claveprivrsa
-	usuario.Clavelogin = user.Clavelogin
-	usuario.Nombre = user.Nombre
-	return true
+	clavebcryptlogin, _ := scrypt.Key(clavehashlogin, salt, 16384, 8, 1, 64)
+
+	return clavebcryptlogin, salt
+}
+
+//Insertamos a un nuevo usuario en BD
+func (bd *BD) insertUsuarioBD(usuario Usuario) (Usuario, bool) {
+
+	var usuariobd Usuario
+
+	//genera la clavelogin con scrypt (y el salt con el que se crea)
+	clavelogin, salt := generarClaveLoginClaves(usuario.Clavelogin)
+
+	//Conexión BD
+	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return usuariobd, false
+	}
+	defer db.Close()
+
+	//Preparamos consulta
+	stmtIns, err := db.Prepare("INSERT INTO usuario VALUES(?, ?, ?, ?, ?, ?)")
+	if err != nil {
+		fmt.Println(err.Error())
+		return usuariobd, false
+	}
+
+	//Insertamos
+	_, err = stmtIns.Exec("DEFAULT", usuario.Nombre, usuario.Clavepubrsa, usuario.Claveprivrsa, clavelogin, salt)
+	if err != nil {
+		fmt.Println(err.Error())
+		return usuariobd, false
+	}
+
+	defer stmtIns.Close()
+
+	usuariobd = bd.getUsuarioByNombreBD(usuario.Nombre)
+
+	return usuariobd, true
 }
 
 // Comprobamos un usuario con su nombre y clave cifrada
-func (bd *BD) comprobarUsuarioBD(nombre string, clave string) (Usuario, bool) {
+func (bd *BD) loginUsuarioBD(nombre string, clavehashlogin []byte) (Usuario, bool) {
 
 	var usuario Usuario
 	usuario.Nombre = nombre
@@ -83,7 +103,7 @@ func (bd *BD) comprobarUsuarioBD(nombre string, clave string) (Usuario, bool) {
 	defer db.Close()
 
 	//Obtenemos los datos del usuario según su nombre
-	rows, err := db.Query("SELECT id, clavepubrsa, claveprivrsa, clavelogin, salt, clavecifrado FROM usuario WHERE nombre = '" + nombre + "'")
+	rows, err := db.Query("SELECT id, clavepubrsa, claveprivrsa, clavelogin, salt FROM usuario WHERE nombre = '" + nombre + "'")
 	if err != nil {
 		fmt.Println(err.Error())
 		defer db.Close()
@@ -91,7 +111,7 @@ func (bd *BD) comprobarUsuarioBD(nombre string, clave string) (Usuario, bool) {
 	}
 
 	for rows.Next() {
-		err = rows.Scan(&usuario.Id, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &usuario.Clavelogin, &usuario.Salt, &usuario.Clavecifrado)
+		err = rows.Scan(&usuario.Id, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &usuario.Clavelogin, &usuario.Salt)
 		if err != nil {
 			fmt.Println(err.Error())
 			defer db.Close()
@@ -100,9 +120,9 @@ func (bd *BD) comprobarUsuarioBD(nombre string, clave string) (Usuario, bool) {
 	}
 
 	//Comparamos las claves generadas con la Salt de la BD y las guardadas en la BD
-	clavelogin, clavecifrado := generarClaves(clave, usuario.Salt)
+	clavelogin := generarClaveLoginConSalt(clavehashlogin, usuario.Salt)
 
-	if string(clavelogin) != string(usuario.Clavelogin) || string(clavecifrado) != string(usuario.Clavecifrado) {
+	if string(clavelogin) != string(usuario.Clavelogin) {
 		return usuario, false
 	}
 
@@ -120,13 +140,13 @@ func (bd *BD) getUsuarioByNombreBD(user string) Usuario {
 	}
 	defer db.Close()
 	//Obtenemos el nombre del usuario
-	rows, err := db.Query("SELECT id, nombre, clavepubrsa, claveprivrsa, clavelogin, salt, clavecifrado FROM usuario WHERE nombre = '" + user + "'")
+	rows, err := db.Query("SELECT id, nombre, clavepubrsa, claveprivrsa, clavelogin, salt FROM usuario WHERE nombre = '" + user + "'")
 	if err != nil {
 		fmt.Println(err.Error())
 		defer db.Close()
 	}
 	for rows.Next() {
-		err = rows.Scan(&usuario.Id, &usuario.Nombre, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &usuario.Clavelogin, &usuario.Salt, &usuario.Clavecifrado)
+		err = rows.Scan(&usuario.Id, &usuario.Nombre, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &usuario.Clavelogin, &usuario.Salt)
 		if err != nil {
 			fmt.Println(err.Error())
 			defer db.Close()
@@ -150,7 +170,7 @@ func (bd *BD) getUsuarioById(id int) Usuario {
 	defer db.Close()
 
 	//Obtenemos el nombre del usuario
-	rows, err := db.Query("SELECT id, nombre, clavepubrsa, claveprivrsa, clavelogin, salt, clavecifrado FROM usuario WHERE id = " + strconv.Itoa(id))
+	rows, err := db.Query("SELECT id, nombre, clavepubrsa, claveprivrsa, clavelogin, salt FROM usuario WHERE id = " + strconv.Itoa(id))
 	if err != nil {
 		fmt.Println(err.Error())
 		defer db.Close()
@@ -158,7 +178,7 @@ func (bd *BD) getUsuarioById(id int) Usuario {
 	}
 
 	for rows.Next() {
-		err = rows.Scan(&usuario.Id, &usuario.Nombre, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &usuario.Clavelogin, &usuario.Salt, &usuario.Clavecifrado)
+		err = rows.Scan(&usuario.Id, &usuario.Nombre, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &usuario.Clavelogin, &usuario.Salt)
 		if err != nil {
 			fmt.Println(err.Error())
 			defer db.Close()
@@ -267,37 +287,6 @@ func (bd *BD) getUsuariosChatBD(id int) []int {
 	return usuarios
 }
 
-//Insertamos a un nuevo usuario en BD
-func (bd *BD) insertUsuarioBD(usuario Usuario) bool {
-
-	//Conexión BD
-	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return false
-	}
-	defer db.Close()
-
-	//Preparamos consulta
-	stmtIns, err := db.Prepare("INSERT INTO usuario VALUES(?, ?, ?, ?, ?, ?, ?)")
-	if err != nil {
-		fmt.Println(err.Error())
-		return false
-	}
-
-	//Insertamos
-	_, err = stmtIns.Exec("DEFAULT", usuario.Nombre, usuario.Clavepubrsa, usuario.Claveprivrsa, usuario.Clavelogin, usuario.Salt, usuario.Clavecifrado)
-	if err != nil {
-		fmt.Println(err.Error())
-		return false
-	}
-
-	defer stmtIns.Close()
-
-	return true
-}
-
 //Modificamos los datos de un usuario
 func (bd *BD) modificarUsuarioBD(usuario Usuario) bool {
 
@@ -316,14 +305,14 @@ func (bd *BD) modificarUsuarioBD(usuario Usuario) bool {
 	}
 
 	//Preparamos crear el chat
-	stmtIns, err := db.Prepare("UPDATE usuario set clavepubrsa=?, claveprivrsa=?, clavelogin=?, salt=?, clavecifrado=? where id=?")
+	stmtIns, err := db.Prepare("UPDATE usuario set clavepubrsa=?, claveprivrsa=?, clavelogin=?, salt=? where id=?")
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
 	}
 
 	//Insertamos crear el chat
-	_, err = stmtIns.Exec(usuario.Clavepubrsa, usuario.Claveprivrsa, usuario.Clavelogin, usuario.Salt, usuario.Clavecifrado, usuario.Id)
+	_, err = stmtIns.Exec(usuario.Clavepubrsa, usuario.Claveprivrsa, usuario.Clavelogin, usuario.Salt, usuario.Id)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false

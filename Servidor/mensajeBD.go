@@ -138,7 +138,7 @@ func (bd *BD) CrearNuevaClaveMensajesBD() int64 {
 }
 
 //Guardamos la clave de un usuario para leer x mensajes
-func (bd *BD) GuardarClaveUsuarioMensajesBD(idclavesmensajes int, claveusuario string, idusuario int) bool {
+func (bd *BD) GuardarClaveUsuarioMensajesBD(idusuario int, idclavesmensajes int, clavemensajes string) bool {
 
 	//Conexión BD
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
@@ -157,7 +157,7 @@ func (bd *BD) GuardarClaveUsuarioMensajesBD(idclavesmensajes int, claveusuario s
 	}
 
 	//Insertamos
-	_, err = stmtIns.Exec(idusuario, idclavesmensajes, claveusuario)
+	_, err = stmtIns.Exec(idusuario, idclavesmensajes, clavemensajes)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false

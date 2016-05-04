@@ -2,14 +2,13 @@ package main
 
 import (
 	"bufio"
-	"crypto/rand"
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/crypto/scrypt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net"
@@ -89,7 +88,7 @@ func main() {
 	//getClaveCifrarMensajeChat(conn, 1)
 
 	//CrearNuevaClaveMensajes(conn)
-	//nuevaClaveUsuarioConIdConjuntoClaves(conn, 1, "minuevaclavemaria")
+	//nuevaClaveUsuarioConIdConjuntoClaves(conn, 1, "minuevaclave1")
 	var u Usuario
 	u.nombre = "Prueba"
 	u.clavepubrsa = "Prueba"
@@ -129,6 +128,16 @@ func handleServerRead(conn net.Conn) {
 			fmt.Println("dato:", i, "->", mensaje.Datos[i])
 		}
 
+		//Si nos devuelven el usuario lo rellenamos
+		if mensaje.Funcion == "DatosUsuario" {
+			fmt.Println("cliente guardado:")
+			idusuario, _ := strconv.Atoi(mensaje.Datos[0])
+			ClientUsuario.id = idusuario
+			ClientUsuario.nombre = mensaje.Datos[1]
+			ClientUsuario.clavepubrsa = mensaje.Datos[2]
+			ClientUsuario.claveprivrsa = mensaje.Datos[3]
+			fmt.Println(ClientUsuario)
+		}
 	}
 }
 
@@ -163,10 +172,8 @@ func handleClientWrite(conn net.Conn) {
 
 }
 
-//Genera hash de la clave, la divide en 2 para login y cifrado.
-//La del login con salt se le aplica bcrypt
-func generarClaves(clave string) {
-
+//De la ontraseña en claro se realiza hash y se divide en 2 (login y cifrado)
+func generarHashClaves(clave string) {
 	//Hash con SHA-2 (256) para la contraseña en general
 	clavebytes := []byte(clave)
 	clavebytesconsha2 := sha256.Sum256(clavebytes)
@@ -175,19 +182,32 @@ func generarClaves(clave string) {
 	clavehashlogin := clavebytesconsha2[0 : len(clavebytesconsha2)/2]
 	clavehashcifrado := clavebytesconsha2[len(clavebytesconsha2)/2 : len(clavebytesconsha2)]
 
-	//La parte del login hacemos BCRYPT con SALT
-	salt := make([]byte, 32)
-	_, err := io.ReadFull(rand.Reader, salt)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	clavebcryptlogin, _ := scrypt.Key(clavehashlogin, salt, 16384, 8, 1, 64)
-
-	//Guardamos los datos en una variable
-	ClientUsuario.clavelogin = clavebcryptlogin
 	ClientUsuario.clavecifrado = clavehashcifrado
-	ClientUsuario.salt = salt
+	ClientUsuario.clavelogin = clavehashlogin
+}
+
+//Registrar a un usuario
+func registrarUsuario(conn net.Conn, usuario Usuario, clave string) {
+
+	mensaje := Mensaje{}
+
+	//Rellenar datos
+	mensaje.From = nombre_usuario_from
+	mensaje.Funcion = "registrarusuario"
+
+	//Generamos los hash de las claves
+	generarHashClaves(clave)
+
+	mensaje.Datos = []string{usuario.nombre, usuario.clavepubrsa, usuario.claveprivrsa}
+	mensaje.DatosClaves = [][]byte{ClientUsuario.clavelogin}
+
+	//Convertir a json
+	b, _ := json.Marshal(mensaje)
+
+	log.Printf(string(b))
+
+	//Escribe json en el socket
+	conn.Write(b)
 }
 
 //Cliente realiza login
@@ -203,50 +223,27 @@ func login(conn net.Conn) {
 	password, _ := reader.ReadString('\n')
 	password = password[0 : len(password)-2]
 
+	//Generamos los hash de las claves
+	generarHashClaves(password)
+
 	mensaje := Mensaje{}
 	mensaje.From = nombreusuario
-	mensaje.Password = password
+	mensaje.DatosClaves = [][]byte{ClientUsuario.clavelogin}
 	mensaje.Funcion = "login"
 	mensaje.To = -1
 
 	//Rellenamos variable nombre usuario global
 	nombre_usuario_from = nombreusuario
+	ClientUsuario.nombre = nombreusuario
+	//ClientUsuario.clavelogin = clavebcryptlogin
+	//ClientUsuario.clavecifrado = clavehashcifrado
+	//ClientUsuario.salt = salt
 
 	//Convertir a json
 	b, _ := json.Marshal(mensaje)
 	log.Printf(string(b))
 
 	//Escribe peticion json en el socket
-	conn.Write(b)
-}
-
-//Registrar a un usuario
-func registrarUsuario(conn net.Conn, usuario Usuario, clave string) {
-
-	mensaje := Mensaje{}
-
-	//Rellenar datos
-	mensaje.From = nombre_usuario_from
-	mensaje.Password = "1"
-	mensaje.Funcion = "registrarusuario"
-
-	//Generamos las claves
-	generarClaves(clave)
-
-	//Debemos guardar la SALT con la que hacemos la clave del login, la clave del login y la clavehashcifrado
-	fmt.Println("Mira la clave login:", []byte(string(ClientUsuario.clavelogin)))
-	fmt.Println("Mira la clave sha:", []byte(string(ClientUsuario.salt)))
-	fmt.Println("Mira la clave cifrado:", ClientUsuario.clavecifrado)
-
-	mensaje.Datos = []string{usuario.nombre, usuario.clavepubrsa, usuario.claveprivrsa}
-	mensaje.DatosClaves = [][]byte{ClientUsuario.clavelogin, ClientUsuario.salt, ClientUsuario.clavecifrado}
-
-	//Convertir a json
-	b, _ := json.Marshal(mensaje)
-
-	log.Printf(string(b))
-
-	//Escribe json en el socket
 	conn.Write(b)
 }
 
@@ -399,8 +396,41 @@ func CrearNuevaClaveMensajes(conn net.Conn) {
 	conn.Write(b)
 }
 
+func cifrarAES(datos string, clave []byte) (cipher.Block, bool) {
+
+	fmt.Println("mira la clave:", clave)
+	fmt.Println("mira la :", ClientUsuario.clavecifrado)
+	fmt.Println("mira la :", ClientUsuario.nombre)
+
+	var nulo cipher.Block
+
+	clavecifrada, err := aes.NewCipher(clave)
+
+	if err != nil {
+		return nulo, true
+	}
+
+	fmt.Println("mira la clave:", clavecifrada)
+
+	return clavecifrada, false
+}
+
+func descifrarAES(datos cipher.Block, clave []byte) {
+
+}
+
 //Asocia nueva clave de un usuario con el id que indica ese nuevo conjunto de claves
-func nuevaClaveUsuarioConIdConjuntoClaves(conn net.Conn, idconjuntoclaves int, claveusuario string) {
+func nuevaClaveUsuarioConIdConjuntoClaves(conn net.Conn, idconjuntoclaves int, clavemensajes string) {
+
+	//Cifrar la clave para los mensajes
+	clavecifradamensajes, err := cifrarAES(clavemensajes, ClientUsuario.clavecifrado)
+
+	if err == true {
+		fmt.Println("Error al generar clave con cifrado AES")
+		return
+	}
+
+	fmt.Println("Miraa con aes:", clavecifradamensajes)
 
 	mensaje := Mensaje{}
 
@@ -409,7 +439,8 @@ func nuevaClaveUsuarioConIdConjuntoClaves(conn net.Conn, idconjuntoclaves int, c
 	mensaje.Password = "1"
 	mensaje.Funcion = "nuevaclaveusuarioconidconjuntoclaves"
 	cadena_idconjuntoclaves := strconv.Itoa(idconjuntoclaves)
-	mensaje.Datos = []string{cadena_idconjuntoclaves, claveusuario}
+	mensaje.Datos = []string{cadena_idconjuntoclaves}
+	//mensaje.DatosClaves = [][]byte{clavecifradamensajes}
 
 	//Convertir a json
 	b, _ := json.Marshal(mensaje)

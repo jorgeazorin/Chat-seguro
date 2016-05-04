@@ -34,13 +34,46 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	bd.adress = ""
 	bd.database = "sds"
 
+	///////////////////
+	//REGISTRAR USUARIO
+	///////////////////
+	if mensaje.Funcion == "registrarusuario" {
+
+		var usuarionuevo Usuario
+
+		usuarionuevo.Nombre = mensaje.Datos[0]
+		usuarionuevo.Clavepubrsa = mensaje.Datos[1]
+		usuarionuevo.Claveprivrsa = mensaje.Datos[2]
+		usuarionuevo.Clavelogin = mensaje.DatosClaves[0]
+
+		fmt.Println("1 login:", usuarionuevo.Clavelogin)
+
+		/*if usuario.Id != 1 {
+			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Error, no tienes permiso para registrar a un usuario."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+			return
+		}*/
+
+		_, test := bd.insertUsuarioBD(usuarionuevo)
+
+		if test == false {
+			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Error al intentar registrar al usuario."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+			return
+		}
+
+		//Enviamos mensaje contestación
+		mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Usuario registrado correctamente"}
+		EnviarMensajeSocketSocket(conexion, mesj)
+	}
+
 	////////////////
 	//INICIAR SESIÓN
 	////////////////
 	if mensaje.Funcion == "login" {
 
 		//Rellenamos el usuario de la conexión con el login
-		test := usuario.login(mensaje.From, mensaje.Password)
+		usuario, test := bd.loginUsuarioBD(mensaje.From, mensaje.DatosClaves[0])
 
 		//Si login incorrecto se lo decimos al cliente
 		if test == false {
@@ -53,46 +86,9 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		conexiones[usuario.Id] = conexion
 
 		//Enviamos un mensaje de todo OK al usuario logeado
-		mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Logeado correctamente"}
+		mesj := MensajeSocket{From: usuario.Nombre, Funcion: "DatosUsuario", Datos: []string{strconv.Itoa(usuario.Id), usuario.Nombre, usuario.Clavepubrsa, usuario.Claveprivrsa}, MensajeSocket: "Logeado correctamente"}
 		EnviarMensajeSocketSocket(conexion, mesj)
 
-	}
-
-	///////////////////
-	//REGISTRAR USUARIO
-	///////////////////
-	if mensaje.Funcion == "registrarusuario" {
-
-		var usuarionuevo Usuario
-
-		usuarionuevo.Nombre = mensaje.Datos[0]
-		usuarionuevo.Clavepubrsa = mensaje.Datos[1]
-		usuarionuevo.Claveprivrsa = mensaje.Datos[2]
-		usuarionuevo.Clavelogin = mensaje.DatosClaves[0]
-		usuarionuevo.Salt = mensaje.DatosClaves[1]
-		usuarionuevo.Clavecifrado = mensaje.DatosClaves[2]
-
-		fmt.Println("1 login:", usuarionuevo.Clavelogin)
-		fmt.Println("2 salt:", usuarionuevo.Salt)
-		fmt.Println("3 cifrado:", usuarionuevo.Clavecifrado)
-
-		/*if usuario.Id != 1 {
-			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Error, no tienes permiso para registrar a un usuario."}
-			EnviarMensajeSocketSocket(conexion, mesj)
-			return
-		}*/
-
-		test := bd.insertUsuarioBD(usuarionuevo)
-
-		if test == false {
-			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Error al intentar registrar al usuario."}
-			EnviarMensajeSocketSocket(conexion, mesj)
-			return
-		}
-
-		//Enviamos mensaje contestación
-		mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Usuario registrado correctamente"}
-		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
 	////////////////////////
@@ -313,16 +309,16 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	////////////////////////////////////////////
 	if mensaje.Funcion == "nuevaclaveusuarioconidconjuntoclaves" {
 
-		idconjuntoclaves, _ := strconv.Atoi(mensaje.Datos[0])
-		claveusuario := mensaje.Datos[1]
+		/*idconjuntoclaves, _ := strconv.Atoi(mensaje.Datos[0])
+		clavemensajes := mensaje.DatosClaves[0]
 
-		test := bd.GuardarClaveUsuarioMensajesBD(idconjuntoclaves, claveusuario, usuario.Id)
+		test := bd.GuardarClaveUsuarioMensajesBD(usuario.Id, idconjuntoclaves, clavemensajes)
 
 		if test == false {
 			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Error al asociar la clave del usuario con el id del conjunto de claves."}
 			EnviarMensajeSocketSocket(conexion, mesj)
 			return
-		}
+		}*/
 
 		//Enviamos mensaje contestación
 		mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Clave usuario asociada a id del conjunto de claves."}
