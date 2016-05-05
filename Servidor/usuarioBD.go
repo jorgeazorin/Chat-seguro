@@ -18,8 +18,8 @@ import (
 type Usuario struct {
 	Id           int    `json:"Id"`
 	Nombre       string `json:"Nombre"`
-	Clavepubrsa  string `json:"Clavepubrsa"`
-	Claveprivrsa string `json:"Claveprivrsa"`
+	Clavepubrsa  []byte `json:"Clavepubrsa"`
+	Claveprivrsa []byte `json:"Claveprivrsa"`
 	Clavelogin   []byte `json:"Clavelogin"`
 	Salt         []byte `json:"Salt"`
 	Clavecifrado []byte `json:"Clavecifrado"`

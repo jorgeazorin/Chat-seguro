@@ -42,11 +42,9 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		var usuarionuevo Usuario
 
 		usuarionuevo.Nombre = mensaje.Datos[0]
-		usuarionuevo.Clavepubrsa = mensaje.Datos[1]
-		usuarionuevo.Claveprivrsa = mensaje.Datos[2]
 		usuarionuevo.Clavelogin = mensaje.DatosClaves[0]
-
-		fmt.Println("1 login:", usuarionuevo.Clavelogin)
+		usuarionuevo.Clavepubrsa = mensaje.DatosClaves[1]
+		usuarionuevo.Claveprivrsa = mensaje.DatosClaves[2]
 
 		/*if usuario.Id != 1 {
 			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Error, no tienes permiso para registrar a un usuario."}
@@ -86,7 +84,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		conexiones[usuario.Id] = conexion
 
 		//Enviamos un mensaje de todo OK al usuario logeado
-		mesj := MensajeSocket{From: usuario.Nombre, Funcion: "DatosUsuario", Datos: []string{strconv.Itoa(usuario.Id), usuario.Nombre, usuario.Clavepubrsa, usuario.Claveprivrsa}, MensajeSocket: "Logeado correctamente"}
+		mesj := MensajeSocket{From: usuario.Nombre, Funcion: "DatosUsuario", Datos: []string{strconv.Itoa(usuario.Id), usuario.Nombre}, DatosClaves: [][]byte{usuario.Clavepubrsa, usuario.Claveprivrsa}, MensajeSocket: "Logeado correctamente"}
 		EnviarMensajeSocketSocket(conexion, mesj)
 
 	}
@@ -393,7 +391,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	//EDITAR USUARIO
 	////////////////
 	if mensaje.Funcion == "modificarusuario" {
-		usuarioAux := Usuario{Id: usuario.Id, Nombre: usuario.Nombre, Claveprivrsa: mensaje.Datos[0], Clavepubrsa: mensaje.Datos[1], Clavelogin: []byte(mensaje.Datos[2])}
+		usuarioAux := Usuario{Id: usuario.Id, Nombre: usuario.Nombre, Claveprivrsa: mensaje.DatosClaves[1], Clavepubrsa: mensaje.DatosClaves[2], Clavelogin: mensaje.DatosClaves[0]}
 		boolean := bd.modificarUsuarioBD(usuarioAux)
 		if boolean {
 			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Usuario cambiado correctamente"}

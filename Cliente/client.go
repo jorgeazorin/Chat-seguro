@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
@@ -34,8 +36,8 @@ var nombre_usuario_from string
 type Usuario struct {
 	id               int
 	nombre           string
-	clavepubrsa      string
-	claveprivrsa     string
+	clavepubrsa      []byte
+	claveprivrsa     []byte
 	claveenclaro     string
 	clavehashcifrado []byte
 	clavehashlogin   []byte
@@ -91,8 +93,7 @@ func main() {
 	//nuevaClaveUsuarioConIdConjuntoClaves(conn, 1, "minuevaclave1")
 	var u Usuario
 	u.nombre = "Prueba"
-	u.clavepubrsa = "Prueba"
-	u.claveprivrsa = "Prueba"
+	//u.clavepubrsa, u.claveprivrsa = generarClavesRSA()
 	//registrarUsuario(conn, u, "miclave1")
 
 	///////////////////////////////////
@@ -134,8 +135,8 @@ func handleServerRead(conn net.Conn) {
 			idusuario, _ := strconv.Atoi(mensaje.Datos[0])
 			ClientUsuario.id = idusuario
 			ClientUsuario.nombre = mensaje.Datos[1]
-			ClientUsuario.clavepubrsa = mensaje.Datos[2]
-			ClientUsuario.claveprivrsa = mensaje.Datos[3]
+			ClientUsuario.clavepubrsa = mensaje.DatosClaves[0]
+			ClientUsuario.claveprivrsa = mensaje.DatosClaves[1]
 			fmt.Println(ClientUsuario)
 		}
 	}
@@ -186,6 +187,22 @@ func generarHashClaves(clave string) {
 	ClientUsuario.clavehashlogin = clavehashlogin
 }
 
+//Genera una clave pública y otra privada
+func generarClavesRSA() ([]byte, []byte) {
+	claveprivada, err := rsa.GenerateKey(rand.Reader, 2048)
+
+	if err != nil {
+		fmt.Println(err.Error)
+	}
+
+	clavepublica := &claveprivada.PublicKey
+
+	priv := x509.MarshalPKCS1PrivateKey(claveprivada)
+	pub, _ := x509.MarshalPKIXPublicKey(clavepublica)
+
+	return priv, pub
+}
+
 //Registrar a un usuario
 func registrarUsuario(conn net.Conn, usuario Usuario, clave string) {
 
@@ -198,8 +215,8 @@ func registrarUsuario(conn net.Conn, usuario Usuario, clave string) {
 	//Generamos los hash de las claves
 	generarHashClaves(clave)
 
-	mensaje.Datos = []string{usuario.nombre, usuario.clavepubrsa, usuario.claveprivrsa}
-	mensaje.DatosClaves = [][]byte{ClientUsuario.clavehashlogin}
+	mensaje.Datos = []string{usuario.nombre}
+	mensaje.DatosClaves = [][]byte{ClientUsuario.clavehashlogin, usuario.clavepubrsa, usuario.claveprivrsa}
 
 	//Convertir a json
 	b, _ := json.Marshal(mensaje)
