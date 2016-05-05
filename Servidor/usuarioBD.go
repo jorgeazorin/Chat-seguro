@@ -13,7 +13,6 @@ import (
 	"gopkg.in/gorp.v1"
 	"io"
 	"log"
-	"strconv"
 )
 
 type Usuario struct {
@@ -94,7 +93,7 @@ func (bd *BD) insertUsuarioBD(usuario Usuario) (Usuario, bool) {
 		return usuariobd, false
 	}
 
-	usuariobd = bd.getUsuarioByNombreBD(usuario.Nombre)
+	usuariobd, _ = bd.getUsuarioByNombreBD(usuario.Nombre)
 
 	return usuariobd, true
 }
@@ -102,33 +101,19 @@ func (bd *BD) insertUsuarioBD(usuario Usuario) (Usuario, bool) {
 // Comprobamos un usuario con su nombre y clave cifrada
 func (bd *BD) loginUsuarioBD(nombre string, clavehashlogin []byte) (Usuario, bool) {
 
-	var usuario Usuario
-	usuario.Nombre = nombre
-
-	//Conexión BD
-	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return usuario, false
-	}
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
-
-	//Obtenemos los datos del usuario según su nombre
-	rows, err := db.Query("SELECT id, clavepubrsa, claveprivrsa, clavelogin, salt FROM usuario WHERE nombre = '" + nombre + "'")
-	if err != nil {
-		fmt.Println(err.Error())
-		defer db.Close()
-		return usuario, false
+	if test == true {
+		return Usuario{}, true
 	}
 
-	for rows.Next() {
-		err = rows.Scan(&usuario.Id, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &usuario.Clavelogin, &usuario.Salt)
-		if err != nil {
-			fmt.Println(err.Error())
-			defer db.Close()
-			return usuario, false
-		}
+	//Select
+	var usuario Usuario
+	err := dbmap.SelectOne(&usuario, "SELECT * FROM usuario WHERE nombre = ?", nombre)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return Usuario{}, true
 	}
 
 	//Comparamos las claves generadas con la Salt de la BD y las guardadas en la BD
@@ -141,74 +126,56 @@ func (bd *BD) loginUsuarioBD(nombre string, clavehashlogin []byte) (Usuario, boo
 	return usuario, true
 }
 
-//Obtenemos usuario según id usuario
-func (bd *BD) getUsuarioByNombreBD(user string) Usuario {
-	usuario := Usuario{}
-	//Conexión BD
-	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
-
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	defer db.Close()
-	//Obtenemos el nombre del usuario
-	rows, err := db.Query("SELECT id, nombre, clavepubrsa, claveprivrsa, clavelogin, salt FROM usuario WHERE nombre = '" + user + "'")
-	if err != nil {
-		fmt.Println(err.Error())
-		defer db.Close()
-	}
-	for rows.Next() {
-		err = rows.Scan(&usuario.Id, &usuario.Nombre, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &usuario.Clavelogin, &usuario.Salt)
-		if err != nil {
-			fmt.Println(err.Error())
-			defer db.Close()
-		}
-	}
-	return usuario
-}
-
 //Obtenemos una instancia de usuario según id usuario
-func (bd *BD) getUsuarioById(id int) Usuario {
-
-	var usuario Usuario
-
-	//Conexión BD
-	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return usuario
-	}
-	defer db.Close()
-
-	//Obtenemos el nombre del usuario
-	rows, err := db.Query("SELECT id, nombre, clavepubrsa, claveprivrsa, clavelogin, salt FROM usuario WHERE id = " + strconv.Itoa(id))
-	if err != nil {
-		fmt.Println(err.Error())
-		defer db.Close()
-		return usuario
-	}
-
-	for rows.Next() {
-		err = rows.Scan(&usuario.Id, &usuario.Nombre, &usuario.Clavepubrsa, &usuario.Claveprivrsa, &usuario.Clavelogin, &usuario.Salt)
-		if err != nil {
-			fmt.Println(err.Error())
-			defer db.Close()
-			return usuario
-		}
-	}
-
-	return usuario
-}
-
-//Obtenemos nombre de usuario según id usuario
-func (bd *BD) getNombreUsuario(id int) string {
+func (bd *BD) getUsuarioById(id int) (Usuario, bool) {
 
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
 	if test == true {
-		return ""
+		return Usuario{}, true
+	}
+
+	//Select
+	var usuario Usuario
+	err := dbmap.SelectOne(&usuario, "SELECT * FROM usuario WHERE id = ?", id)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return Usuario{}, true
+	}
+
+	return usuario, false
+}
+
+//Obtenemos usuario según id usuario
+func (bd *BD) getUsuarioByNombreBD(user string) (Usuario, bool) {
+
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
+	defer db.Close()
+	if test == true {
+		return Usuario{}, true
+	}
+
+	//Select
+	var usuario Usuario
+	err := dbmap.SelectOne(&usuario, "SELECT * FROM usuario WHERE nombre = ?", user)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return Usuario{}, true
+	}
+
+	return usuario, false
+}
+
+//Obtenemos nombre de usuario según id usuario
+func (bd *BD) getNombreUsuario(id int) (string, bool) {
+
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
+	defer db.Close()
+	if test == true {
+		return "", true
 	}
 
 	//Select
@@ -216,20 +183,20 @@ func (bd *BD) getNombreUsuario(id int) string {
 	err := dbmap.SelectOne(&usuario, "SELECT nombre FROM usuario WHERE id = ?", id)
 	if err != nil {
 		fmt.Println("Error:", err.Error())
-		return ""
+		return "", true
 	}
 
-	return usuario.Nombre
+	return usuario.Nombre, false
 }
 
 //Obtenemos clave pub de usuario según id usuario
-func (bd *BD) getClavePubUsuario(id int) []byte {
+func (bd *BD) getClavePubUsuario(id int) ([]byte, bool) {
 
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
 	if test == true {
-		return []byte{}
+		return []byte{}, true
 	}
 
 	//Select
@@ -237,40 +204,31 @@ func (bd *BD) getClavePubUsuario(id int) []byte {
 	err := dbmap.SelectOne(&usuario, "SELECT clavepubrsa FROM usuario WHERE id = ?", id)
 	if err != nil {
 		fmt.Println("Error:", err.Error())
-		return []byte{}
+		return []byte{}, true
 	}
 
-	return usuario.Clavepubrsa
+	return usuario.Clavepubrsa, false
 }
 
 //Obtener los id de usuarios de un chat
-func (bd *BD) getUsuariosChatBD(id int) []int {
-	usuarios := []int{}
+func (bd *BD) getUsuariosChatBD(id int) ([]int, bool) {
 
-	//Conexión BD
-	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
-
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
-	//Obtenemos el nombre del usuario
-	rows, err := db.Query("SELECT idusuario FROM usuarioschat WHERE idchat = " + strconv.Itoa(id))
-	if err != nil {
-		fmt.Println(err.Error())
-		defer db.Close()
+	if test == true {
+		return []int{}, true
 	}
-	for rows.Next() {
-		var i int
-		err = rows.Scan(&i)
-		if err != nil {
-			fmt.Println(err.Error())
-			defer db.Close()
-		}
-		usuarios = append(usuarios, i)
 
+	//Select
+	usuarios := []int{}
+	_, err := dbmap.Select(&usuarios, "SELECT idusuario FROM usuarioschat WHERE idchat = ?", id)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return []int{}, true
 	}
-	return usuarios
+
+	return usuarios, false
 }
 
 //Modificamos los datos de un usuario
@@ -293,42 +251,22 @@ func (bd *BD) modificarUsuarioBD(usuario Usuario) bool {
 	return true
 }
 
-func (bd *BD) getClavesMensajes(usuario int) []string {
-	claves := make([]string, 0, 1) //Los mensajes de un chat
+func (bd *BD) getClavesMensajes(usuario int) ([]string, bool) {
 
-	//Conexion BD
-	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil
-	}
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
+	if test == true {
+		return []string{}, true
+	}
 
-	//De el chat buscamos los datos de los mensajes de dicho chat
-	rows, err := db.Query("SELECT `idusuario`,`idclavesmensajes` FROM `clavesusuario` WHERE `idusuario`= " + strconv.Itoa(usuario))
+	//Select
+	claves := make([]string, 0, 1) //Los mensajes de un chat
+	_, err := dbmap.Select(&claves, "SELECT idclavesmensajes FROM clavesusuario WHERE idusuario = ?", usuario)
 	if err != nil {
-		fmt.Println(err.Error())
-		defer db.Close()
-		return nil
+		fmt.Println("Error:", err.Error())
+		return []string{}, true
 	}
 
-	var clave string
-	var id string
-
-	for rows.Next() {
-		//Obtenemos los datos del mensaje
-		err = rows.Scan(&clave, &id)
-
-		if err != nil {
-			fmt.Println(err.Error())
-			defer db.Close()
-			return nil
-		}
-
-		//Guardamos el mensaje en el array de mensajes
-		claves = append(claves, id+":"+clave)
-	}
-
-	return claves
+	return claves, false
 }

@@ -107,7 +107,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 
 		//Obtenemos los usuarios que pertenecen en el chat
 		idChat := mensaje.Chat
-		idusuarios := bd.getUsuariosChatBD(idChat)
+		idusuarios, _ := bd.getUsuariosChatBD(idChat)
 
 		//Enviamos el mensaje a todos los usuarios de ese chat (incluido el emisor)
 		for i := 0; i < len(idusuarios); i++ {
@@ -242,16 +242,16 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		//Obtenemos id del usuario
 		idusuario, _ := strconv.Atoi(mensaje.Datos[0])
 
-		clavepub := bd.getClavePubUsuario(idusuario)
+		clavepub, test := bd.getClavePubUsuario(idusuario)
 
-		if clavepub == "" {
+		if test == true {
 			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Error al obtener clave del usuario."}
 			EnviarMensajeSocketSocket(conexion, mesj)
 			return
 		}
 
 		//Enviamos mensaje contestación
-		mesj := MensajeSocket{From: usuario.Nombre, Datos: []string{clavepub}, MensajeSocket: "Clave pub usuario obtenida correctamente."}
+		mesj := MensajeSocket{From: usuario.Nombre, DatosClaves: [][]byte{clavepub}, MensajeSocket: "Clave pub usuario obtenida correctamente."}
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
@@ -358,7 +358,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	}
 
 	if mensaje.Funcion == "getclavesmensajes" {
-		claves := bd.getClavesMensajes(usuario.Id)
+		claves, _ := bd.getClavesMensajes(usuario.Id)
 
 		datos := make([]string, 0, 1)
 
@@ -379,7 +379,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	/////////////////////////////////
 	if mensaje.Funcion == "obtenerTodo" {
 		todoslosdatos := TodosLosDatos{}
-		todoslosdatos.Claves = bd.getClavesMensajes(usuario.Id)
+		todoslosdatos.Claves, _ = bd.getClavesMensajes(usuario.Id)
 		todoslosdatos.Usuario.Claveprivrsa = usuario.Claveprivrsa
 		todoslosdatos.Usuario.Clavepubrsa = usuario.Clavepubrsa
 		todoslosdatos.Usuario.Nombre = usuario.Nombre

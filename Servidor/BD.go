@@ -51,28 +51,39 @@ func main() {
 	fmt.Println("Mira modificar usuario:", test)
 
 	//Probar obtener nombre según id
-	nombreusuario := bd.getNombreUsuario(1)
+	nombreusuario, _ := bd.getNombreUsuario(1)
 	fmt.Println("Mira el nombre del usuario:", nombreusuario)
 
 	//Probar obtener pub según id
-	clavepub := bd.getClavePubUsuario(1)
-	fmt.Println("Mira clave pubñica del usuario:", clavepub)
+	clavepub, _ := bd.getClavePubUsuario(1)
+	fmt.Println("Mira clave publica del usuario:", clavepub)
 
 	//Probar obtener usuario según id
-	usuario := bd.getUsuario(1)
-	fmt.Println("Mira el usuario:", usuario.id, usuario.nombre, usuario.clavepubrsa, usuario.claveprivrsa, usuario.claveusuario)
+	usuario, _ := bd.getUsuarioById(1)
+	fmt.Println("Mira el usuario:", usuario.Id, usuario.Nombre, usuario.Clavepubrsa, usuario.Claveprivrsa, usuario.Clavelogin)
+
+	//Probar obtener usuario según nombre
+	usuario, _ = bd.getUsuarioByNombreBD("Pepe")
+	fmt.Println("Mira el usuario:", usuario.Id, usuario.Nombre, usuario.Clavepubrsa, usuario.Claveprivrsa, usuario.Clavelogin)
+
+	//get usuarios de un chat
+	usuarios, _ := bd.getUsuariosChatBD(1)
+	fmt.Println("Mira:", usuarios)
+
+	claves, _ := bd.getClavesMensajes(1)
+	fmt.Println("Mira:", claves)
 
 	//Prueba comprobar usuario
-	var miusuario Usuario
-	miusuario, test = bd.comprobarUsuarioBD("Maria", "clave15cifrada")
-	fmt.Println("Mira comprobando usuario:", test, " tiene:", miusuario.clavepubrsa, miusuario.id)
-	fmt.Println("-")
+	//var miusuario Usuario
+	//miusuario, test = bd.loginUsuarioBD("Maria", "clave15cifrada")
+	//fmt.Println("Mira comprobando usuario:", test, " tiene:", miusuario.clavepubrsa, miusuario.id)
+	//fmt.Println("-")
 
 	//////////
 	//MENSAJES
 	//////////
 
-	//Prueba guardar mensaje
+	///Prueba guardar mensaje
 	var m Mensaje
 	m.texto = "Hola que tal?? :)"
 	m.idchat = 1
@@ -140,6 +151,5 @@ func main() {
 			}
 		}
 	}
-	fmt.Println("-")
-}
-*/
+	fmt.Println("-")/
+}*/

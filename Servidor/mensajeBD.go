@@ -201,7 +201,7 @@ func (bd *BD) getMensajesChatBD(idchat int) []Mensaje {
 			return nil
 		}
 
-		mensaje.Nombreemisor = bd.getNombreUsuario(mensaje.Idemisor)
+		mensaje.Nombreemisor, _ = bd.getNombreUsuario(mensaje.Idemisor)
 
 		//Para ver si un mensaje aparece como leido o no
 		rows2, err2 := db.Query("SELECT leido from receptoresmensaje where idmensaje = " + strconv.Itoa(mensaje.Id))
