@@ -9,8 +9,10 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
+	//"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
@@ -78,6 +80,8 @@ func main() {
 	//////////////////////////////////
 
 	login(conn)
+	mensajecifrado, nonce, _ := cifrarAES("hola amigos", ClientUsuario.clavehashcifrado)
+	descifrarAES(mensajecifrado, ClientUsuario.clavehashcifrado, nonce)
 	//obtenerMensajesChat(conn, 1)
 
 	//Usuario 1 en el chat 7 al usuario 15
@@ -137,7 +141,7 @@ func handleServerRead(conn net.Conn) {
 			ClientUsuario.nombre = mensaje.Datos[1]
 			ClientUsuario.clavepubrsa = mensaje.DatosClaves[0]
 			ClientUsuario.claveprivrsa = mensaje.DatosClaves[1]
-			fmt.Println(ClientUsuario)
+			//fmt.Println(ClientUsuario)
 		}
 	}
 }
@@ -201,6 +205,54 @@ func generarClavesRSA() ([]byte, []byte) {
 	pub, _ := x509.MarshalPKIXPublicKey(clavepublica)
 
 	return priv, pub
+}
+
+func cifrarAES(texto string, clave []byte) ([]byte, []byte, bool) {
+
+	var textocifrar = []byte(texto)
+
+	block, err := aes.NewCipher(clave)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	// Never use more than 2^32 random nonces with a given key because of the risk of a repeat.
+	nonce := make([]byte, 12)
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		fmt.Println(err.Error())
+	}
+
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	ciphertext := aesgcm.Seal(nil, nonce, textocifrar, nil)
+	fmt.Println("Miramos cifrado", ciphertext)
+
+	return ciphertext, nonce, false
+}
+
+func descifrarAES(ciphertext []byte, clave []byte, nonce []byte) {
+
+	//nonce, _ := hex.DecodeString("bb8ef84243d2ee95a41c6c57")
+
+	block, err := aes.NewCipher(clave)
+	if err != nil {
+		fmt.Println("1", err.Error())
+	}
+
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		fmt.Println("2", err.Error())
+	}
+
+	textodescifrado, err := aesgcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		fmt.Println("3", err.Error())
+	}
+
+	fmt.Println("Era este tu mensaje? :)", string(textodescifrado))
 }
 
 //Registrar a un usuario
@@ -413,41 +465,19 @@ func CrearNuevaClaveMensajes(conn net.Conn) {
 	conn.Write(b)
 }
 
-func cifrarAES(datos string, clave []byte) (cipher.Block, bool) {
-
-	fmt.Println("mira la clave:", clave)
-	fmt.Println("mira la :", ClientUsuario.clavehashcifrado)
-	fmt.Println("mira la :", ClientUsuario.nombre)
-
-	var nulo cipher.Block
-
-	clavecifrada, err := aes.NewCipher(clave)
-
-	if err != nil {
-		return nulo, true
-	}
-
-	fmt.Println("mira la clave:", clavecifrada)
-
-	return clavecifrada, false
-}
-
-func descifrarAES(datos cipher.Block, clave []byte) {
-
-}
-
 //Asocia nueva clave de un usuario con el id que indica ese nuevo conjunto de claves
 func nuevaClaveUsuarioConIdConjuntoClaves(conn net.Conn, idconjuntoclaves int, clavemensajes string) {
 
-	//Cifrar la clave para los mensajes
+	/*/Cifrar la clave para los mensajes
 	clavecifradamensajes, err := cifrarAES(clavemensajes, ClientUsuario.clavehashcifrado)
+
 
 	if err == true {
 		fmt.Println("Error al generar clave con cifrado AES")
 		return
 	}
 
-	fmt.Println("Miraa con aes:", clavecifradamensajes)
+	fmt.Println("Miraa con aes:", clavecifradamensajes)*/
 
 	mensaje := Mensaje{}
 
