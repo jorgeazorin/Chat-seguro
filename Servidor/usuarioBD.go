@@ -80,7 +80,6 @@ func (bd *BD) insertUsuarioBD(usuario Usuario) (Usuario, bool) {
 	//Conexion y dbmapa
 	dbmap, db, err := bd.conectarBD()
 	defer db.Close()
-
 	if err == true {
 		return usuariobd, false
 	}
@@ -89,7 +88,7 @@ func (bd *BD) insertUsuarioBD(usuario Usuario) (Usuario, bool) {
 	dbmap.AddTableWithName(usuario, "usuario").SetKeys(true, "Id")
 
 	//Insert
-	err := dbmap.Insert(&usuario)
+	err = dbmap.Insert(&usuario)
 	if err != nil {
 		fmt.Println("Error:", err.Error())
 		return usuariobd, false
