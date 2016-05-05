@@ -52,7 +52,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 			return
 		}*/
 
-		_, test := bd.insertUsuarioBD(usuarionuevo)
+		usuario, test := bd.insertUsuarioBD(usuarionuevo)
 
 		if test == false {
 			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Error al intentar registrar al usuario."}
@@ -61,7 +61,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		}
 
 		//Enviamos mensaje contestación
-		mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Usuario registrado correctamente"}
+		mesj := MensajeSocket{From: usuario.Nombre, Funcion: "DatosUsuario", Datos: []string{strconv.Itoa(usuario.Id), usuario.Nombre}, DatosClaves: [][]byte{usuario.Clavepubrsa, usuario.Claveprivrsa}, MensajeSocket: "Usuario registrado correctamente"}
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 

@@ -79,10 +79,11 @@ func main() {
 	//////////////////////////////////
 
 	login(conn)
-	mensajecifrado, _ := cifrarAES([]byte("hola amigos"), ClientUsuario.clavehashcifrado)
-	mensajedescifrado, _ := descifrarAES(mensajecifrado, ClientUsuario.clavehashcifrado)
 
-	fmt.Println("Tu mensaje era:", string(mensajedescifrado))
+	//probando a cifrar descifrar con AES
+	/*mensajecifrado, _ := cifrarAES([]byte("hola amigos"), ClientUsuario.clavehashcifrado)
+	mensajedescifrado, _ := descifrarAES(mensajecifrado, ClientUsuario.clavehashcifrado)
+	fmt.Println("Tu mensaje era:", string(mensajedescifrado))*/
 
 	//obtenerMensajesChat(conn, 1)
 
@@ -97,10 +98,12 @@ func main() {
 
 	//CrearNuevaClaveMensajes(conn)
 	//nuevaClaveUsuarioConIdConjuntoClaves(conn, 1, "minuevaclave1")
-	var u Usuario
-	u.nombre = "Prueba"
-	//u.clavepubrsa, u.claveprivrsa = generarClavesRSA()
-	//registrarUsuario(conn, u, "miclave1")
+
+	//Registrar un usuario
+	//ClientUsuario.nombre = "Prueba"
+	//ClientUsuario.claveenclaro = "miclave1"
+	//ClientUsuario.clavepubrsa, ClientUsuario.claveprivrsa = generarClavesRSA()
+	//registrarUsuario(conn)
 
 	///////////////////////////////////
 	//    Enviar  y recibir      /////
@@ -135,7 +138,8 @@ func handleServerRead(conn net.Conn) {
 			fmt.Println("dato:", i, "->", mensaje.Datos[i])
 		}
 
-		//Si nos devuelven el usuario lo rellenamos
+		//Si nos devuelven el usuario lo rellenamos. La claveenclaro, clavehashcifrado,
+		//clavehashlogin ya estan rellenas (registro o login en cliente)
 		if mensaje.Funcion == "DatosUsuario" {
 			fmt.Println("cliente guardado:")
 			idusuario, _ := strconv.Atoi(mensaje.Datos[0])
@@ -143,6 +147,11 @@ func handleServerRead(conn net.Conn) {
 			ClientUsuario.nombre = mensaje.Datos[1]
 			ClientUsuario.clavepubrsa = mensaje.DatosClaves[0]
 			ClientUsuario.claveprivrsa = mensaje.DatosClaves[1]
+
+			//fmt.Println("Mira la clave privada descifrada:")
+			//claveprivrsades, _ := descifrarAES(ClientUsuario.claveprivrsa, ClientUsuario.clavehashcifrado)
+			//fmt.Println(claveprivrsades)
+			//fmt.Println(string(claveprivrsades))
 			//fmt.Println(ClientUsuario)
 		}
 	}
@@ -180,7 +189,8 @@ func handleClientWrite(conn net.Conn) {
 }
 
 //De la ontraseña en claro se realiza hash y se divide en 2 (login y cifrado)
-func generarHashClaves(clave string) {
+func generarHashClaves(clave string) ([]byte, []byte) {
+
 	//Hash con SHA-2 (256) para la contraseña en general
 	clavebytes := []byte(clave)
 	clavebytesconsha2 := sha256.Sum256(clavebytes)
@@ -189,8 +199,7 @@ func generarHashClaves(clave string) {
 	clavehashlogin := clavebytesconsha2[0 : len(clavebytesconsha2)/2]
 	clavehashcifrado := clavebytesconsha2[len(clavebytesconsha2)/2 : len(clavebytesconsha2)]
 
-	ClientUsuario.clavehashcifrado = clavehashcifrado
-	ClientUsuario.clavehashlogin = clavehashlogin
+	return clavehashlogin, clavehashcifrado
 }
 
 //Genera una clave pública y otra privada
@@ -206,7 +215,11 @@ func generarClavesRSA() ([]byte, []byte) {
 	priv := x509.MarshalPKCS1PrivateKey(claveprivada)
 	pub, _ := x509.MarshalPKIXPublicKey(clavepublica)
 
-	return priv, pub
+	fmt.Println("Mira la clave privada generada:")
+	fmt.Println(priv)
+	fmt.Println(string(priv))
+
+	return pub, priv
 }
 
 //Cifrar con AES en modo CTR
@@ -255,19 +268,21 @@ func descifrarAES(ciphertext []byte, clave []byte) ([]byte, bool) {
 }
 
 //Registrar a un usuario
-func registrarUsuario(conn net.Conn, usuario Usuario, clave string) {
+func registrarUsuario(conn net.Conn) {
 
+	//Rellenar datos del mensaje
 	mensaje := Mensaje{}
-
-	//Rellenar datos
-	mensaje.From = nombre_usuario_from
+	mensaje.From = ClientUsuario.nombre
 	mensaje.Funcion = "registrarusuario"
 
 	//Generamos los hash de las claves
-	generarHashClaves(clave)
+	ClientUsuario.clavehashlogin, ClientUsuario.clavehashcifrado = generarHashClaves(ClientUsuario.claveenclaro)
 
-	mensaje.Datos = []string{usuario.nombre}
-	mensaje.DatosClaves = [][]byte{ClientUsuario.clavehashlogin, usuario.clavepubrsa, usuario.claveprivrsa}
+	//Clave privada del usuario cifrar
+	ClientUsuario.claveprivrsa, _ = cifrarAES(ClientUsuario.claveprivrsa, ClientUsuario.clavehashcifrado)
+
+	mensaje.Datos = []string{ClientUsuario.nombre}
+	mensaje.DatosClaves = [][]byte{ClientUsuario.clavehashlogin, ClientUsuario.clavepubrsa, ClientUsuario.claveprivrsa}
 
 	//Convertir a json
 	b, _ := json.Marshal(mensaje)
@@ -284,28 +299,21 @@ func login(conn net.Conn) {
 
 	//Pedimos los datos
 	fmt.Print("Usuario:")
-	nombreusuario, _ := reader.ReadString('\n')
-	nombreusuario = nombreusuario[0 : len(nombreusuario)-2]
+	ClientUsuario.nombre, _ = reader.ReadString('\n')
+	ClientUsuario.nombre = ClientUsuario.nombre[0 : len(ClientUsuario.nombre)-2]
 
 	fmt.Print("Password:")
-	password, _ := reader.ReadString('\n')
-	password = password[0 : len(password)-2]
+	ClientUsuario.claveenclaro, _ = reader.ReadString('\n')
+	ClientUsuario.claveenclaro = ClientUsuario.claveenclaro[0 : len(ClientUsuario.claveenclaro)-2]
 
 	//Generamos los hash de las claves
-	generarHashClaves(password)
+	ClientUsuario.clavehashlogin, ClientUsuario.clavehashcifrado = generarHashClaves(ClientUsuario.claveenclaro)
 
 	mensaje := Mensaje{}
-	mensaje.From = nombreusuario
+	mensaje.From = ClientUsuario.nombre
 	mensaje.DatosClaves = [][]byte{ClientUsuario.clavehashlogin}
 	mensaje.Funcion = "login"
 	mensaje.To = -1
-
-	//Rellenamos variable nombre usuario global
-	nombre_usuario_from = nombreusuario
-	ClientUsuario.nombre = nombreusuario
-	//ClientUsuario.clavelogin = clavebcryptlogin
-	//ClientUsuario.clavecifrado = clavehashcifrado
-	//ClientUsuario.salt = salt
 
 	//Convertir a json
 	b, _ := json.Marshal(mensaje)
