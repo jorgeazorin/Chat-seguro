@@ -18,6 +18,7 @@ type MensajeSocket struct {
 	DatosClaves   [][]byte `json:"DatosClaves"`
 	Chat          int      `json:"Chat"`
 	MensajeSocket string   `json:"MensajeSocket"`
+	Mensajechat   []byte   `json:"Mensajechat"`
 }
 
 type TodosLosDatos struct {
@@ -99,7 +100,8 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		var m Mensaje
 		m.Texto = mensaje.MensajeSocket
 		m.Idchat = 1
-		m.Idemisor = usuario.Id
+		m.Idemisor = mensaje.Idfrom
+		m.Nombreemisor = mensaje.From
 		m.Idclave = 1
 		//bd.guardarMensajeBD(m)
 
