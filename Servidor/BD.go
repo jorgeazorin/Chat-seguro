@@ -33,24 +33,30 @@ func main() {
 
 	//Prueba insertar usuario
 	var uu Usuario
-	uu.nombre = "alex"
-	uu.clavepubrsa = "clavepubrsa"
-	uu.claveprivrsa = "claveprivrsa"
-	uu.claveusuario = "clavecifrada"
+	uu.Nombre = "alex"
+	uu.Clavepubrsa = []byte("clavepubrsa")
+	uu.Claveprivrsa = []byte("claveprivrsa")
+	uu.Clavelogin = []byte("clavecifrada")
 	//bd.insertUsuarioBD(uu)
 
 	//Prueba Modificar Usuario
 	var u Usuario
-	u.id = 15
-	u.clavepubrsa = "clave15pubrsa"
-	u.claveprivrsa = "clave15privrsa"
-	u.claveusuario = "clave15cifrada"
+	u.Id = 15
+	u.Nombre = "Usuario15"
+	u.Clavepubrsa = []byte("clave15pubrsa")
+	u.Claveprivrsa = []byte("clave15privrsa")
+	u.Salt = []byte("clave15cifrada")
+	u.Clavelogin = []byte("clave15cifrada")
 	test = bd.modificarUsuarioBD(u)
 	fmt.Println("Mira modificar usuario:", test)
 
 	//Probar obtener nombre según id
 	nombreusuario := bd.getNombreUsuario(1)
 	fmt.Println("Mira el nombre del usuario:", nombreusuario)
+
+	//Probar obtener pub según id
+	clavepub := bd.getClavePubUsuario(1)
+	fmt.Println("Mira clave pubñica del usuario:", clavepub)
 
 	//Probar obtener usuario según id
 	usuario := bd.getUsuario(1)

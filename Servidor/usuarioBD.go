@@ -204,69 +204,43 @@ func (bd *BD) getUsuarioById(id int) Usuario {
 //Obtenemos nombre de usuario según id usuario
 func (bd *BD) getNombreUsuario(id int) string {
 
-	var nombreusuario string
-
-	//Conexión BD
-	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return ""
-	}
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
-
-	//Obtenemos el nombre del usuario
-	rows, err := db.Query("SELECT nombre FROM usuario WHERE id = " + strconv.Itoa(id))
-	if err != nil {
-		fmt.Println(err.Error())
-		defer db.Close()
+	if test == true {
 		return ""
 	}
 
-	for rows.Next() {
-		err = rows.Scan(&nombreusuario)
-		if err != nil {
-			fmt.Println(err.Error())
-			defer db.Close()
-			return ""
-		}
+	//Select
+	var usuario Usuario
+	err := dbmap.SelectOne(&usuario, "SELECT nombre FROM usuario WHERE id = ?", id)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return ""
 	}
 
-	return nombreusuario
+	return usuario.Nombre
 }
 
 //Obtenemos clave pub de usuario según id usuario
-func (bd *BD) getClavePubUsuario(id int) string {
+func (bd *BD) getClavePubUsuario(id int) []byte {
 
-	var clavepub string
-
-	//Conexión BD
-	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return ""
-	}
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
+	if test == true {
+		return []byte{}
+	}
 
-	//Obtenemos el nombre del usuario
-	rows, err := db.Query("SELECT clavepubrsa FROM usuario WHERE id = " + strconv.Itoa(id))
+	//Select
+	var usuario Usuario
+	err := dbmap.SelectOne(&usuario, "SELECT clavepubrsa FROM usuario WHERE id = ?", id)
 	if err != nil {
-		fmt.Println(err.Error())
-		defer db.Close()
-		return ""
+		fmt.Println("Error:", err.Error())
+		return []byte{}
 	}
 
-	for rows.Next() {
-		err = rows.Scan(&clavepub)
-		if err != nil {
-			fmt.Println(err.Error())
-			defer db.Close()
-			return ""
-		}
-	}
-
-	return clavepub
+	return usuario.Clavepubrsa
 }
 
 //Obtener los id de usuarios de un chat
@@ -302,35 +276,19 @@ func (bd *BD) getUsuariosChatBD(id int) []int {
 //Modificamos los datos de un usuario
 func (bd *BD) modificarUsuarioBD(usuario Usuario) bool {
 
-	//Conexion BD
-	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return false
-	}
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
-
-	nombreu := bd.getNombreUsuario(usuario.Id)
-	if nombreu == "" {
+	if test == true {
 		return false
 	}
 
-	//Preparamos crear el chat
-	stmtIns, err := db.Prepare("UPDATE usuario set clavepubrsa=?, claveprivrsa=?, clavelogin=?, salt=? where id=?")
+	//Update
+	_, err := dbmap.Update(&usuario)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("Error:", err.Error())
 		return false
 	}
-
-	//Insertamos crear el chat
-	_, err = stmtIns.Exec(usuario.Clavepubrsa, usuario.Claveprivrsa, usuario.Clavelogin, usuario.Salt, usuario.Id)
-	if err != nil {
-		fmt.Println(err.Error())
-		return false
-	}
-
-	defer stmtIns.Close()
 
 	return true
 }
