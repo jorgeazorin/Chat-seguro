@@ -105,8 +105,8 @@ func main() {
 	//nuevaClaveUsuarioConIdConjuntoClaves(conn, 1, "nuevaclave1")
 
 	//Registrar un usuario
-	//ClientUsuario.nombre = "Prueba2"
-	//ClientUsuario.claveenclaro = "miclave2"
+	//ClientUsuario.nombre = "Prueba3"
+	//ClientUsuario.claveenclaro = "miclave3"
 	//ClientUsuario.clavepubrsa, ClientUsuario.claveprivrsa = generarClavesRSA()
 	//registrarUsuario(conn)
 

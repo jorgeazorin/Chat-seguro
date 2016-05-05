@@ -10,6 +10,7 @@ import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"golang.org/x/crypto/scrypt"
+	"gopkg.in/gorp.v1"
 	"io"
 	"log"
 	"strconv"
@@ -48,38 +49,51 @@ func generarClaveLoginClaves(clavehashlogin []byte) ([]byte, []byte) {
 	return clavebcryptlogin, salt
 }
 
+//Conexión con BD y mapa para gorp
+func (bd *BD) conectarBD() (*gorp.DbMap, *sql.DB, bool) {
+
+	var dbmap *gorp.DbMap
+	var db *sql.DB
+	var err error
+
+	//Conexión BD
+	db, err = sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return dbmap, db, true
+	}
+
+	//Construye un mapa gorp DbMap
+	dbmap = &gorp.DbMap{Db: db, Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
+
+	return dbmap, db, false
+}
+
 //Insertamos a un nuevo usuario en BD
 func (bd *BD) insertUsuarioBD(usuario Usuario) (Usuario, bool) {
 
 	var usuariobd Usuario
 
 	//genera la clavelogin con scrypt (y el salt con el que se crea)
-	clavelogin, salt := generarClaveLoginClaves(usuario.Clavelogin)
+	usuario.Clavelogin, usuario.Salt = generarClaveLoginClaves(usuario.Clavelogin)
 
-	//Conexión BD
-	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return usuariobd, false
-	}
+	//Conexion y dbmapa
+	dbmap, db, err := bd.conectarBD()
 	defer db.Close()
 
-	//Preparamos consulta
-	stmtIns, err := db.Prepare("INSERT INTO usuario VALUES(?, ?, ?, ?, ?, ?)")
-	if err != nil {
-		fmt.Println(err.Error())
+	if err == true {
 		return usuariobd, false
 	}
 
-	//Insertamos
-	_, err = stmtIns.Exec("DEFAULT", usuario.Nombre, usuario.Clavepubrsa, usuario.Claveprivrsa, clavelogin, salt)
+	//Añade la tabla especificando el nombre, con true el id automático
+	dbmap.AddTableWithName(usuario, "usuario").SetKeys(true, "Id")
+
+	//Insert
+	err := dbmap.Insert(&usuario)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("Error:", err.Error())
 		return usuariobd, false
 	}
-
-	defer stmtIns.Close()
 
 	usuariobd = bd.getUsuarioByNombreBD(usuario.Nombre)
 
