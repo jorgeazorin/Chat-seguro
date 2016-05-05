@@ -14,7 +14,7 @@ type Usuario struct {
 	Claveprivrsa []byte `json:"Claveprivrsa"`
 	Clavelogin   []byte `json:"Clavelogin"`
 	Salt         []byte `json:"Salt"`
-	Clavecifrado []byte `json:"Clavecifrado"`
+	//	Clavecifrado []byte `json:"Clavecifrado"`
 }
 
 func main() {
@@ -34,17 +34,17 @@ func main() {
 
 	var u Usuario
 	u.Id = 6
-	u.Nombre = "recorcholes"
+	u.Nombre = "recorcholes1"
 	u.Clavepubrsa = []byte("recorcholes1")
 	u.Claveprivrsa = []byte("recorchole2")
 	u.Clavelogin = []byte("recorchole3")
-	u.Clavelogin = []byte("recorchole4")
+	u.Salt = []byte("recorchole4")
 
-	//Crear la tabla
-	//dbmap.AddTableWithName(u, "usuario").SetKeys(true, "Id")
+	//Añade la tabla especificando el bomre, con false el id no se pone automático...
+	dbmap.AddTableWithName(u, "usuario").SetKeys(false, "Id")
 
 	//insert
-	err = dbmap.Insert(u)
+	err = dbmap.Insert(&u)
 
 	if err != nil {
 		fmt.Println("Error:", err.Error())

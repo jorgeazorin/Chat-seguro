@@ -22,7 +22,6 @@ type Usuario struct {
 	Claveprivrsa []byte `json:"Claveprivrsa"`
 	Clavelogin   []byte `json:"Clavelogin"`
 	Salt         []byte `json:"Salt"`
-	Clavecifrado []byte `json:"Clavecifrado"`
 }
 
 //Generar clave con scrypt dada una salt
