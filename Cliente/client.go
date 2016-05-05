@@ -9,7 +9,6 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
-	//"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -80,8 +79,11 @@ func main() {
 	//////////////////////////////////
 
 	login(conn)
-	mensajecifrado, nonce, _ := cifrarAES("hola amigos", ClientUsuario.clavehashcifrado)
-	descifrarAES(mensajecifrado, ClientUsuario.clavehashcifrado, nonce)
+	mensajecifrado, _ := cifrarAES([]byte("hola amigos"), ClientUsuario.clavehashcifrado)
+	mensajedescifrado, _ := descifrarAES(mensajecifrado, ClientUsuario.clavehashcifrado)
+
+	fmt.Println("Tu mensaje era:", string(mensajedescifrado))
+
 	//obtenerMensajesChat(conn, 1)
 
 	//Usuario 1 en el chat 7 al usuario 15
@@ -207,52 +209,49 @@ func generarClavesRSA() ([]byte, []byte) {
 	return priv, pub
 }
 
-func cifrarAES(texto string, clave []byte) ([]byte, []byte, bool) {
+//Cifrar con AES en modo CTR
+func cifrarAES(textocifrar []byte, clave []byte) ([]byte, bool) {
 
-	var textocifrar = []byte(texto)
-
+	//Calculamos block con clave
 	block, err := aes.NewCipher(clave)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println(err)
+		return []byte{}, true
 	}
 
-	// Never use more than 2^32 random nonces with a given key because of the risk of a repeat.
-	nonce := make([]byte, 12)
-	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		fmt.Println(err.Error())
+	// IV necesita ser único aunque no seguro, se incluye al principio del textocifrado
+	ciphertext := make([]byte, aes.BlockSize+len(textocifrar))
+	iv := ciphertext[:aes.BlockSize]
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return []byte{}, true
 	}
 
-	aesgcm, err := cipher.NewGCM(block)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+	//Ciframos
+	stream := cipher.NewCTR(block, iv)
+	stream.XORKeyStream(ciphertext[aes.BlockSize:], textocifrar)
 
-	ciphertext := aesgcm.Seal(nil, nonce, textocifrar, nil)
-	fmt.Println("Miramos cifrado", ciphertext)
-
-	return ciphertext, nonce, false
+	return ciphertext, false
 }
 
-func descifrarAES(ciphertext []byte, clave []byte, nonce []byte) {
+//Con CTR se descifra como se cifra, con NewCTR
+func descifrarAES(ciphertext []byte, clave []byte) ([]byte, bool) {
 
-	//nonce, _ := hex.DecodeString("bb8ef84243d2ee95a41c6c57")
-
+	//Calculamos block con clave
 	block, err := aes.NewCipher(clave)
 	if err != nil {
-		fmt.Println("1", err.Error())
+		fmt.Println(err)
+		return []byte{}, true
 	}
 
-	aesgcm, err := cipher.NewGCM(block)
-	if err != nil {
-		fmt.Println("2", err.Error())
-	}
+	//Volvemos a calcular iv (ahora sin rand, iv está al principio del textocifrado)
+	iv := ciphertext[:aes.BlockSize]
 
-	textodescifrado, err := aesgcm.Open(nil, nonce, ciphertext, nil)
-	if err != nil {
-		fmt.Println("3", err.Error())
-	}
+	//Desciframos
+	textodescifrado := make([]byte, len(ciphertext))
+	stream := cipher.NewCTR(block, iv)
+	stream.XORKeyStream(textodescifrado, ciphertext[aes.BlockSize:])
 
-	fmt.Println("Era este tu mensaje? :)", string(textodescifrado))
+	return textodescifrado, false
 }
 
 //Registrar a un usuario
