@@ -66,6 +66,9 @@ func (bd *BD) conectarBD() (*gorp.DbMap, *sql.DB, bool) {
 	//Construye un mapa gorp DbMap
 	dbmap = &gorp.DbMap{Db: db, Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
 
+	//Añade la tabla especificando el nombre, con true el id automático
+	dbmap.AddTableWithName(Usuario{}, "usuario").SetKeys(true, "Id")
+
 	return dbmap, db, false
 }
 
@@ -78,17 +81,14 @@ func (bd *BD) insertUsuarioBD(usuario Usuario) (Usuario, bool) {
 	usuario.Clavelogin, usuario.Salt = generarClaveLoginClaves(usuario.Clavelogin)
 
 	//Conexion y dbmapa
-	dbmap, db, err := bd.conectarBD()
+	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
-	if err == true {
+	if test == true {
 		return usuariobd, false
 	}
 
-	//Añade la tabla especificando el nombre, con true el id automático
-	dbmap.AddTableWithName(usuario, "usuario").SetKeys(true, "Id")
-
 	//Insert
-	err = dbmap.Insert(&usuario)
+	err := dbmap.Insert(&usuario)
 	if err != nil {
 		fmt.Println("Error:", err.Error())
 		return usuariobd, false
