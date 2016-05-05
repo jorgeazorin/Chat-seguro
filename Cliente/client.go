@@ -22,6 +22,7 @@ import (
 //Struct de los mensajes que se envian por el socket
 type Mensaje struct {
 	From        string   `json:"From"`
+	Idfrom      int      `json:"Idfrom"`
 	To          int      `json:"To"`
 	Password    string   `json:"Password"`
 	Funcion     string   `json:"Funcion"`
@@ -29,6 +30,7 @@ type Mensaje struct {
 	DatosClaves [][]byte `json:"DatosClaves"`
 	Chat        int      `json:"Chat"`
 	Mensaje     string   `json:"MensajeSocket"`
+	Mensajechat string   `json:"Mensajechat"`
 }
 
 var nombre_usuario_from string
@@ -45,6 +47,9 @@ type Usuario struct {
 }
 
 var ClientUsuario Usuario
+
+//Variable global, de momento para guardar clave cifrar mensajes chat1
+var clavecifrarmensajes []byte
 
 func main() {
 
@@ -97,11 +102,11 @@ func main() {
 	//getClaveCifrarMensajeChat(conn, 1)
 
 	//CrearNuevaClaveMensajes(conn)
-	//nuevaClaveUsuarioConIdConjuntoClaves(conn, 1, "minuevaclave1")
+	//nuevaClaveUsuarioConIdConjuntoClaves(conn, 1, "nuevaclave1")
 
 	//Registrar un usuario
-	//ClientUsuario.nombre = "Prueba"
-	//ClientUsuario.claveenclaro = "miclave1"
+	//ClientUsuario.nombre = "Prueba2"
+	//ClientUsuario.claveenclaro = "miclave2"
 	//ClientUsuario.clavepubrsa, ClientUsuario.claveprivrsa = generarClavesRSA()
 	//registrarUsuario(conn)
 
@@ -132,27 +137,47 @@ func handleServerRead(conn net.Conn) {
 		}
 		json.Unmarshal(reply[:n], &mensaje)
 
-		fmt.Println("" + mensaje.From + " -> " + mensaje.Mensaje + " Datos: ->")
+		//Descifrar el mensaje
+		fmt.Println("Mira el mensaje:", mensaje.Mensaje)
+
+		if mensaje.Mensajechat != "" {
+			mensajedescifrado, err2 := descifrarAES([]byte(mensaje.Mensajechat), clavecifrarmensajes)
+			if err2 == true {
+				fmt.Println("Error al descifrar clave con cifrado AES")
+				continue
+			}
+			mensaje.Mensajechat = string(mensajedescifrado)
+		}
+
+		fmt.Println("" + mensaje.From + " -> " + mensaje.Mensaje + " -> " + mensaje.Mensajechat + " Datos: ->")
 
 		for i := 0; i < len(mensaje.Datos); i++ {
 			fmt.Println("dato:", i, "->", mensaje.Datos[i])
 		}
+		for i := 0; i < len(mensaje.DatosClaves); i++ {
+			fmt.Println("dato clave:", i, "->", mensaje.DatosClaves[i])
+		}
+		fmt.Println()
 
 		//Si nos devuelven el usuario lo rellenamos. La claveenclaro, clavehashcifrado,
 		//clavehashlogin ya estan rellenas (registro o login en cliente)
 		if mensaje.Funcion == "DatosUsuario" {
-			fmt.Println("cliente guardado:")
 			idusuario, _ := strconv.Atoi(mensaje.Datos[0])
 			ClientUsuario.id = idusuario
 			ClientUsuario.nombre = mensaje.Datos[1]
 			ClientUsuario.clavepubrsa = mensaje.DatosClaves[0]
 			ClientUsuario.claveprivrsa = mensaje.DatosClaves[1]
 
-			//fmt.Println("Mira la clave privada descifrada:")
-			//claveprivrsades, _ := descifrarAES(ClientUsuario.claveprivrsa, ClientUsuario.clavehashcifrado)
-			//fmt.Println(claveprivrsades)
-			//fmt.Println(string(claveprivrsades))
-			//fmt.Println(ClientUsuario)
+			////////////////////////
+			//PRUEBAS AFTER DE LOGIN
+			////////////////////////
+			//nuevaClaveUsuarioConIdConjuntoClaves(conn, 1, "nuevaclave1")
+			getClaveCifrarMensajeChat(conn, 1)
+		}
+
+		if mensaje.Funcion == "DatosClaveCifrarMensajeChat" {
+			laclave := mensaje.DatosClaves[0]
+			clavecifrarmensajes, _ = descifrarAES(laclave, ClientUsuario.clavehashcifrado)
 		}
 	}
 }
@@ -170,10 +195,22 @@ func handleClientWrite(conn net.Conn) {
 		message, _ := reader.ReadString('\n')
 
 		//Rellenar datos
-		mensaje.From = nombre_usuario_from
+		mensaje.From = ClientUsuario.nombre
 		mensaje.Password = "1"
 		mensaje.Funcion = "enviar"
-		mensaje.Mensaje = message[0 : len(message)-2]
+		mensaje.Mensajechat = message[0 : len(message)-2]
+
+		//getClaveCifrarMensajeChat(conn, 1)
+
+		//Ciframos el mensaje
+		//De momento clave guardada globalmente pero sería hacer llamadas al servidor, channels, etc
+		mensajecifrado, err := cifrarAES([]byte(mensaje.Mensajechat), clavecifrarmensajes)
+		if err == true {
+			fmt.Println("Error al cifrar clave con cifrado AES")
+			continue
+		}
+		mensaje.Mensajechat = string(mensajecifrado)
+
 		mensaje.To = 2
 		datos := []string{""}
 		mensaje.Datos = datos
@@ -214,10 +251,6 @@ func generarClavesRSA() ([]byte, []byte) {
 
 	priv := x509.MarshalPKCS1PrivateKey(claveprivada)
 	pub, _ := x509.MarshalPKIXPublicKey(clavepublica)
-
-	fmt.Println("Mira la clave privada generada:")
-	fmt.Println(priv)
-	fmt.Println(string(priv))
 
 	return pub, priv
 }
@@ -270,6 +303,8 @@ func descifrarAES(ciphertext []byte, clave []byte) ([]byte, bool) {
 //Registrar a un usuario
 func registrarUsuario(conn net.Conn) {
 
+	var err bool
+
 	//Rellenar datos del mensaje
 	mensaje := Mensaje{}
 	mensaje.From = ClientUsuario.nombre
@@ -279,7 +314,11 @@ func registrarUsuario(conn net.Conn) {
 	ClientUsuario.clavehashlogin, ClientUsuario.clavehashcifrado = generarHashClaves(ClientUsuario.claveenclaro)
 
 	//Clave privada del usuario cifrar
-	ClientUsuario.claveprivrsa, _ = cifrarAES(ClientUsuario.claveprivrsa, ClientUsuario.clavehashcifrado)
+	ClientUsuario.claveprivrsa, err = cifrarAES(ClientUsuario.claveprivrsa, ClientUsuario.clavehashcifrado)
+	if err == true {
+		fmt.Println("Error al cifrar clave con cifrado AES")
+		return
+	}
 
 	mensaje.Datos = []string{ClientUsuario.nombre}
 	mensaje.DatosClaves = [][]byte{ClientUsuario.clavehashlogin, ClientUsuario.clavepubrsa, ClientUsuario.claveprivrsa}
@@ -330,10 +369,9 @@ func obtenerMensajesChat(conn net.Conn, idchat int) {
 
 	//Rellenar datos
 	mensaje.Chat = idchat
-	mensaje.From = nombre_usuario_from
+	mensaje.From = ClientUsuario.nombre
 	mensaje.Password = "1"
 	mensaje.Funcion = "obtenermensajeschat"
-	mensaje.Mensaje = ""
 
 	//Convertir a json
 	b, _ := json.Marshal(mensaje)
@@ -352,10 +390,9 @@ func agregarUsuariosChat(conn net.Conn, idchat int, usuarios []string) {
 
 	//Rellenar datos
 	mensaje.Chat = idchat
-	mensaje.From = nombre_usuario_from
+	mensaje.From = ClientUsuario.nombre
 	mensaje.Password = "1"
 	mensaje.Funcion = "agregarusuarioschat"
-	mensaje.Mensaje = ""
 	mensaje.Datos = usuarios
 
 	//Convertir a json
@@ -374,10 +411,9 @@ func eliminarUsuariosChat(conn net.Conn, idchat int, usuarios []string) {
 
 	//Rellenar datos
 	mensaje.Chat = idchat
-	mensaje.From = nombre_usuario_from
+	mensaje.From = ClientUsuario.nombre
 	mensaje.Password = "1"
 	mensaje.Funcion = "eliminarusuarioschat"
-	mensaje.Mensaje = ""
 	mensaje.Datos = usuarios
 
 	//Convertir a json
@@ -395,10 +431,10 @@ func getClavePubUsuario(conn net.Conn, idusuario int) {
 	mensaje := Mensaje{}
 
 	//Rellenar datos
-	mensaje.From = nombre_usuario_from
+	mensaje.From = ClientUsuario.nombre
 	mensaje.Password = "1"
 	mensaje.Funcion = "getclavepubusuario"
-	mensaje.Mensaje = ""
+
 	cadena_idusuario := strconv.Itoa(idusuario)
 	mensaje.Datos = []string{cadena_idusuario}
 
@@ -417,7 +453,7 @@ func getClaveMensaje(conn net.Conn, idmensaje int) {
 	mensaje := Mensaje{}
 
 	//Rellenar datos
-	mensaje.From = nombre_usuario_from
+	mensaje.From = ClientUsuario.nombre
 	mensaje.Password = "1"
 	mensaje.Funcion = "getclavesmensajes"
 	cadena_idmensaje := strconv.Itoa(idmensaje)
@@ -438,8 +474,8 @@ func getClaveCifrarMensajeChat(conn net.Conn, idchat int) {
 	mensaje := Mensaje{}
 
 	//Rellenar datos
-	mensaje.From = nombre_usuario_from
-	mensaje.Password = "1"
+	mensaje.From = ClientUsuario.nombre
+	mensaje.Idfrom = ClientUsuario.id
 	mensaje.Funcion = "getclavecifrarmensajechat"
 	cadena_idchat := strconv.Itoa(idchat)
 	mensaje.Datos = []string{cadena_idchat}
@@ -459,7 +495,7 @@ func CrearNuevaClaveMensajes(conn net.Conn) {
 	mensaje := Mensaje{}
 
 	//Rellenar datos
-	mensaje.From = nombre_usuario_from
+	mensaje.From = ClientUsuario.nombre
 	mensaje.Password = "1"
 	mensaje.Funcion = "crearnuevoidparanuevaclavemensajes"
 
@@ -475,26 +511,23 @@ func CrearNuevaClaveMensajes(conn net.Conn) {
 //Asocia nueva clave de un usuario con el id que indica ese nuevo conjunto de claves
 func nuevaClaveUsuarioConIdConjuntoClaves(conn net.Conn, idconjuntoclaves int, clavemensajes string) {
 
-	/*/Cifrar la clave para los mensajes
-	clavecifradamensajes, err := cifrarAES(clavemensajes, ClientUsuario.clavehashcifrado)
-
-
+	//Cifrar la clave para los mensajes
+	clavecifradamensajes, err := cifrarAES([]byte(clavemensajes), ClientUsuario.clavehashcifrado)
 	if err == true {
-		fmt.Println("Error al generar clave con cifrado AES")
+		fmt.Println("Error al cifrar clave con cifrado AES")
 		return
 	}
-
-	fmt.Println("Miraa con aes:", clavecifradamensajes)*/
 
 	mensaje := Mensaje{}
 
 	//Rellenar datos
-	mensaje.From = nombre_usuario_from
-	mensaje.Password = "1"
+	mensaje.From = ClientUsuario.nombre
+	mensaje.Idfrom = ClientUsuario.id
+	mensaje.Chat = 1
 	mensaje.Funcion = "nuevaclaveusuarioconidconjuntoclaves"
 	cadena_idconjuntoclaves := strconv.Itoa(idconjuntoclaves)
 	mensaje.Datos = []string{cadena_idconjuntoclaves}
-	//mensaje.DatosClaves = [][]byte{clavecifradamensajes}
+	mensaje.DatosClaves = [][]byte{clavecifradamensajes}
 
 	//Convertir a json
 	b, _ := json.Marshal(mensaje)

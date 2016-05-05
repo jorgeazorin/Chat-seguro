@@ -138,7 +138,7 @@ func (bd *BD) CrearNuevaClaveMensajesBD() int64 {
 }
 
 //Guardamos la clave de un usuario para leer x mensajes
-func (bd *BD) GuardarClaveUsuarioMensajesBD(idusuario int, idclavesmensajes int, clavemensajes string) bool {
+func (bd *BD) GuardarClaveUsuarioMensajesBD(idusuario int, idclavesmensajes int, clavemensajes []byte) bool {
 
 	//Conexión BD
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
@@ -301,25 +301,25 @@ func (bd *BD) getMensaje(idmensaje int) (Mensaje, bool) {
 }
 
 //Obtiene la última clave (con la que se están cifrando ahora los mensajes)
-func (bd *BD) getLastKeyMensaje(idchat int, idusuario int) (string, bool) {
+func (bd *BD) getLastKeyMensaje(idchat int, idusuario int) ([]byte, bool) {
 
-	var clave string
+	var clave []byte
 
 	//Conexion BD
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 
 	if err != nil {
 		fmt.Println(err.Error())
-		return "", false
+		return []byte{}, false
 	}
 	defer db.Close()
 
 	//De el chat buscamos los datos de los mensajes de dicho chat
-	rows, err := db.Query("SELECT claveusuario FROM clavesusuario, mensaje WHERE idusuario = " + strconv.Itoa(idusuario) + " AND chat = " + strconv.Itoa(idchat) + " AND clave = (select max(clave) from clavesusuario, mensaje WHERE idusuario = " + strconv.Itoa(idusuario) + " AND chat = " + strconv.Itoa(idchat) + ")")
+	rows, err := db.Query("SELECT clavemensajes FROM clavesusuario, mensaje WHERE idusuario = " + strconv.Itoa(idusuario) + " AND chat = " + strconv.Itoa(idchat) + " AND clave = (select max(clave) from clavesusuario, mensaje WHERE idusuario = " + strconv.Itoa(idusuario) + " AND chat = " + strconv.Itoa(idchat) + ")")
 	if err != nil {
 		fmt.Println(err.Error())
 		defer db.Close()
-		return "", false
+		return []byte{}, false
 	}
 
 	for rows.Next() {
@@ -329,7 +329,7 @@ func (bd *BD) getLastKeyMensaje(idchat int, idusuario int) (string, bool) {
 		if err != nil {
 			fmt.Println(err.Error())
 			defer db.Close()
-			return "", false
+			return []byte{}, false
 		}
 
 	}

@@ -10,6 +10,7 @@ import (
 //Struct de los mensajes que se envian por el socket
 type MensajeSocket struct {
 	From          string   `json:"From"`
+	Idfrom        int      `json:"Idfrom"`
 	To            int      `json:"To"`
 	Password      string   `json:"Password"`
 	Funcion       string   `json:"Funcion"`
@@ -182,7 +183,6 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 
 		//Los agregamos llamando a la BD
 		test := bd.addUsuariosChatBD(idChat, idusuarios)
-		fmt.Println("Mira:", test)
 		if test == false {
 			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Hubo un error al realizar la operación."}
 			EnviarMensajeSocketSocket(conexion, mesj)
@@ -261,7 +261,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		//Obtenemos id del mensaje
 		idchat, _ := strconv.Atoi(mensaje.Datos[0])
 
-		prueba := bd.usuarioEnChat(usuario.Id, idchat)
+		prueba := bd.usuarioEnChat(mensaje.Idfrom, idchat)
 
 		if prueba == false {
 			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "No tienes permiso de acceso a los datos de este mensaje."}
@@ -269,7 +269,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 			return
 		}
 
-		clavemensaje, test := bd.getLastKeyMensaje(idchat, usuario.Id)
+		clavemensaje, test := bd.getLastKeyMensaje(idchat, mensaje.Idfrom)
 
 		if test == false {
 			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Error al obtener clave para cifrar mensajes."}
@@ -278,7 +278,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		}
 
 		//Enviamos mensaje contestación
-		mesj := MensajeSocket{From: usuario.Nombre, Datos: []string{clavemensaje}, MensajeSocket: "Clave para mensajes obtenida correctamente."}
+		mesj := MensajeSocket{From: usuario.Nombre, Funcion: "DatosClaveCifrarMensajeChat", DatosClaves: [][]byte{clavemensaje}, MensajeSocket: "Clave para mensajes obtenida correctamente."}
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
@@ -307,16 +307,18 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	////////////////////////////////////////////
 	if mensaje.Funcion == "nuevaclaveusuarioconidconjuntoclaves" {
 
-		/*idconjuntoclaves, _ := strconv.Atoi(mensaje.Datos[0])
+		fmt.Println("Mira el usuario:", mensaje.From, " y id:", mensaje.Idfrom, "mira clave cifrada", mensaje.DatosClaves[0])
+
+		idconjuntoclaves, _ := strconv.Atoi(mensaje.Datos[0])
 		clavemensajes := mensaje.DatosClaves[0]
 
-		test := bd.GuardarClaveUsuarioMensajesBD(usuario.Id, idconjuntoclaves, clavemensajes)
+		test := bd.GuardarClaveUsuarioMensajesBD(mensaje.Idfrom, idconjuntoclaves, clavemensajes)
 
 		if test == false {
 			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Error al asociar la clave del usuario con el id del conjunto de claves."}
 			EnviarMensajeSocketSocket(conexion, mesj)
 			return
-		}*/
+		}
 
 		//Enviamos mensaje contestación
 		mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Clave usuario asociada a id del conjunto de claves."}
