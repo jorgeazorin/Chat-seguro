@@ -298,6 +298,12 @@ func descifrarAES(ciphertext []byte, clave []byte) ([]byte, bool) {
 	return textodescifrado, false
 }
 
+func escribirSocket(conn net.Conn, mensaje Mensaje) {
+	//Convertir a json y escribir en el socket
+	b, _ := json.Marshal(mensaje)
+	conn.Write(b)
+}
+
 //Registrar a un usuario
 func registrarUsuario(conn net.Conn) {
 
@@ -321,13 +327,7 @@ func registrarUsuario(conn net.Conn) {
 	mensaje.Datos = []string{ClientUsuario.nombre}
 	mensaje.DatosClaves = [][]byte{ClientUsuario.clavehashlogin, ClientUsuario.clavepubrsa, ClientUsuario.claveprivrsa}
 
-	//Convertir a json
-	b, _ := json.Marshal(mensaje)
-
-	log.Printf(string(b))
-
-	//Escribe json en el socket
-	conn.Write(b)
+	escribirSocket(conn, mensaje)
 }
 
 //Cliente realiza login
@@ -352,158 +352,63 @@ func login(conn net.Conn) {
 	mensaje.Funcion = "login"
 	mensaje.To = -1
 
-	//Convertir a json
-	b, _ := json.Marshal(mensaje)
-	log.Printf(string(b))
-
-	//Escribe peticion json en el socket
-	conn.Write(b)
+	escribirSocket(conn, mensaje)
 }
 
 //Cliente pide mensajes de un chat
 func obtenerMensajesChat(conn net.Conn, idchat int) {
 
-	mensaje := Mensaje{}
+	mensaje := Mensaje{Chat: idchat, From: ClientUsuario.nombre, Funcion: "obtenermensajeschat"}
 
-	//Rellenar datos
-	mensaje.Chat = idchat
-	mensaje.From = ClientUsuario.nombre
-	mensaje.Password = "1"
-	mensaje.Funcion = "obtenermensajeschat"
-
-	//Convertir a json
-	b, _ := json.Marshal(mensaje)
-
-	log.Printf(string(b))
-
-	//Escribe json en el socket
-	conn.Write(b)
-
+	escribirSocket(conn, mensaje)
 }
 
 //Cliente pide añadir usuarios a un chat
 func agregarUsuariosChat(conn net.Conn, idchat int, usuarios []string) {
 
-	mensaje := Mensaje{}
+	mensaje := Mensaje{Chat: idchat, From: ClientUsuario.nombre, Funcion: "agregarusuarioschat", Datos: usuarios}
 
-	//Rellenar datos
-	mensaje.Chat = idchat
-	mensaje.From = ClientUsuario.nombre
-	mensaje.Password = "1"
-	mensaje.Funcion = "agregarusuarioschat"
-	mensaje.Datos = usuarios
-
-	//Convertir a json
-	b, _ := json.Marshal(mensaje)
-
-	log.Printf(string(b))
-
-	//Escribe json en el socket
-	conn.Write(b)
+	escribirSocket(conn, mensaje)
 }
 
 //Cliente pide eliminar usuarios en un chat
 func eliminarUsuariosChat(conn net.Conn, idchat int, usuarios []string) {
 
-	mensaje := Mensaje{}
+	mensaje := Mensaje{Chat: idchat, From: ClientUsuario.nombre, Funcion: "eliminarusuarioschat", Datos: usuarios}
 
-	//Rellenar datos
-	mensaje.Chat = idchat
-	mensaje.From = ClientUsuario.nombre
-	mensaje.Password = "1"
-	mensaje.Funcion = "eliminarusuarioschat"
-	mensaje.Datos = usuarios
-
-	//Convertir a json
-	b, _ := json.Marshal(mensaje)
-
-	log.Printf(string(b))
-
-	//Escribe json en el socket
-	conn.Write(b)
+	escribirSocket(conn, mensaje)
 }
 
 //Cliente pide clave pública de un usuario
 func getClavePubUsuario(conn net.Conn, idusuario int) {
 
-	mensaje := Mensaje{}
+	mensaje := Mensaje{From: ClientUsuario.nombre, Funcion: "getclavepubusuario", Datos: []string{strconv.Itoa(idusuario)}}
 
-	//Rellenar datos
-	mensaje.From = ClientUsuario.nombre
-	mensaje.Password = "1"
-	mensaje.Funcion = "getclavepubusuario"
-
-	cadena_idusuario := strconv.Itoa(idusuario)
-	mensaje.Datos = []string{cadena_idusuario}
-
-	//Convertir a json
-	b, _ := json.Marshal(mensaje)
-
-	log.Printf(string(b))
-
-	//Escribe json en el socket
-	conn.Write(b)
+	escribirSocket(conn, mensaje)
 }
 
 //Cliente pide clave cifrada para descifrar mensajes
 func getClaveMensaje(conn net.Conn, idmensaje int) {
 
-	mensaje := Mensaje{}
+	mensaje := Mensaje{From: ClientUsuario.nombre, Funcion: "getclavesmensajes", Datos: []string{strconv.Itoa(idmensaje)}}
 
-	//Rellenar datos
-	mensaje.From = ClientUsuario.nombre
-	mensaje.Password = "1"
-	mensaje.Funcion = "getclavesmensajes"
-	cadena_idmensaje := strconv.Itoa(idmensaje)
-	mensaje.Datos = []string{cadena_idmensaje}
-
-	//Convertir a json
-	b, _ := json.Marshal(mensaje)
-
-	log.Printf(string(b))
-
-	//Escribe json en el socket
-	conn.Write(b)
+	escribirSocket(conn, mensaje)
 }
 
 //Cliente pide clave cifrada para descifrar mensajes
 func getClaveCifrarMensajeChat(conn net.Conn, idchat int) {
 
-	mensaje := Mensaje{}
+	mensaje := Mensaje{From: ClientUsuario.nombre, Idfrom: ClientUsuario.id, Funcion: "getclavecifrarmensajechat", Datos: []string{strconv.Itoa(idchat)}}
 
-	//Rellenar datos
-	mensaje.From = ClientUsuario.nombre
-	mensaje.Idfrom = ClientUsuario.id
-	mensaje.Funcion = "getclavecifrarmensajechat"
-	cadena_idchat := strconv.Itoa(idchat)
-	mensaje.Datos = []string{cadena_idchat}
-
-	//Convertir a json
-	b, _ := json.Marshal(mensaje)
-
-	log.Printf(string(b))
-
-	//Escribe json en el socket
-	conn.Write(b)
+	escribirSocket(conn, mensaje)
 }
 
 //Cliente crea nuevo id clave para un nuevo conjunto de claves
 func CrearNuevaClaveMensajes(conn net.Conn) {
 
-	mensaje := Mensaje{}
+	mensaje := Mensaje{From: ClientUsuario.nombre, Funcion: "crearnuevoidparanuevaclavemensajes"}
 
-	//Rellenar datos
-	mensaje.From = ClientUsuario.nombre
-	mensaje.Password = "1"
-	mensaje.Funcion = "crearnuevoidparanuevaclavemensajes"
-
-	//Convertir a json
-	b, _ := json.Marshal(mensaje)
-
-	log.Printf(string(b))
-
-	//Escribe json en el socket
-	conn.Write(b)
+	escribirSocket(conn, mensaje)
 }
 
 //Asocia nueva clave de un usuario con el id que indica ese nuevo conjunto de claves
@@ -518,22 +423,7 @@ func nuevaClaveUsuarioConIdConjuntoClaves(conn net.Conn, idconjuntoclaves int, c
 		return
 	}
 
-	mensaje := Mensaje{}
+	mensaje := Mensaje{From: ClientUsuario.nombre, Idfrom: ClientUsuario.id, Chat: 1, Funcion: "nuevaclaveusuarioconidconjuntoclaves", Datos: []string{strconv.Itoa(idconjuntoclaves)}, DatosClaves: [][]byte{clavecifradamensajes}}
 
-	//Rellenar datos
-	mensaje.From = ClientUsuario.nombre
-	mensaje.Idfrom = ClientUsuario.id
-	mensaje.Chat = 1
-	mensaje.Funcion = "nuevaclaveusuarioconidconjuntoclaves"
-	cadena_idconjuntoclaves := strconv.Itoa(idconjuntoclaves)
-	mensaje.Datos = []string{cadena_idconjuntoclaves}
-	mensaje.DatosClaves = [][]byte{clavecifradamensajes}
-
-	//Convertir a json
-	b, _ := json.Marshal(mensaje)
-
-	log.Printf(string(b))
-
-	//Escribe json en el socket
-	conn.Write(b)
+	escribirSocket(conn, mensaje)
 }
