@@ -64,19 +64,14 @@ func (bd *BD) guardarMensajeBD(mensaje Mensaje) bool {
 		return false
 	}
 
-	//Rellenamos array receptores
-	receptores := make([]Receptoresmensaje, 0, 1)
+	//Rellenamos un receptor e insertamos, asi con todos
 	for i := 0; i < len(idreceptores); i++ {
 		var receptor Receptoresmensaje
 		receptor.Idmensaje = mensaje.Id
 		receptor.Idreceptor = idreceptores[i]
 		receptor.Leido = false
-		receptores = append(receptores, receptor)
-	}
 
-	for i := 0; i < len(idreceptores); i++ {
-		//Insert
-		err = dbmap.Insert(&receptores[i])
+		err = dbmap.Insert(&receptor)
 		if err != nil {
 			fmt.Println("Error:", err.Error())
 			return false

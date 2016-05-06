@@ -6,11 +6,9 @@ package main
 
 import (
 	"crypto/rand"
-	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"golang.org/x/crypto/scrypt"
-	"gopkg.in/gorp.v1"
 	"io"
 	"log"
 )
@@ -46,33 +44,6 @@ func generarClaveLoginClaves(clavehashlogin []byte) ([]byte, []byte) {
 	clavebcryptlogin, _ := scrypt.Key(clavehashlogin, salt, 16384, 8, 1, 64)
 
 	return clavebcryptlogin, salt
-}
-
-//Conexión con BD y mapa para gorp
-func (bd *BD) conectarBD() (*gorp.DbMap, *sql.DB, bool) {
-
-	var dbmap *gorp.DbMap
-	var db *sql.DB
-	var err error
-
-	//Conexión BD
-	db, err = sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
-	if err != nil {
-		fmt.Println("Error:", err.Error())
-		return dbmap, db, false
-	}
-
-	//Construye un mapa gorp DbMap
-	dbmap = &gorp.DbMap{Db: db, Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
-
-	//Añade la tabla especificando el nombre, con true el id automático
-	dbmap.AddTableWithName(Usuario{}, "usuario").SetKeys(true, "Id")
-	dbmap.AddTableWithName(Mensaje{}, "mensaje").SetKeys(true, "Id")
-	dbmap.AddTableWithName(Receptoresmensaje{}, "receptoresmensaje")
-	dbmap.AddTableWithName(Clavesmensajes{}, "clavesmensajes").SetKeys(true, "Id")
-	dbmap.AddTableWithName(Clavesusuario{}, "clavesusuario")
-
-	return dbmap, db, true
 }
 
 //Insertamos a un nuevo usuario en BD

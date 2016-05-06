@@ -152,9 +152,10 @@ func handleServerRead(conn net.Conn) {
 		for i := 0; i < len(mensaje.Datos); i++ {
 			fmt.Println("dato:", i, "->", mensaje.Datos[i])
 		}
+		/*De momento no mostramos que es mucho dato grande
 		for i := 0; i < len(mensaje.DatosClaves); i++ {
 			fmt.Println("dato clave:", i, "->", mensaje.DatosClaves[i])
-		}
+		}*/
 		fmt.Println()
 
 		//Si nos devuelven el usuario lo rellenamos. (menos claveenclaro, clavehashcifrado clavehashlogin ya estan rellenos)

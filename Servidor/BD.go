@@ -5,8 +5,10 @@
 package main
 
 import (
-	//"fmt"
+	"database/sql"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"gopkg.in/gorp.v1"
 )
 
 type BD struct {
@@ -16,7 +18,41 @@ type BD struct {
 	database string
 }
 
+//Conexión con BD y mapa para gorp
+func (bd *BD) conectarBD() (*gorp.DbMap, *sql.DB, bool) {
+
+	var dbmap *gorp.DbMap
+	var db *sql.DB
+	var err error
+
+	//Conexión BD
+	db, err = sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return dbmap, db, false
+	}
+
+	//Construye un mapa gorp DbMap
+	dbmap = &gorp.DbMap{Db: db, Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
+
+	//Añade la tabla especificando el nombre, con true el id automático
+	dbmap.AddTableWithName(Usuario{}, "usuario").SetKeys(true, "Id")
+	dbmap.AddTableWithName(Mensaje{}, "mensaje").SetKeys(true, "Id")
+	dbmap.AddTableWithName(Receptoresmensaje{}, "receptoresmensaje")
+	dbmap.AddTableWithName(Clavesmensajes{}, "clavesmensajes").SetKeys(true, "Id")
+	dbmap.AddTableWithName(Clavesusuario{}, "clavesusuario")
+	dbmap.AddTableWithName(Chat{}, "chat").SetKeys(true, "Id")
+	dbmap.AddTableWithName(UsuariosChat{}, "usuarioschat")
+
+	return dbmap, db, true
+}
+
 /*
+
+/////////
+//PRUEBAS
+/////////
+
 func main() {
 	var test bool
 	var bd BD
@@ -118,27 +154,26 @@ func main() {
 	clavlast, _ := bd.getLastKeyMensaje(1, 1)
 	fmt.Println("mira ultima clave chat 1 usu 1:", string(clavlast))
 
-	test = bd.marcarLeidoPorUsuarioBD(23, 15)
-	fmt.Println("marcado como leido mensaje 23 usu 15", test)
-	test = bd.marcarLeidoPorUsuarioBD(23, 31)
-	fmt.Println("marcado como leido mensaje 23 usu 31", test)
+	//test = bd.marcarLeidoPorUsuarioBD(23, 15)
+	//fmt.Println("marcado como leido mensaje 23 usu 15", test)
+	//test = bd.marcarLeidoPorUsuarioBD(23, 31)
+	//fmt.Println("marcado como leido mensaje 23 usu 31", test)
 
 	//////
 	//CHAT
 	//////
 
 	//Prueba crear chat
-	usuarios := make([]int, 0, 1)
+	usuarios = make([]int, 0, 1)
 	usuarios = append(usuarios, 1)
 	usuarios = append(usuarios, 2)
-	usuarios = append(usuarios, 3)
 	//test = bd.crearChatBD(usuarios, "")
 	//fmt.Println("Mira crear chat:", test)
 
 	//Prueba modificar chat
 	var c Chat
-	c.id = 5
-	c.nombre = "grupo molon :)"
+	c.Id = 5
+	c.Nombre = "grupo molon traidor :)"
 	test = bd.modificarChatBD(c)
 	fmt.Println("Mira modificar chat:", test)
 
@@ -157,21 +192,27 @@ func main() {
 	//fmt.Println("Mira eliminar usuarios a chat:", test)
 
 	//Obtener mensajes de un usuario
-	chats := make([]Chat, 0, 1)
-	chats = bd.getChatsUsuarioBD(15)
-	fmt.Println("Mira mensajes usuario 15 Maria")
+	chats := make([]ChatDatos, 0, 1)
+	chats, _ = bd.getChatsUsuarioBD(15)
+	fmt.Println("Mira mensajes usuario 15 que es  Maria")
 
 	for i := 0; i < len(chats); i++ {
-		fmt.Println("Mira mi chat id", chats[i].id, "es", chats[i].nombre)
+		fmt.Println("Mira mi chat id", chats[i].Chat.Id, "es", chats[i].Chat.Nombre)
 
-		for j := 0; j < len(chats[i].mensajes); j++ {
-			if chats[i].mensajes[j].idemisor != 15 {
-				fmt.Println("De", chats[i].mensajes[j].nombreemisor, "-> ", chats[i].mensajes[j].id, ": '", chats[i].mensajes[j].texto, "' / leido:", chats[i].mensajes[j].leido)
+		for j := 0; j < len(chats[i].MensajesDatos); j++ {
+			if chats[i].MensajesDatos[j].Mensaje.Emisor != 15 {
+				fmt.Println("De", chats[i].MensajesDatos[j].Mensaje.Emisor, "-> ", chats[i].MensajesDatos[j].Mensaje.Id, ": '", chats[i].MensajesDatos[j].Mensaje.Texto, "' / leido:", chats[i].MensajesDatos[j].Leido)
 			} else {
-				fmt.Println("De", chats[i].mensajes[j].nombreemisor, "-> ", chats[i].mensajes[j].id, ": '", chats[i].mensajes[j].texto, "' / leido: es un mensaje mio")
+				fmt.Println("De", chats[i].MensajesDatos[j].Mensaje.Emisor, "-> ", chats[i].MensajesDatos[j].Mensaje.Id, ": '", chats[i].MensajesDatos[j].Mensaje.Texto, "' / leido: es un mensaje mio")
 			}
 		}
 	}
-	fmt.Println("-")/
+	fmt.Println("-")
+
+	test = bd.usuarioEnChat(31, 1)
+	fmt.Println("¿Esta el usuario con id 31 en chat 1?", test)
+	test = bd.usuarioEnChat(31, 5)
+	fmt.Println("¿Esta el usuario con id 31 en chat 5?", test)
+
 }
 */
