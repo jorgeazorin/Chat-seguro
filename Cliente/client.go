@@ -122,6 +122,12 @@ func main() {
 	}
 }
 
+//Convertir a json y escribir en el socket
+func escribirSocket(conn net.Conn, mensaje Mensaje) {
+	b, _ := json.Marshal(mensaje)
+	conn.Write(b)
+}
+
 //Si envia algo el servidor a este cliente lo muestra en pantalla
 func handleServerRead(conn net.Conn) {
 	var mensaje Mensaje
@@ -182,7 +188,6 @@ func handleServerRead(conn net.Conn) {
 
 //SI escribe algo lo envia al servidor
 func handleClientWrite(conn net.Conn) {
-	mensaje := Mensaje{}
 
 	//bucle infinito
 	for {
@@ -193,10 +198,7 @@ func handleClientWrite(conn net.Conn) {
 		message, _ := reader.ReadString('\n')
 
 		//Rellenar datos
-		mensaje.From = ClientUsuario.nombre
-		mensaje.Password = "1"
-		mensaje.Funcion = "enviar"
-		mensaje.Mensajechat = []byte(message[0 : len(message)-2])
+		mensaje := Mensaje{From: ClientUsuario.nombre, Funcion: "enviar", Mensajechat: []byte(message[0 : len(message)-2])}
 
 		//getClaveCifrarMensajeChat(conn, 1)
 
@@ -208,17 +210,12 @@ func handleClientWrite(conn net.Conn) {
 			continue
 		}
 		mensaje.Mensajechat = mensajecifrado
-
 		mensaje.To = 2
 		datos := []string{""}
 		mensaje.Datos = datos
 		mensaje.Chat = 1
 
-		//Convertir a json
-		b, _ := json.Marshal(mensaje)
-
-		//Escribe json en el socket
-		conn.Write(b)
+		escribirSocket(conn, mensaje)
 	}
 
 }
@@ -298,21 +295,10 @@ func descifrarAES(ciphertext []byte, clave []byte) ([]byte, bool) {
 	return textodescifrado, false
 }
 
-func escribirSocket(conn net.Conn, mensaje Mensaje) {
-	//Convertir a json y escribir en el socket
-	b, _ := json.Marshal(mensaje)
-	conn.Write(b)
-}
-
 //Registrar a un usuario
 func registrarUsuario(conn net.Conn) {
 
 	var err bool
-
-	//Rellenar datos del mensaje
-	mensaje := Mensaje{}
-	mensaje.From = ClientUsuario.nombre
-	mensaje.Funcion = "registrarusuario"
 
 	//Generamos los hash de las claves
 	ClientUsuario.clavehashlogin, ClientUsuario.clavehashcifrado = generarHashClaves(ClientUsuario.claveenclaro)
@@ -324,9 +310,8 @@ func registrarUsuario(conn net.Conn) {
 		return
 	}
 
-	mensaje.Datos = []string{ClientUsuario.nombre}
-	mensaje.DatosClaves = [][]byte{ClientUsuario.clavehashlogin, ClientUsuario.clavepubrsa, ClientUsuario.claveprivrsa}
-
+	//Rellenar datos del mensaje
+	mensaje := Mensaje{From: ClientUsuario.nombre, Funcion: "registrarusuario", Datos: []string{ClientUsuario.nombre}, DatosClaves: [][]byte{ClientUsuario.clavehashlogin, ClientUsuario.clavepubrsa, ClientUsuario.claveprivrsa}}
 	escribirSocket(conn, mensaje)
 }
 
@@ -338,7 +323,6 @@ func login(conn net.Conn) {
 	fmt.Print("Usuario:")
 	ClientUsuario.nombre, _ = reader.ReadString('\n')
 	ClientUsuario.nombre = ClientUsuario.nombre[0 : len(ClientUsuario.nombre)-2]
-
 	fmt.Print("Password:")
 	ClientUsuario.claveenclaro, _ = reader.ReadString('\n')
 	ClientUsuario.claveenclaro = ClientUsuario.claveenclaro[0 : len(ClientUsuario.claveenclaro)-2]
@@ -346,12 +330,7 @@ func login(conn net.Conn) {
 	//Generamos los hash de las claves
 	ClientUsuario.clavehashlogin, ClientUsuario.clavehashcifrado = generarHashClaves(ClientUsuario.claveenclaro)
 
-	mensaje := Mensaje{}
-	mensaje.From = ClientUsuario.nombre
-	mensaje.DatosClaves = [][]byte{ClientUsuario.clavehashlogin}
-	mensaje.Funcion = "login"
-	mensaje.To = -1
-
+	mensaje := Mensaje{From: ClientUsuario.nombre, DatosClaves: [][]byte{ClientUsuario.clavehashlogin}, Funcion: "login", To: -1}
 	escribirSocket(conn, mensaje)
 }
 
@@ -359,7 +338,6 @@ func login(conn net.Conn) {
 func obtenerMensajesChat(conn net.Conn, idchat int) {
 
 	mensaje := Mensaje{Chat: idchat, From: ClientUsuario.nombre, Funcion: "obtenermensajeschat"}
-
 	escribirSocket(conn, mensaje)
 }
 
@@ -367,7 +345,6 @@ func obtenerMensajesChat(conn net.Conn, idchat int) {
 func agregarUsuariosChat(conn net.Conn, idchat int, usuarios []string) {
 
 	mensaje := Mensaje{Chat: idchat, From: ClientUsuario.nombre, Funcion: "agregarusuarioschat", Datos: usuarios}
-
 	escribirSocket(conn, mensaje)
 }
 
@@ -375,7 +352,6 @@ func agregarUsuariosChat(conn net.Conn, idchat int, usuarios []string) {
 func eliminarUsuariosChat(conn net.Conn, idchat int, usuarios []string) {
 
 	mensaje := Mensaje{Chat: idchat, From: ClientUsuario.nombre, Funcion: "eliminarusuarioschat", Datos: usuarios}
-
 	escribirSocket(conn, mensaje)
 }
 
@@ -383,7 +359,6 @@ func eliminarUsuariosChat(conn net.Conn, idchat int, usuarios []string) {
 func getClavePubUsuario(conn net.Conn, idusuario int) {
 
 	mensaje := Mensaje{From: ClientUsuario.nombre, Funcion: "getclavepubusuario", Datos: []string{strconv.Itoa(idusuario)}}
-
 	escribirSocket(conn, mensaje)
 }
 
@@ -391,7 +366,6 @@ func getClavePubUsuario(conn net.Conn, idusuario int) {
 func getClaveMensaje(conn net.Conn, idmensaje int) {
 
 	mensaje := Mensaje{From: ClientUsuario.nombre, Funcion: "getclavesmensajes", Datos: []string{strconv.Itoa(idmensaje)}}
-
 	escribirSocket(conn, mensaje)
 }
 
@@ -399,7 +373,6 @@ func getClaveMensaje(conn net.Conn, idmensaje int) {
 func getClaveCifrarMensajeChat(conn net.Conn, idchat int) {
 
 	mensaje := Mensaje{From: ClientUsuario.nombre, Idfrom: ClientUsuario.id, Funcion: "getclavecifrarmensajechat", Datos: []string{strconv.Itoa(idchat)}}
-
 	escribirSocket(conn, mensaje)
 }
 
@@ -407,7 +380,6 @@ func getClaveCifrarMensajeChat(conn net.Conn, idchat int) {
 func CrearNuevaClaveMensajes(conn net.Conn) {
 
 	mensaje := Mensaje{From: ClientUsuario.nombre, Funcion: "crearnuevoidparanuevaclavemensajes"}
-
 	escribirSocket(conn, mensaje)
 }
 
@@ -424,6 +396,5 @@ func nuevaClaveUsuarioConIdConjuntoClaves(conn net.Conn, idconjuntoclaves int, c
 	}
 
 	mensaje := Mensaje{From: ClientUsuario.nombre, Idfrom: ClientUsuario.id, Chat: 1, Funcion: "nuevaclaveusuarioconidconjuntoclaves", Datos: []string{strconv.Itoa(idconjuntoclaves)}, DatosClaves: [][]byte{clavecifradamensajes}}
-
 	escribirSocket(conn, mensaje)
 }
