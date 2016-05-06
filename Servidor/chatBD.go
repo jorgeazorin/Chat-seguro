@@ -177,9 +177,9 @@ func (bd *BD) removeUsuariosChatBD(idchat int, usuariosexpulsados []int) bool {
 
 func (bd *BD) getChatsUsuarioBD(idusuario int) []Chat {
 
-	chats := make([]Chat, 0, 1)       //Todos los chats del usuario
-	mensajes := make([]Mensaje, 0, 1) //Los mensajes de un chat
-	var chat Chat                     // Para ir introduciendo chats al slice
+	chats := make([]Chat, 0, 1)            //Todos los chats del usuario
+	mensajes := make([]MensajeDatos, 0, 1) //Los mensajes de un chat
+	var chat Chat                          // Para ir introduciendo chats al slice
 
 	//Conexion BD
 	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
@@ -231,13 +231,15 @@ func (bd *BD) getChatsUsuarioBD(idusuario int) []Chat {
 		}
 
 		//De cada chat buscamos los datos de los mensajes de dicho chat
-		mensajes = bd.getMensajesChatBD(chats[i].Id)
+		mensajes, _ = bd.getMensajesChatBD(chats[i].Id, idusuario)
 
 		//Añadimos el array de mensajes a este chat
-		chats[i].Mensajes = mensajes
+		for j := 0; j < len(mensajes); j++ {
+			chats[i].Mensajes[j] = mensajes[j].Mensaje
+		}
 
 		//Vaciamos el array de mensajes, para rellenar el próximo chat
-		mensajes = make([]Mensaje, 0, 1)
+		mensajes = make([]MensajeDatos, 0, 1)
 	}
 
 	return chats

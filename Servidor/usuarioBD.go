@@ -59,7 +59,7 @@ func (bd *BD) conectarBD() (*gorp.DbMap, *sql.DB, bool) {
 	db, err = sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
 	if err != nil {
 		fmt.Println("Error:", err.Error())
-		return dbmap, db, true
+		return dbmap, db, false
 	}
 
 	//Construye un mapa gorp DbMap
@@ -67,8 +67,12 @@ func (bd *BD) conectarBD() (*gorp.DbMap, *sql.DB, bool) {
 
 	//Añade la tabla especificando el nombre, con true el id automático
 	dbmap.AddTableWithName(Usuario{}, "usuario").SetKeys(true, "Id")
+	dbmap.AddTableWithName(Mensaje{}, "mensaje").SetKeys(true, "Id")
+	dbmap.AddTableWithName(Receptoresmensaje{}, "receptoresmensaje")
+	dbmap.AddTableWithName(Clavesmensajes{}, "clavesmensajes").SetKeys(true, "Id")
+	dbmap.AddTableWithName(Clavesusuario{}, "clavesusuario")
 
-	return dbmap, db, false
+	return dbmap, db, true
 }
 
 //Insertamos a un nuevo usuario en BD
@@ -82,7 +86,7 @@ func (bd *BD) insertUsuarioBD(usuario Usuario) (Usuario, bool) {
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
-	if test == true {
+	if test == false {
 		return usuariobd, false
 	}
 
@@ -104,8 +108,8 @@ func (bd *BD) loginUsuarioBD(nombre string, clavehashlogin []byte) (Usuario, boo
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
-	if test == true {
-		return Usuario{}, true
+	if test == false {
+		return Usuario{}, false
 	}
 
 	//Select
@@ -113,7 +117,7 @@ func (bd *BD) loginUsuarioBD(nombre string, clavehashlogin []byte) (Usuario, boo
 	err := dbmap.SelectOne(&usuario, "SELECT * FROM usuario WHERE nombre = ?", nombre)
 	if err != nil {
 		fmt.Println("Error:", err.Error())
-		return Usuario{}, true
+		return Usuario{}, false
 	}
 
 	//Comparamos las claves generadas con la Salt de la BD y las guardadas en la BD
@@ -132,8 +136,8 @@ func (bd *BD) getUsuarioById(id int) (Usuario, bool) {
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
-	if test == true {
-		return Usuario{}, true
+	if test == false {
+		return Usuario{}, false
 	}
 
 	//Select
@@ -141,10 +145,10 @@ func (bd *BD) getUsuarioById(id int) (Usuario, bool) {
 	err := dbmap.SelectOne(&usuario, "SELECT * FROM usuario WHERE id = ?", id)
 	if err != nil {
 		fmt.Println("Error:", err.Error())
-		return Usuario{}, true
+		return Usuario{}, false
 	}
 
-	return usuario, false
+	return usuario, true
 }
 
 //Obtenemos usuario según id usuario
@@ -153,8 +157,8 @@ func (bd *BD) getUsuarioByNombreBD(user string) (Usuario, bool) {
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
-	if test == true {
-		return Usuario{}, true
+	if test == false {
+		return Usuario{}, false
 	}
 
 	//Select
@@ -162,10 +166,10 @@ func (bd *BD) getUsuarioByNombreBD(user string) (Usuario, bool) {
 	err := dbmap.SelectOne(&usuario, "SELECT * FROM usuario WHERE nombre = ?", user)
 	if err != nil {
 		fmt.Println("Error:", err.Error())
-		return Usuario{}, true
+		return Usuario{}, false
 	}
 
-	return usuario, false
+	return usuario, true
 }
 
 //Obtenemos nombre de usuario según id usuario
@@ -174,8 +178,8 @@ func (bd *BD) getNombreUsuario(id int) (string, bool) {
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
-	if test == true {
-		return "", true
+	if test == false {
+		return "", false
 	}
 
 	//Select
@@ -183,10 +187,10 @@ func (bd *BD) getNombreUsuario(id int) (string, bool) {
 	err := dbmap.SelectOne(&usuario, "SELECT nombre FROM usuario WHERE id = ?", id)
 	if err != nil {
 		fmt.Println("Error:", err.Error())
-		return "", true
+		return "", false
 	}
 
-	return usuario.Nombre, false
+	return usuario.Nombre, true
 }
 
 //Obtenemos clave pub de usuario según id usuario
@@ -195,8 +199,8 @@ func (bd *BD) getClavePubUsuario(id int) ([]byte, bool) {
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
-	if test == true {
-		return []byte{}, true
+	if test == false {
+		return []byte{}, false
 	}
 
 	//Select
@@ -204,10 +208,10 @@ func (bd *BD) getClavePubUsuario(id int) ([]byte, bool) {
 	err := dbmap.SelectOne(&usuario, "SELECT clavepubrsa FROM usuario WHERE id = ?", id)
 	if err != nil {
 		fmt.Println("Error:", err.Error())
-		return []byte{}, true
+		return []byte{}, false
 	}
 
-	return usuario.Clavepubrsa, false
+	return usuario.Clavepubrsa, true
 }
 
 //Obtener los id de usuarios de un chat
@@ -216,8 +220,8 @@ func (bd *BD) getUsuariosChatBD(id int) ([]int, bool) {
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
-	if test == true {
-		return []int{}, true
+	if test == false {
+		return []int{}, false
 	}
 
 	//Select
@@ -225,10 +229,10 @@ func (bd *BD) getUsuariosChatBD(id int) ([]int, bool) {
 	_, err := dbmap.Select(&usuarios, "SELECT idusuario FROM usuarioschat WHERE idchat = ?", id)
 	if err != nil {
 		fmt.Println("Error:", err.Error())
-		return []int{}, true
+		return []int{}, false
 	}
 
-	return usuarios, false
+	return usuarios, true
 }
 
 //Modificamos los datos de un usuario
@@ -237,7 +241,7 @@ func (bd *BD) modificarUsuarioBD(usuario Usuario) bool {
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
-	if test == true {
+	if test == false {
 		return false
 	}
 
@@ -256,8 +260,8 @@ func (bd *BD) getClavesMensajes(usuario int) ([]string, bool) {
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
-	if test == true {
-		return []string{}, true
+	if test == false {
+		return []string{}, false
 	}
 
 	//Select
@@ -265,8 +269,8 @@ func (bd *BD) getClavesMensajes(usuario int) ([]string, bool) {
 	_, err := dbmap.Select(&claves, "SELECT idclavesmensajes FROM clavesusuario WHERE idusuario = ?", usuario)
 	if err != nil {
 		fmt.Println("Error:", err.Error())
-		return []string{}, true
+		return []string{}, false
 	}
 
-	return claves, false
+	return claves, true
 }

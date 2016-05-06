@@ -83,24 +83,45 @@ func main() {
 	//MENSAJES
 	//////////
 
-	///Prueba guardar mensaje
+	//Prueba guardar mensaje
 	var m Mensaje
-	m.texto = "Hola que tal?? :)"
-	m.idchat = 1
-	m.idemisor = 1
-	m.idclave = 1
-	//	test = bd.guardarMensajeBD(m)
-	fmt.Println("Mira guardar mensaje:", test)
+	m.Texto = "Hola que tal?? :)"
+	m.Chat = 1
+	m.Emisor = 1
+	m.Clave = 1
+	//test = bd.guardarMensajeBD(m)
+	//fmt.Println("Mira guardar mensaje:", test)
 
 	//Prueba crear nueva clavesmensajes
-	//id := bd.CrearNuevaClaveParaMensajesBD()
+	//id, _ := bd.CrearNuevaClaveMensajesBD()
 	//fmt.Println("Mira id clavesmensajes creado:", id)
 	//fmt.Println("-")
 
 	//Prueba insertar clave de un usuario para x mensajes
-	//test = bd.GuardarClaveUsuarioMensajesBD(1, "claveusuario1", 1)
+	var clavesusuario Clavesusuario
+	clavesusuario.Idusuario = 1
+	clavesusuario.Idclavesmensajes = 4
+	clavesusuario.Clavemensajes = []byte("claveusuario1")
+	//test = bd.GuardarClaveUsuarioMensajesBD(clavesusuario)
 	//fmt.Println("Mira guardar clave usuario de x mensaje:", test)
-	fmt.Println("-")
+	//fmt.Println("-")
+
+	mismensajes, _ := bd.getMensajesChatBD(1, 1)
+	fmt.Println("mira los mensajes:", mismensajes)
+
+	clavemen, _ := bd.getClaveMensaje(11, 31)
+	fmt.Println("mira clave mensaje 11 usuario 31:", clavemen)
+
+	men, _ := bd.getMensajeBD(11)
+	fmt.Println("mira  mensaje 11:", men)
+
+	clavlast, _ := bd.getLastKeyMensaje(1, 1)
+	fmt.Println("mira ultima clave chat 1 usu 1:", string(clavlast))
+
+	test = bd.marcarLeidoPorUsuarioBD(23, 15)
+	fmt.Println("marcado como leido mensaje 23 usu 15", test)
+	test = bd.marcarLeidoPorUsuarioBD(23, 31)
+	fmt.Println("marcado como leido mensaje 23 usu 31", test)
 
 	//////
 	//CHAT
@@ -152,4 +173,5 @@ func main() {
 		}
 	}
 	fmt.Println("-")/
-}*/
+}
+*/

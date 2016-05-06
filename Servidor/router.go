@@ -99,10 +99,9 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		//Guardamos los mensajes en la BD
 		var m Mensaje
 		m.Texto = mensaje.MensajeSocket
-		m.Idchat = 1
-		m.Idemisor = mensaje.Idfrom
-		m.Nombreemisor = mensaje.From
-		m.Idclave = 1
+		m.Chat = 1
+		m.Emisor = mensaje.Idfrom
+		m.Clave = 1
 		//bd.guardarMensajeBD(m)
 
 		//Obtenemos los usuarios que pertenecen en el chat
@@ -138,15 +137,15 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		}
 
 		//Obtenemos los mensajes
-		mensajes := bd.getMensajesChatBD(idChat)
+		mensajes, _ := bd.getMensajesChatBD(idChat, mensaje.Idfrom)
 		datos := make([]string, 0, 1)
 
 		for i := 0; i < len(mensajes); i++ {
-			fmt.Println("::::", mensajes[i].Id, mensajes[i].Texto)
+			fmt.Println("::::", mensajes[i].Mensaje.Id, mensajes[i].Mensaje.Texto)
 
 			men := Mensaje{}
-			men.Id = mensajes[i].Id
-			men.Texto = mensajes[i].Texto
+			men.Id = mensajes[i].Mensaje.Id
+			men.Texto = mensajes[i].Mensaje.Texto
 
 			//Codificamos los mensajes en json
 			b, _ := json.Marshal(men)
@@ -244,7 +243,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 
 		clavepub, test := bd.getClavePubUsuario(idusuario)
 
-		if test == true {
+		if test == false {
 			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Error al obtener clave del usuario."}
 			EnviarMensajeSocketSocket(conexion, mesj)
 			return
@@ -289,7 +288,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	//////////////////////////////////
 	if mensaje.Funcion == "crearnuevoidparanuevaclavemensajes" {
 
-		idclavemensajes := bd.CrearNuevaClaveMensajesBD()
+		idclavemensajes, _ := bd.CrearNuevaClaveMensajesBD()
 
 		if idclavemensajes == 0 {
 			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Error al crear id para nuevo conjunto de claves."}
@@ -297,7 +296,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 			return
 		}
 
-		cadena_idclavemensajes := strconv.FormatInt(idclavemensajes, 10)
+		cadena_idclavemensajes := strconv.Itoa(idclavemensajes)
 
 		//Enviamos mensaje contestación
 		mesj := MensajeSocket{From: usuario.Nombre, Datos: []string{cadena_idclavemensajes}, MensajeSocket: "Id nuevo conjunto claves creado correctamente."}
@@ -314,7 +313,11 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		idconjuntoclaves, _ := strconv.Atoi(mensaje.Datos[0])
 		clavemensajes := mensaje.DatosClaves[0]
 
-		test := bd.GuardarClaveUsuarioMensajesBD(mensaje.Idfrom, idconjuntoclaves, clavemensajes)
+		var clavesusuario Clavesusuario
+		clavesusuario.Idusuario = mensaje.Idfrom
+		clavesusuario.Idclavesmensajes = idconjuntoclaves
+		clavesusuario.Clavemensajes = clavemensajes
+		test := bd.GuardarClaveUsuarioMensajesBD(clavesusuario)
 
 		if test == false {
 			mesj := MensajeSocket{From: usuario.Nombre, MensajeSocket: "Error al asociar la clave del usuario con el id del conjunto de claves."}
@@ -354,7 +357,8 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	///////////////////////////
 	if mensaje.Funcion == "marcarmensajeleido" {
 		i, _ := strconv.Atoi(mensaje.Datos[0])
-		bd.marcarLeido(i)
+		idreceptor := mensaje.Idfrom
+		bd.marcarLeidoPorUsuarioBD(i, idreceptor)
 	}
 
 	if mensaje.Funcion == "getclavesmensajes" {

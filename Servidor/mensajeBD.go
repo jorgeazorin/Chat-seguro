@@ -5,296 +5,211 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"strconv"
 )
 
 //Para guardar un mensaje con sus datos
 type Mensaje struct {
-	Id           int    `json:"Id"`
-	Texto        string `json:"Texto"`
-	Idemisor     int    `json:"Idemisor"`
-	Nombreemisor string `json:"Nombreemisor"`
-	Leido        bool   `json:"Leido"`
-	Idchat       int    `json:"Idchat"`
-	Idclave      int    `json:"Idclave"`
+	Id     int    `json:"Id"`
+	Texto  string `json:"Texto"`
+	Emisor int    `json:"Emisor"`
+	Chat   int    `json:"Chat"`
+	Clave  int    `json:"Clave"`
+}
+
+type Receptoresmensaje struct {
+	Idmensaje  int  `json:"Idmensaje"`
+	Idreceptor int  `json:"Idreceptor"`
+	Leido      bool `json:"Leido"`
+}
+
+type Clavesmensajes struct {
+	Id int `json:"Id"`
+}
+
+type Clavesusuario struct {
+	Idusuario        int    `json:"Idusuario"`
+	Idclavesmensajes int    `json:"Idclavesmensajes"`
+	Clavemensajes    []byte `json:"Clavemensajes"`
+}
+
+type MensajeDatos struct {
+	Mensaje Mensaje `json:"Mensaje"`
+	Leido   bool    `json:"Leido"`
 }
 
 //Guarda un mensaje para todos los receptores posibles del chat
-func (bd *BD) guardarMensaje(mensaje Mensaje) bool {
+func (bd *BD) guardarMensajeBD(mensaje Mensaje) bool {
 
-	var idreceptoraux = -1
-	idreceptores := make([]int, 0, 1)
-
-	//Conexion BD
-	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return false
-	}
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
-
-	//Obtenemos los id de los usuarios que recibiráne el mensaje en este chat
-	rows, err := db.Query("SELECT idusuario FROM usuarioschat WHERE idchat = " + strconv.Itoa(mensaje.Idchat) + " and idusuario !=" + strconv.Itoa(mensaje.Idemisor))
-	if err != nil {
-		fmt.Println(err.Error())
-		defer db.Close()
+	if test == false {
 		return false
 	}
 
-	//Guardamos id de los usuarios receptores en slice de ids
-	for rows.Next() {
-		err = rows.Scan(&idreceptoraux)
-
-		if err != nil {
-			fmt.Println(err.Error())
-			defer db.Close()
-			return false
-		}
-		idreceptores = append(idreceptores, idreceptoraux)
-	}
-
-	//Preparamos la creación del mensaje
-	stmtIns, err := db.Prepare("INSERT INTO mensaje VALUES(?, ?, ?, ?, ?)")
+	//Select
+	idreceptores := make([]int, 0, 1)
+	_, err := dbmap.Select(&idreceptores, "SELECT idusuario FROM usuarioschat WHERE idchat = ? and idusuario != ?", mensaje.Chat, mensaje.Emisor)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("Error:", err.Error())
 		return false
 	}
 
-	//Insertamos el mensaje
-	res, err := stmtIns.Exec("DEFAULT", mensaje.Texto, mensaje.Idemisor, mensaje.Idchat, mensaje.Idclave)
+	//Insert
+	err = dbmap.Insert(&mensaje)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("Error:", err.Error())
 		return false
 	}
 
-	//Obtenemos id del mensaje creado
-	idmensaje, err := res.LastInsertId()
-	if err != nil {
-		fmt.Println(err.Error())
-		return false
-	}
-	println("Id del mensaje creado:", idmensaje)
-
-	//Por cada receptor
+	//Rellenamos array receptores
+	receptores := make([]Receptoresmensaje, 0, 1)
 	for i := 0; i < len(idreceptores); i++ {
+		var receptor Receptoresmensaje
+		receptor.Idmensaje = mensaje.Id
+		receptor.Idreceptor = idreceptores[i]
+		receptor.Leido = false
+		receptores = append(receptores, receptor)
+	}
 
-		//Preparamos la insercion del receptor del mensaje
-		stmtIns, err := db.Prepare("INSERT INTO receptoresmensaje VALUES(?, ?, ?)")
+	for i := 0; i < len(idreceptores); i++ {
+		//Insert
+		err = dbmap.Insert(&receptores[i])
 		if err != nil {
-			fmt.Println(err.Error())
-			return false
-		}
-
-		//Insertamos el receptor con el mensaje
-		_, err = stmtIns.Exec(idmensaje, idreceptores[i], "DEFAULT")
-		if err != nil {
-			fmt.Println(err.Error())
+			fmt.Println("Error:", err.Error())
 			return false
 		}
 	}
+
 	return true
 }
 
 //Crear nuevo id para nuevo grupo de claves para siguientes mensajes
-func (bd *BD) CrearNuevaClaveMensajesBD() int64 {
+func (bd *BD) CrearNuevaClaveMensajesBD() (int, bool) {
 
-	//Conexión BD
-	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return 0
-	}
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
-
-	//Preparamos consulta
-	stmtIns, err := db.Prepare("INSERT INTO clavesmensajes VALUES(?)")
-	if err != nil {
-		fmt.Println(err.Error())
-		return 0
+	if test == false {
+		return 0, false
 	}
 
-	//Insertamos
-	res, err := stmtIns.Exec("DEFAULT")
+	//Insert
+	var clavesmensajes Clavesmensajes
+	err := dbmap.Insert(&clavesmensajes)
 	if err != nil {
-		fmt.Println(err.Error())
-		return 0
+		fmt.Println("Error:", err.Error())
+		return 0, false
 	}
 
-	//Obtenemos id de lo creado
-	idclavesmensajes, err := res.LastInsertId()
-	if err != nil {
-		fmt.Println(err.Error())
-		return 0
-	}
-
-	defer stmtIns.Close()
-
-	return idclavesmensajes
+	return clavesmensajes.Id, true
 }
 
 //Guardamos la clave de un usuario para leer x mensajes
-func (bd *BD) GuardarClaveUsuarioMensajesBD(idusuario int, idclavesmensajes int, clavemensajes []byte) bool {
+func (bd *BD) GuardarClaveUsuarioMensajesBD(clavesusuario Clavesusuario) bool {
 
-	//Conexión BD
-	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return false
-	}
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
-
-	//Preparamos consulta
-	stmtIns, err := db.Prepare("INSERT INTO clavesusuario VALUES(?, ?, ?)")
-	if err != nil {
-		fmt.Println(err.Error())
+	if test == false {
 		return false
 	}
 
-	//Insertamos
-	_, err = stmtIns.Exec(idusuario, idclavesmensajes, clavemensajes)
+	//Insert
+	err := dbmap.Insert(&clavesusuario)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("Error:", err.Error())
 		return false
 	}
-
-	defer stmtIns.Close()
 
 	return true
 }
 
 //Obtenemos todos los mensajes de un chat
-func (bd *BD) getMensajesChatBD(idchat int) []Mensaje {
+func (bd *BD) getMensajesChatBD(idchat int, idusuario int) ([]MensajeDatos, bool) {
 
-	mensajes := make([]Mensaje, 0, 1) //Los mensajes de un chat
-	var mensaje Mensaje               //Para ir introduciendo mensajes al slice
-
-	//Conexion BD
-	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil
-	}
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
+	if test == false {
+		return []MensajeDatos{}, false
+	}
 
 	//De el chat buscamos los datos de los mensajes de dicho chat
-	rows, err := db.Query("SELECT id, texto, emisor FROM mensaje WHERE chat = " + strconv.Itoa(idchat))
+	mensajes := make([]Mensaje, 0, 1)
+	_, err := dbmap.Select(&mensajes, "SELECT * FROM mensaje WHERE chat = ?", idchat)
 	if err != nil {
-		fmt.Println(err.Error())
-		defer db.Close()
-		return nil
+		fmt.Println("Error:", err.Error())
+		return []MensajeDatos{}, false
 	}
 
-	for rows.Next() {
-		//Obtenemos los datos del mensaje
-		err = rows.Scan(&mensaje.Id, &mensaje.Texto, &mensaje.Idemisor)
+	mismensajes := make([]MensajeDatos, 0, 1)
 
+	for i := 0; i < len(mensajes); i++ {
+		//Vemos más datos como si el mensaje está leído
+		var recetoresmensajes Receptoresmensaje
+		_, err := dbmap.Select(&recetoresmensajes, "SELECT * FROM receptoresmensaje WHERE idmensaje = ? and idreceptor = ?", mensajes[i].Id, idusuario)
 		if err != nil {
-			fmt.Println(err.Error())
-			defer db.Close()
-			return nil
+			fmt.Println("Error:", err.Error())
+			return []MensajeDatos{}, false
 		}
-
-		mensaje.Nombreemisor, _ = bd.getNombreUsuario(mensaje.Idemisor)
-
-		//Para ver si un mensaje aparece como leido o no
-		rows2, err2 := db.Query("SELECT leido from receptoresmensaje where idmensaje = " + strconv.Itoa(mensaje.Id))
-		if err2 != nil {
-			fmt.Println(err2.Error())
-			defer db.Close()
-			return nil
-		}
-		for rows2.Next() {
-			err2 = rows2.Scan(&mensaje.Leido)
-			//Si no aparece, el mensaje es suyo propio, siempre lo habrá leido
-			if err2 != nil {
-				mensaje.Leido = true
-			}
-		}
-
-		//Guardamos el mensaje en el array de mensajes
-		mensajes = append(mensajes, mensaje)
+		//Rellenamos los datos
+		var mimensaje MensajeDatos
+		mimensaje.Mensaje = mensajes[i]
+		mimensaje.Leido = recetoresmensajes.Leido
+		mismensajes = append(mismensajes, mimensaje)
 	}
 
-	return mensajes
+	return mismensajes, true
 }
 
 //Obtiene la clave cifrada con la que se cifran los mensajes
-func (bd *BD) getClaveMensaje(idmensaje int) (string, bool) {
+func (bd *BD) getClaveMensaje(idmensaje int, idusuario int) ([]byte, bool) {
 
-	var clavemensaje string
-
-	//Conexion BD
-	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return "", false
-	}
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
+	if test == false {
+		return []byte{}, false
+	}
 
-	//De el chat buscamos los datos de los mensajes de dicho chat
-	rows, err := db.Query("SELECT claveusuario FROM mensaje, clavesusuario WHERE id = " + strconv.Itoa(idmensaje))
+	//Buscamos idclave de ese mensaje
+	var mensaje Mensaje
+	err := dbmap.SelectOne(&mensaje, "SELECT * FROM mensaje WHERE id = ?", idmensaje)
 	if err != nil {
-		fmt.Println(err.Error())
-		defer db.Close()
-		return "", false
+		fmt.Println("Error:", err.Error())
+		return []byte{}, false
 	}
 
-	for rows.Next() {
-		//Obtenemos los datos del mensaje
-		err = rows.Scan(&clavemensaje)
-
-		if err != nil {
-			fmt.Println(err.Error())
-			defer db.Close()
-			return "", false
-		}
-
+	//Buscamos la clave que tiene ese idclave
+	var clavesusuario Clavesusuario
+	err = dbmap.SelectOne(&clavesusuario, "SELECT * FROM clavesusuario WHERE idclavesmensajes = ? AND idusuario = ?", mensaje.Clave, idusuario)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return []byte{}, false
 	}
 
-	return clavemensaje, true
+	return clavesusuario.Clavemensajes, true
 }
 
 //Obtiene los datos de un mensaje
-func (bd *BD) getMensaje(idmensaje int) (Mensaje, bool) {
+func (bd *BD) getMensajeBD(idmensaje int) (Mensaje, bool) {
 
-	var mensaje Mensaje
-	mensaje.Id = idmensaje
-
-	//Conexion BD
-	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return mensaje, false
-	}
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
-
-	//De el chat buscamos los datos de los mensajes de dicho chat
-	rows, err := db.Query("SELECT texto, emisor, chat, clave FROM mensaje WHERE id = " + strconv.Itoa(idmensaje))
-	if err != nil {
-		fmt.Println(err.Error())
-		defer db.Close()
-		return mensaje, false
+	if test == false {
+		return Mensaje{}, false
 	}
 
-	for rows.Next() {
-		//Obtenemos los datos del mensaje
-		err = rows.Scan(&mensaje.Texto, &mensaje.Idemisor, &mensaje.Idchat, &mensaje.Idclave)
-
-		if err != nil {
-			fmt.Println(err.Error())
-			defer db.Close()
-			return mensaje, false
-		}
-
+	//Buscamos los datos de mensaje en concreto
+	var mensaje Mensaje
+	err := dbmap.SelectOne(&mensaje, "SELECT * FROM mensaje WHERE id = ?", idmensaje)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return Mensaje{}, false
 	}
 
 	return mensaje, true
@@ -303,53 +218,80 @@ func (bd *BD) getMensaje(idmensaje int) (Mensaje, bool) {
 //Obtiene la última clave (con la que se están cifrando ahora los mensajes)
 func (bd *BD) getLastKeyMensaje(idchat int, idusuario int) ([]byte, bool) {
 
-	var clave []byte
-
-	//Conexion BD
-	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return []byte{}, false
-	}
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
-
-	//De el chat buscamos los datos de los mensajes de dicho chat
-	rows, err := db.Query("SELECT clavemensajes FROM clavesusuario, mensaje WHERE idusuario = " + strconv.Itoa(idusuario) + " AND chat = " + strconv.Itoa(idchat) + " AND clave = (select max(clave) from clavesusuario, mensaje WHERE idusuario = " + strconv.Itoa(idusuario) + " AND chat = " + strconv.Itoa(idchat) + ")")
-	if err != nil {
-		fmt.Println(err.Error())
-		defer db.Close()
+	if test == false {
 		return []byte{}, false
 	}
 
-	for rows.Next() {
-		//Obtenemos los datos del mensaje
-		err = rows.Scan(&clave)
-
-		if err != nil {
-			fmt.Println(err.Error())
-			defer db.Close()
-			return []byte{}, false
-		}
-
+	//Buscamos los datos de mensaje en concreto (el último mensaje de este chat)
+	var mensaje Mensaje
+	err := dbmap.SelectOne(&mensaje, "SELECT * FROM mensaje WHERE chat = ? AND id = (SELECT max(id) FROM mensaje WHERE chat = ?)", idchat, idchat)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return []byte{}, false
 	}
 
-	return clave, true
+	//Buscamos la clave que tiene ese idclave del mensaje
+	var clavesusuario Clavesusuario
+	err = dbmap.SelectOne(&clavesusuario, "SELECT * FROM clavesusuario WHERE idclavesmensajes = ? AND idusuario = ?", mensaje.Clave, idusuario)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return []byte{}, false
+	}
+
+	return clavesusuario.Clavemensajes, true
 }
 
-func (bd *BD) marcarLeido(idMensaje int) {
-	//Conexion BD
-	db, err := sql.Open("mysql", bd.username+":"+bd.password+"@/"+bd.database)
+func (bd *BD) marcarLeidoPorUsuarioBD(idmensaje int, idreceptor int) bool {
 
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
+	if test == false {
+		return false
+	}
 
-	//De el chat buscamos los datos de los mensajes de dicho chat
-	_, err = db.Query("UPDATE `receptoresmensaje` SET `leido`=true WHERE `idmensaje`=" + strconv.Itoa(idMensaje))
+	//Marcamos como leido
+	_, err := dbmap.Exec("UPDATE receptoresmensaje SET leido = true WHERE idmensaje = ? and idreceptor = ?", idmensaje, idreceptor)
 	if err != nil {
 		fmt.Println(err.Error())
-		defer db.Close()
+		return false
 	}
+
+	return true
 }
+
+/**
+
+func (bd *BD) marcarLeidoPorUsuarioBD(idmensaje int, idreceptor int) bool {
+
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
+	defer db.Close()
+	if test == false {
+		return false
+	}
+
+	//Select receptormensajes
+	var receptormensaje Receptoresmensaje
+	err := dbmap.SelectOne(&receptormensaje, "SELECT * FROM receptoresmensaje WHERE idmensaje = ? AND idreceptor = ?", idmensaje, idreceptor)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return false
+	}
+
+	//Insert leido
+	receptormensaje.Leido = true
+	_, err = dbmap.Update(&receptormensaje)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return false
+	}
+
+	return true
+}
+
+
+*/
