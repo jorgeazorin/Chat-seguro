@@ -262,36 +262,3 @@ func (bd *BD) marcarLeidoPorUsuarioBD(idmensaje int, idreceptor int) bool {
 
 	return true
 }
-
-/**
-
-func (bd *BD) marcarLeidoPorUsuarioBD(idmensaje int, idreceptor int) bool {
-
-	//Conexion y dbmapa
-	dbmap, db, test := bd.conectarBD()
-	defer db.Close()
-	if test == false {
-		return false
-	}
-
-	//Select receptormensajes
-	var receptormensaje Receptoresmensaje
-	err := dbmap.SelectOne(&receptormensaje, "SELECT * FROM receptoresmensaje WHERE idmensaje = ? AND idreceptor = ?", idmensaje, idreceptor)
-	if err != nil {
-		fmt.Println("Error:", err.Error())
-		return false
-	}
-
-	//Insert leido
-	receptormensaje.Leido = true
-	_, err = dbmap.Update(&receptormensaje)
-	if err != nil {
-		fmt.Println("Error:", err.Error())
-		return false
-	}
-
-	return true
-}
-
-
-*/
