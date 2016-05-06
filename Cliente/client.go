@@ -176,6 +176,7 @@ func handleServerRead(conn net.Conn) {
 			//PRUEBAS AFTER DE LOGIN
 			////////////////////////
 			//nuevaClaveUsuarioConIdConjuntoClaves(conn, 1, "nuevaclave1")
+			//Obtenemos la clave para cifrar mensajes del chat1
 			getClaveCifrarMensajeChat(conn, 1)
 		}
 
@@ -198,7 +199,7 @@ func handleClientWrite(conn net.Conn) {
 		message, _ := reader.ReadString('\n')
 
 		//Rellenar datos
-		mensaje := Mensaje{From: ClientUsuario.nombre, Funcion: "enviar", Mensajechat: []byte(message[0 : len(message)-2])}
+		mensaje := Mensaje{From: ClientUsuario.nombre, Funcion: "enviar", Mensajechat: []byte(message[0 : len(message)-2]), Chat: 1}
 
 		//getClaveCifrarMensajeChat(conn, 1)
 
@@ -210,10 +211,6 @@ func handleClientWrite(conn net.Conn) {
 			continue
 		}
 		mensaje.Mensajechat = mensajecifrado
-		mensaje.To = 2
-		datos := []string{""}
-		mensaje.Datos = datos
-		mensaje.Chat = 1
 
 		escribirSocket(conn, mensaje)
 	}

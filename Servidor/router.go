@@ -104,7 +104,6 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 
 		//Obtenemos los usuarios que pertenecen en el chat
 		idusuarios, test := bd.getUsuariosChatBD(mensaje.Chat)
-
 		if test == false {
 			mesj := MensajeSocket{From: mensaje.From, MensajeSocket: "Error al enviar mensaje"}
 			EnviarMensajeSocketSocket(conexion, mesj)
