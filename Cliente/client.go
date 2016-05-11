@@ -381,7 +381,7 @@ func CrearNuevaClaveMensajes(conn net.Conn) {
 }
 
 //Asocia nueva clave de un usuario con el id que indica ese nuevo conjunto de claves
-func nuevaClaveUsuarioConIdConjuntoClaves(conn net.Conn, idconjuntoclaves int, clavemensajes string) {
+func nuevaClaveUsuarioConIdConjuntoClaves(conn net.Conn, idconjuntoclaves int, clavemensajes string, idchat int) {
 
 	clavesmensajeshash, _ := generarHashClaves(clavemensajes)
 
@@ -392,6 +392,6 @@ func nuevaClaveUsuarioConIdConjuntoClaves(conn net.Conn, idconjuntoclaves int, c
 		return
 	}
 
-	mensaje := Mensaje{From: ClientUsuario.nombre, Idfrom: ClientUsuario.id, Chat: 1, Funcion: "nuevaclaveusuarioconidconjuntoclaves", Datos: []string{strconv.Itoa(idconjuntoclaves)}, DatosClaves: [][]byte{clavecifradamensajes}}
+	mensaje := Mensaje{From: ClientUsuario.nombre, Idfrom: ClientUsuario.id, Chat: idchat, Funcion: "nuevaclaveusuarioconidconjuntoclaves", Datos: []string{strconv.Itoa(idconjuntoclaves)}, DatosClaves: [][]byte{clavecifradamensajes}}
 	escribirSocket(conn, mensaje)
 }
