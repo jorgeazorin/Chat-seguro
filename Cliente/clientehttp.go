@@ -50,9 +50,8 @@ func IniciarServidorWeb() {
 }
 
 func escribitWebSocket(ws *websocket.Conn) {
-
-	var message = "hello"
-	websocket.Message.Send(ws, message)
+	//var message = "hello"
+	//websocket.Message.Send(ws, message)
 }
 
 func leerDatosWS(ws *websocket.Conn) string {

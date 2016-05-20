@@ -44,29 +44,18 @@
     //Cliente servidor http nos envía algo
     ws.onmessage = function (event) {
 
-      //AHORA RECIBES UN OBJETO Object BLOB
-      //Ni idea de que es y como obtener sus cosillas por dentro
-      //Cuando lo sepas ya cambias esto xD
+      respuesta = JSON.parse(event.data)
 
-    	console.log("Hemos recibido"+event.data);
-      console.log(event.data);
+      if(respuesta.MensajeSocket == "Chats:") {
+        console.log(respuesta);
 
-      if(event.data == "loginok") {
-        $scope.mostarlogin = false;
-        alert('¡Usuario logeado correctamente!')        
-      }
+        if(respuesta.Datos.length != 0) {
+          console.log("BIENNNNNNNNNNN")
+          $scope.mostarlogin = false;
 
-      if(event.data == "loginnook") {
-        alert('Error al iniciar sesión, pruebe con otras credenciales.')
-      }
-
-      if(event.data == "registrook") {
-        alert('¡Usuario registrado correctamente!')
-        $scope.mostarlogin = false;
-      }
-
-      if(event.data == "registronook") {
-        alert('¡Error al registrar usuario!')
+        }
+      } else {
+        alert(respuesta.MensajeSocket)
       }
 
     }
