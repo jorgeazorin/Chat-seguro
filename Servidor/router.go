@@ -98,6 +98,18 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 			return
 		}
 
+		//Ponemos nombres bien
+		for i := 0; i < len(chats); i++ {
+			if chats[i].Chat.Nombre == "" {
+				idusuarios, _ := bd.getUsuariosChatBD(chats[i].Chat.Id)
+				for j := 0; j < len(idusuarios); j++ {
+					if idusuarios[i] != mensaje.Idfrom {
+						chats[i].Chat.Nombre, _ = bd.getNombreUsuario(idusuarios[i])
+					}
+				}
+			}
+		}
+
 		//Codificamos con Marshal
 		datos := make([]string, 0, 1)
 		for i := 0; i < len(chats); i++ {

@@ -50,8 +50,17 @@
         console.log(respuesta);
 
         if(respuesta.Datos.length != 0) {
-          console.log("BIENNNNNNNNNNN")
+          console.log("Esta vez si hay cosas")
           $scope.mostarlogin = false;
+          
+          chats = eval(respuesta.Datos)
+          for(i=0;i<chats.length;i++) {
+            chats[i] = JSON.parse(chats[i])
+            console.log(chats[i].Chat.Nombre)
+          }
+
+          $scope.chats = chats
+          
 
         }
       } else {

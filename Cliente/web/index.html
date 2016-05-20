@@ -13,7 +13,9 @@
     <div class="main" >
       <div class="menu_izq">
         <ul>
-          <li>{{greeting}}</li>
+          <li class="media" ng-repeat="chat in chats"> 
+            <p>{{chat.Chat.Nombre}}</p>
+          </li>
         </ul>
       </div>
       <div class="centro">
