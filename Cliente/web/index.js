@@ -43,7 +43,13 @@
 
     //Cliente servidor http nos envía algo
     ws.onmessage = function (event) {
+
+      //AHORA RECIBES UN OBJETO Object BLOB
+      //Ni idea de que es y como obtener sus cosillas por dentro
+      //Cuando lo sepas ya cambias esto xD
+
     	console.log("Hemos recibido"+event.data);
+      console.log(event.data);
 
       if(event.data == "loginok") {
         $scope.mostarlogin = false;

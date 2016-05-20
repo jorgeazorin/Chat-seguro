@@ -138,6 +138,12 @@ func escribirSocket(mensaje Mensaje) {
 	conn.Write(b)
 }
 
+//Convertir a json y escribir en el socket con cliente
+func escribirSocketCliente(mensaje Mensaje) {
+	b, _ := json.Marshal(mensaje)
+	websocket.Message.Send(wbSocket, b)
+}
+
 //Si envia algo el servidor a este cliente lo muestra en pantalla
 func handleServerRead() {
 	var mensaje Mensaje
@@ -175,25 +181,28 @@ func handleServerRead() {
 		fmt.Println()
 
 		if mensaje.Mensaje == "Chats:" {
-			for i := 0; i < len(mensaje.Datos); i++ {
-				websocket.Message.Send(wbSocket, mensaje.Datos[i])
-			}
+			respuesta := Mensaje{Funcion: "chats", Datos: mensaje.Datos}
+			escribirSocketCliente(respuesta)
 		}
 
 		if mensaje.Mensaje == "Registrado correctamente" {
-			websocket.Message.Send(wbSocket, "registrook")
+			respuesta := Mensaje{Funcion: "registrook"}
+			websocket.Message.Send(wbSocket, respuesta)
 		}
 
 		if mensaje.Mensaje == "Registro incorrecto" {
-			websocket.Message.Send(wbSocket, "registronook")
+			respuesta := Mensaje{Funcion: "registronook"}
+			websocket.Message.Send(wbSocket, respuesta)
 		}
 
 		if mensaje.Mensaje == "Logeado correctamente" {
-			websocket.Message.Send(wbSocket, "loginok")
+			respuesta := Mensaje{Funcion: "loginok"}
+			escribirSocketCliente(respuesta)
 		}
 
 		if mensaje.Mensaje == "Logeado incorrecto" {
-			websocket.Message.Send(wbSocket, "loginok")
+			respuesta := Mensaje{Funcion: "loginook"}
+			websocket.Message.Send(wbSocket, respuesta)
 		}
 
 		//Si nos devuelven el usuario lo rellenamos. (menos claveenclaro, clavehashcifrado clavehashlogin ya estan rellenos)
