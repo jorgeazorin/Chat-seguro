@@ -121,7 +121,6 @@ func main() {
 	//Registrar un usuario
 	//ClientUsuario.Nombre = "Prueba3"
 	//ClientUsuario.Claveenclaro = "miclave3"
-	//ClientUsuario.Clavepubrsa, ClientUsuario.Claveprivrsa = generarClavesRSA()
 	//registrarUsuario(conn)
 
 	///////////////////////////////////
@@ -307,43 +306,27 @@ func descifrarAES(ciphertext []byte, clave []byte) ([]byte, bool) {
 }
 
 //Registrar a un usuario
-func registrarUsuario() {
+func registrarUsuario(cliente Usuario) bool {
 
 	var err bool
 
 	//Generamos los hash de las claves
-	ClientUsuario.Clavehashlogin, ClientUsuario.Clavehashcifrado = generarHashClaves(ClientUsuario.Claveenclaro)
+	cliente.Clavehashlogin, cliente.Clavehashcifrado = generarHashClaves(cliente.Claveenclaro)
+
+	//Generamos clave pública y privada RSA
+	cliente.Clavepubrsa, cliente.Claveprivrsa = generarClavesRSA()
 
 	//Clave privada del usuario cifrar
-	ClientUsuario.Claveprivrsa, err = cifrarAES(ClientUsuario.Claveprivrsa, ClientUsuario.Clavehashcifrado)
+	cliente.Claveprivrsa, err = cifrarAES(cliente.Claveprivrsa, cliente.Clavehashcifrado)
 	if err == true {
 		fmt.Println("Error al cifrar clave con cifrado AES")
-		return
+		return false
 	}
 
 	//Rellenar datos del mensaje
-	mensaje := Mensaje{From: ClientUsuario.Nombre, Funcion: "registrarusuario", Datos: []string{ClientUsuario.Nombre}, DatosClaves: [][]byte{ClientUsuario.Clavehashlogin, ClientUsuario.Clavepubrsa, ClientUsuario.Claveprivrsa}}
+	mensaje := Mensaje{From: cliente.Nombre, Funcion: "registrarusuario", Datos: []string{cliente.Nombre}, DatosClaves: [][]byte{cliente.Clavehashlogin, cliente.Clavepubrsa, cliente.Claveprivrsa}}
 	escribirSocket(mensaje)
-}
-
-//Cliente realiza login
-func login(username string, password string) {
-
-	reader := bufio.NewReader(os.Stdin)
-
-	//Pedimos los datos
-	fmt.Print("Usuario:")
-	ClientUsuario.Nombre, _ = reader.ReadString('\n')
-	ClientUsuario.Nombre = ClientUsuario.Nombre[0 : len(ClientUsuario.Nombre)-2]
-	fmt.Print("Password:")
-	ClientUsuario.Claveenclaro, _ = reader.ReadString('\n')
-	ClientUsuario.Claveenclaro = ClientUsuario.Claveenclaro[0 : len(ClientUsuario.Claveenclaro)-2]
-
-	//Generamos los hash de las claves
-	ClientUsuario.Clavehashlogin, ClientUsuario.Clavehashcifrado = generarHashClaves(ClientUsuario.Claveenclaro)
-
-	mensaje := Mensaje{From: ClientUsuario.Nombre, DatosClaves: [][]byte{ClientUsuario.Clavehashlogin}, Funcion: "login", To: -1}
-	escribirSocket(mensaje)
+	return true
 }
 
 //Cliente realiza login

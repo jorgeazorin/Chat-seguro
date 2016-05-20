@@ -23,11 +23,20 @@
       </div>
     </div>
 
+    <!-- Formulario login -->
     <div class="login" ng-show="mostarlogin">
-      <h3>Login</h3>
-      <input type="text" ng-model="username" placeholder="Usuario" >
-       <input type="password"  ng-model="password" placeholder="Contraseña" >
-       <button ng-click="Login()">Entrar</button>
+        <h3>Iniciar sesión</h3>
+        <input type="text" ng-model="username" placeholder="Usuario" >
+        <input type="password"  ng-model="password" placeholder="Contraseña" >
+        <button ng-click="Login()">Entrar</button>
+    </div>
+
+    <!-- Formulario registro -->
+    <div class="login" ng-show="mostrarregistro">
+        <h3>Registro</h3>
+        <input type="text" ng-model="username" placeholder="Usuario" >
+        <input type="password"  ng-model="password" placeholder="Contraseña" >
+        <button ng-click="Registro()">Registrarme</button>
     </div>
 
 

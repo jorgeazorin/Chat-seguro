@@ -55,6 +55,17 @@ func escribitWebSocket(ws *websocket.Conn) {
 	websocket.Message.Send(ws, message)
 }
 
+func leerDatosWS(ws *websocket.Conn) string {
+	receivedtext := make([]byte, 100)
+	n, err := ws.Read(receivedtext)
+	if err != nil {
+		fmt.Printf("Error obteniendo datos:", err)
+	}
+	s := string(receivedtext[:n])
+
+	return s
+}
+
 func echoHandler(ws *websocket.Conn) {
 	wbSocket = ws
 
@@ -63,35 +74,33 @@ func echoHandler(ws *websocket.Conn) {
 	websocket.Message.Send(ws, message)
 
 	for {
-
-		receivedtext := make([]byte, 100)
-		n, err := ws.Read(receivedtext)
-		if err != nil {
-			fmt.Println("Error", err)
-		}
-		s := string(receivedtext[:n])
-		fmt.Printf("Received3: %d bytes: %s\n", n, s)
+		datos := leerDatosWS(ws)
 
 		///////
 		//Login
 		///////
-		if s == "login" {
-			n, err := ws.Read(receivedtext)
-			if err != nil {
-				fmt.Printf("Error", err)
-			}
-			s := string(receivedtext[:n])
-
+		if datos == "login" {
+			datos := leerDatosWS(ws)
 			var usuario Usuario
-			json.Unmarshal([]byte(s), &usuario)
+			json.Unmarshal([]byte(datos), &usuario)
 			loginweb(usuario.Nombre, usuario.Claveenclaro)
 		}
 
-		//////
-		//Otra
-		//////
-		if s == "prueba" {
-			fmt.Println("Ha llegaooooo")
+		//////////
+		//Registro
+		//////////
+		if datos == "registro" {
+			datos := leerDatosWS(ws)
+
+			var usuario Usuario
+			json.Unmarshal([]byte(datos), &usuario)
+			test := registrarUsuario(usuario)
+
+			if test == true {
+				websocket.Message.Send(ws, "registrook")
+			} else {
+				websocket.Message.Send(ws, "registronook")
+			}
 		}
 
 		//	websocket.Message.Send(ws, message)
