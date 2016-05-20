@@ -1,8 +1,7 @@
 package main
 
 import (
-	//"crypto/sha256"
-
+	"encoding/json"
 	"fmt"
 	"golang.org/x/net/websocket"
 	"io"
@@ -46,7 +45,6 @@ func IniciarServidorWeb() {
 	var err = http.ListenAndServeTLS(":10443", "cert.pem", "key.pem", nil)
 	if err != nil {
 		panic(err)
-
 	}
 
 }
@@ -59,27 +57,43 @@ func escribitWebSocket(ws *websocket.Conn) {
 
 func echoHandler(ws *websocket.Conn) {
 	wbSocket = ws
-	receivedtext := make([]byte, 100)
 
-	n, err := ws.Read(receivedtext)
-
-	if err != nil {
-		fmt.Printf("Received: %d bytes\n", n)
-	}
-
-	s := string(receivedtext[:n])
-	fmt.Printf("Received: %d bytes: %s\n", n, s)
+	//Esto para que es Jorge?
 	var message = "hello"
 	websocket.Message.Send(ws, message)
 
 	for {
+
 		receivedtext := make([]byte, 100)
 		n, err := ws.Read(receivedtext)
-		s := string(receivedtext[:n])
-		fmt.Printf("Received: %d bytes: %s\n", n, s)
 		if err != nil {
-			break
+			fmt.Println("Error", err)
 		}
+		s := string(receivedtext[:n])
+		fmt.Printf("Received3: %d bytes: %s\n", n, s)
+
+		///////
+		//Login
+		///////
+		if s == "login" {
+			n, err := ws.Read(receivedtext)
+			if err != nil {
+				fmt.Printf("Error", err)
+			}
+			s := string(receivedtext[:n])
+
+			var usuario Usuario
+			json.Unmarshal([]byte(s), &usuario)
+			loginweb(usuario.Nombre, usuario.Claveenclaro)
+		}
+
+		//////
+		//Otra
+		//////
+		if s == "prueba" {
+			fmt.Println("Ha llegaooooo")
+		}
+
 		//	websocket.Message.Send(ws, message)
 	}
 

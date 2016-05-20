@@ -1,0 +1,96 @@
+body {
+    margin: 0;
+    background: -moz-linear-gradient(53deg, rgba(153,218,255,1) 0%, rgba(0,128,128,1) 100%); /* ff3.6+ */
+    background: -webkit-gradient(linear, left bottom, right top, color-stop(0%, rgba(153,218,255,1)), color-stop(100%, rgba(0,128,128,1))); /* safari4+,chrome */
+    background: -webkit-linear-gradient(53deg, rgba(153,218,255,1) 0%, rgba(0,128,128,1) 100%); /* safari5.1+,chrome10+ */
+    background: -o-linear-gradient(53deg, rgba(153,218,255,1) 0%, rgba(0,128,128,1) 100%); /* opera 11.10+ */
+    background: -ms-linear-gradient(53deg, rgba(153,218,255,1) 0%, rgba(0,128,128,1) 100%); /* ie10+ */
+    background: linear-gradient(37deg, rgba(153,218,255,1) 0%, rgba(0,128,128,1) 100%); /* w3c */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008080', endColorstr='#99DAFF',GradientType=0 ); /* ie6-9 */
+}
+.login h3 {
+    font-family: arial;
+    margin-left: 9%;
+    font-weight: 100;
+    color: white;
+}
+.login button {
+    margin: 10%;
+    margin-top: 16px;
+    margin-bottom: 0;
+    width: 80%;
+    background: #1B3235;
+    border: solid 1px #3E8892;
+    padding: 14px;
+    color: white;
+    cursor: pointer;
+}
+.login {
+    position: fixed;
+    background: rgb(73, 165, 177);
+    top: 0;
+    left: 0;
+    width: 60%;
+    box-sizing: border-box;
+    margin: 20%;
+    padding-bottom: 27px;
+    padding-top: 10px;
+    border: solid 1px #43777D;
+    /* box-shadow: 0 0 16px rgba(5, 16, 21, 0.74); */
+}
+
+.login input {
+    width: 80%;
+    margin: 10%;
+    margin-top: 10px;
+    margin-bottom: 9px;
+    background: none;
+    padding: 10px;
+    box-sizing: border-box;
+    border: none;
+    padding-bottom: 2px;
+    border-bottom: solid 1px #3E8892;
+    color: #EEF9FB;
+    font-size: 16px;
+    padding-left: 4px;
+}
+.main {
+    width: 90%;
+    height: 90%;
+    margin: auto;
+    border-radius: 0px;
+    background: #FFFFFF;
+    margin-top: 3%;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.32);
+    position: relative;
+}
+
+.menu_izq {
+    width: 21%;
+    background: #DEDEDE;
+    height: 100%;
+    box-sizing: border-box;
+    padding-top: 30px;
+}
+.centro {
+    position: absolute;
+    width: 79%;
+    height: 100%;
+    box-sizing: border-box;
+    margin-left: 21%;
+    top: 0;
+    left: 0;
+        box-shadow: -4px 0 23px -11px black;
+}
+
+li {
+    display: block;
+
+    width: 100%;
+    background: rgb(243, 243, 243);
+    height: 29px;
+    border-bottom: solid 1px #C7C7C7;
+}
+ul {
+    padding: 0;
+}
