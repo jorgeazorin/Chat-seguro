@@ -12,6 +12,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"golang.org/x/net/websocket"
 	"io"
 	"io/ioutil"
 	"log"
@@ -47,6 +48,8 @@ type Usuario struct {
 }
 
 var ClientUsuario Usuario
+
+var datos_recibidos string
 
 //Variable global, de momento para guardar clave cifrar mensajes chat1
 var clavecifrarmensajes []byte
@@ -97,7 +100,6 @@ func main() {
 	//    PRUEBAS    /////////////////
 	//////////////////////////////////
 	IniciarServidorWeb()
-	//login()
 
 	//probando a cifrar descifrar con AES
 	/*mensajecifrado, _ := cifrarAES([]byte("hola amigos"), ClientUsuario.clavehashcifrado)
@@ -117,11 +119,6 @@ func main() {
 
 	//CrearNuevaClaveMensajes(conn)
 	//nuevaClaveUsuarioConIdConjuntoClaves(conn, 1, "nuevaclave1")
-
-	//Registrar un usuario
-	//ClientUsuario.Nombre = "Prueba3"
-	//ClientUsuario.Claveenclaro = "miclave3"
-	//registrarUsuario(conn)
 
 	///////////////////////////////////
 	//    Enviar  y recibir      /////
@@ -176,6 +173,28 @@ func handleServerRead() {
 			fmt.Println("dato clave:", i, "->", mensaje.DatosClaves[i])
 		}*/
 		fmt.Println()
+
+		if mensaje.Mensaje == "Chats:" {
+			for i := 0; i < len(mensaje.Datos); i++ {
+				websocket.Message.Send(wbSocket, mensaje.Datos[i])
+			}
+		}
+
+		if mensaje.Mensaje == "Registrado correctamente" {
+			websocket.Message.Send(wbSocket, "registrook")
+		}
+
+		if mensaje.Mensaje == "Registro incorrecto" {
+			websocket.Message.Send(wbSocket, "registronook")
+		}
+
+		if mensaje.Mensaje == "Logeado correctamente" {
+			websocket.Message.Send(wbSocket, "loginok")
+		}
+
+		if mensaje.Mensaje == "Logeado incorrecto" {
+			websocket.Message.Send(wbSocket, "loginok")
+		}
 
 		//Si nos devuelven el usuario lo rellenamos. (menos claveenclaro, clavehashcifrado clavehashlogin ya estan rellenos)
 		if mensaje.Funcion == "DatosUsuario" {
@@ -340,6 +359,13 @@ func loginweb(usuario string, password string) {
 	ClientUsuario.Clavehashlogin, ClientUsuario.Clavehashcifrado = generarHashClaves(ClientUsuario.Claveenclaro)
 
 	mensaje := Mensaje{From: ClientUsuario.Nombre, DatosClaves: [][]byte{ClientUsuario.Clavehashlogin}, Funcion: "login", To: -1}
+	escribirSocket(mensaje)
+}
+
+//Cliente pide todos los chats
+func obtenerChats(idchat int) {
+
+	mensaje := Mensaje{Idfrom: ClientUsuario.Id, From: ClientUsuario.Nombre, Funcion: "obtenerchats"}
 	escribirSocket(mensaje)
 }
 

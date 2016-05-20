@@ -31,7 +31,9 @@
 
         ws.send("login");
         ws.send(JSON.stringify(usuario));
-        ws.send("prueba");
+        
+        //Probamos a obtener chats
+        ws.send("chats");
     };
 
     //Socket abierto, conexión establecida
@@ -43,12 +45,22 @@
     ws.onmessage = function (event) {
     	console.log("Hemos recibido"+event.data);
 
+      if(event.data == "loginok") {
+        $scope.mostarlogin = false;
+        alert('¡Usuario logeado correctamente!')        
+      }
+
+      if(event.data == "loginnook") {
+        alert('Error al iniciar sesión, pruebe con otras credenciales.')
+      }
+
       if(event.data == "registrook") {
         alert('¡Usuario registrado correctamente!')
+        $scope.mostarlogin = false;
       }
 
       if(event.data == "registronook") {
-        alert('Error al registrar usuario!')
+        alert('¡Error al registrar usuario!')
       }
 
     }

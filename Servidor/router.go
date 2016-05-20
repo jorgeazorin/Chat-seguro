@@ -59,13 +59,13 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		usuario, test := bd.insertUsuarioBD(usuarionuevo)
 
 		if test == false {
-			mesj := MensajeSocket{From: mensaje.From, MensajeSocket: "Error al intentar registrar al usuario."}
+			mesj := MensajeSocket{From: mensaje.From, MensajeSocket: "Registro incorrecto"}
 			EnviarMensajeSocketSocket(conexion, mesj)
 			return
 		}
 
 		//Enviamos mensaje contestación
-		mesj := MensajeSocket{From: mensaje.From, Funcion: "DatosUsuario", Datos: []string{strconv.Itoa(usuario.Id), usuario.Nombre}, DatosClaves: [][]byte{usuario.Clavepubrsa, usuario.Claveprivrsa}, MensajeSocket: "Usuario registrado correctamente"}
+		mesj := MensajeSocket{From: mensaje.From, Funcion: "DatosUsuario", Datos: []string{strconv.Itoa(usuario.Id), usuario.Nombre}, DatosClaves: [][]byte{usuario.Clavepubrsa, usuario.Claveprivrsa}, MensajeSocket: "Registrado correctamente"}
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
@@ -317,7 +317,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	if mensaje.Funcion == "obtenerchats" {
 
 		//Llamada BD obtener chats del usuario
-		chats, test := bd.getChatsUsuarioBD(usuario.Id)
+		chats, test := bd.getChatsUsuarioBD(mensaje.Idfrom)
 		if test == false {
 			mesj := MensajeSocket{From: mensaje.From, MensajeSocket: "Error al obtener los chats."}
 			EnviarMensajeSocketSocket(conexion, mesj)
