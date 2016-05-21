@@ -36,6 +36,22 @@
         ws.send("chats");
     };
 
+    //Ver todos los mensajes del chat
+    $scope.verChat = function(id) {
+      console.log("Mira su id:"+id)
+
+      //Recorremos chats buscando el seleccionado
+      for(i=0;i<chats.length;i++) {
+        console.log("viendo "+chats[i].Chat.Id )
+
+        if(chats[i].Chat.Id == id) {
+          $scope.mensajes = chats[i].Mensajes
+          console.log(chats[i].Mensajes)
+        }
+      }
+
+    }
+
     //Socket abierto, conexión establecida
     ws.onopen = function(){  
       console.log("Socket has been opened!");  

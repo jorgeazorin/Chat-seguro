@@ -11,11 +11,12 @@ import (
 
 //Para guardar un mensaje con sus datos
 type Mensaje struct {
-	Id     int    `json:"Id"`
-	Texto  string `json:"Texto"`
-	Emisor int    `json:"Emisor"`
-	Chat   int    `json:"Chat"`
-	Clave  int    `json:"Clave"`
+	Id           int    `json:"Id"`
+	Texto        string `json:"Texto"`
+	Emisor       int    `json:"Emisor"`
+	Chat         int    `json:"Chat"`
+	Clave        int    `json:"Clave"`
+	NombreEmisor string `json:"NombreEmisor"`
 }
 
 type Receptoresmensaje struct {

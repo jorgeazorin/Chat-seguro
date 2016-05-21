@@ -160,6 +160,11 @@ func (bd *BD) getChatsUsuarioBD(idusuario int) ([]ChatDatos, bool) {
 			return []ChatDatos{}, false
 		}
 
+		//Nombre al emisor
+		for i := 0; i < len(mensajesdatos); i++ {
+			mensajesdatos[i].Mensaje.NombreEmisor, _ = bd.getNombreUsuario(mensajesdatos[i].Mensaje.Emisor)
+		}
+
 		//Introducimos mensajes al chat y chat al array de chats
 		chatdatos.MensajesDatos = mensajesdatos
 		chatsdatos = append(chatsdatos, chatdatos)

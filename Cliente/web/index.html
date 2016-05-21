@@ -13,14 +13,15 @@
     <div class="main" >
       <div class="menu_izq">
         <ul>
-          <li class="media" ng-repeat="chat in chats"> 
-            <p>{{chat.Chat.Nombre}}</p>
-          </li>
+          <a class="media" ng-repeat="chat in chats"> 
+            <li ng-click="verChat(chat.Chat.Id)">{{chat.Chat.Nombre}}</li>
+          </a>
         </ul>
       </div>
       <div class="centro">
-        <div class="enviar_mensaje">
-          
+        <div class="media" ng-repeat="mensaje in mensajes" class="enviar_mensaje">
+            <a>{{mensaje.Mensaje.NombreEmisor}}</a>
+            <div>{{mensaje.Mensaje.Texto}}</div>
         </div>
       </div>
     </div>
