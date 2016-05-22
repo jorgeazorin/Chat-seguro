@@ -6,11 +6,11 @@
     $scope.greeting = 'Hola!';
   	$scope.mostarlogin = true;
     $scope.mostrarregistro = false;
-
+$scope.chatactual='chat';
     var ws = new WebSocket("wss://localhost:10443/echo");
 
     //Usuario se registra
-    $scope.Registro = function() {
+        $scope.Registro = function() {
         $scope.greeting="Registro";
         
         usuario = {}
@@ -39,13 +39,14 @@
     //Ver todos los mensajes del chat
     $scope.verChat = function(id) {
       console.log("Mira su id:"+id)
-
       //Recorremos chats buscando el seleccionado
       for(i=0;i<chats.length;i++) {
         console.log("viendo "+chats[i].Chat.Id )
 
         if(chats[i].Chat.Id == id) {
-          $scope.mensajes = chats[i].Mensajes
+          $scope.mensajes = chats[i].Mensajes;
+      $scope.chatactual=chats[i].Chat.Nombre;
+
           console.log(chats[i].Mensajes)
         }
       }

@@ -100,7 +100,6 @@ func main() {
 	//    PRUEBAS    /////////////////
 	//////////////////////////////////
 	IniciarServidorWeb()
-
 	//probando a cifrar descifrar con AES
 	/*mensajecifrado, _ := cifrarAES([]byte("hola amigos"), ClientUsuario.clavehashcifrado)
 	mensajedescifrado, _ := descifrarAES(mensajecifrado, ClientUsuario.clavehashcifrado)
