@@ -106,7 +106,7 @@ func echoHandler(ws *websocket.Conn) {
 		//Obtener chats
 		////////////////
 		if datos == "chats" {
-			obtenerChats(ClientUsuario.Id)
+			obtenerChats()
 		}
 
 		////////////////

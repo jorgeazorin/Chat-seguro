@@ -90,6 +90,8 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	///////////////////
 	if mensaje.Funcion == "obtenerchats" {
 
+		fmt.Println(mensaje.Idfrom)
+
 		//Llamada BD obtener chats del usuario
 		chats, test := bd.getChatsUsuarioBD(mensaje.Idfrom)
 		if test == false {
@@ -116,6 +118,9 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 			b, _ := json.Marshal(chats[i])
 			datos = append(datos, string(b))
 		}
+
+		fmt.Println(datos)
+		fmt.Println(mensaje.From)
 
 		//Enviamos los mensajes al usuario que los pidió
 		mesj := MensajeSocket{From: mensaje.From, Datos: datos, MensajeSocket: "Chats:"}

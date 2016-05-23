@@ -302,7 +302,7 @@ func loginweb(usuario string, password string) {
 }
 
 //Cliente pide todos los chats
-func obtenerChats(idchat int) {
+func obtenerChats() {
 
 	mensaje := Mensaje{Idfrom: ClientUsuario.Id, From: ClientUsuario.Nombre, Funcion: "obtenerchats"}
 	escribirSocket(mensaje)
@@ -310,7 +310,6 @@ func obtenerChats(idchat int) {
 
 //Enviar un mensaje
 func enviarMensaje(mensaje Mensaje) bool {
-	fmt.Println("mira l id chat:", mensaje.Chat)
 
 	//Ciframos el mensaje
 	getClaveCifrarMensajeChat(mensaje.Chat)

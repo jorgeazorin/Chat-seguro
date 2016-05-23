@@ -31,14 +31,10 @@
 
         ws.send("login");
         ws.send(JSON.stringify(usuario));
-        
-        //Probamos a obtener chats
-        ws.send("chats");
     };
 
     //Ver todos los mensajes del chat
     $scope.verChat = function(id) {
-      console.log("AQYIIIIIIIIIIIIIIIIIIIIIIIIIIIi")
       //Recorremos chats buscando el seleccionado
       for(i=0;i<chats.length;i++) {
 
@@ -47,10 +43,9 @@
           $scope.chatactual=chats[i].Chat.Nombre;
           $scope.idchatactual=chats[i].Chat.Id;
           console.log(chats[i].Mensajes)
-        }
-
+        }        
       }
-
+      $scope.$apply()
     }
 
     //Enviando mensaje por el chat
@@ -78,21 +73,26 @@
         if(respuesta.Datos.length != 0) {
           console.log("Esta vez si hay cosas")
           $scope.mostarlogin = false;
-          
+          console.log($scope.mostarlogin)
           chats = eval(respuesta.Datos)
           for(i=0;i<chats.length;i++) {
             chats[i] = JSON.parse(chats[i])
             console.log(chats[i].Chat.Nombre)
           }
 
-          $scope.chats = chats
-          
-
+          $scope.chats = chats          
         }
+        $scope.verChat($scope.idchatactual)
+        $scope.$apply()
+      }
+
+      //Cuando el usuario se rellene se piden los chats
+      if(respuesta.Funcion == "DatosUsuario") {
+        ws.send("chats")
       }
 
       if(respuesta.MensajeSocket == "MensajeEnviado:") {
-        $scope.verChat($scope.idchatactual)
+        ws.send("chats")
       }
 
       else {
