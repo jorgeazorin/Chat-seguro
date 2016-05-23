@@ -2,8 +2,7 @@
 
   myApp.controller('controlador', ['$scope', function($scope) {
 
-    //Inicializamos datos, mostramos htmls...
-    $scope.greeting = 'Hola!';
+    //Inicializamos datos, mostramos htmls
   	$scope.mostarlogin = true;
     $scope.mostrarregistro = false;
     $scope.chatactual='chat';
@@ -35,9 +34,9 @@
 
     //Ver todos los mensajes del chat
     $scope.verChat = function(id) {
+
       //Recorremos chats buscando el seleccionado
       for(i=0;i<chats.length;i++) {
-
         if(chats[i].Chat.Id == id) {
           $scope.mensajes = chats[i].Mensajes;
           $scope.chatactual=chats[i].Chat.Nombre;
@@ -45,6 +44,7 @@
           console.log(chats[i].Mensajes)
         }        
       }
+      
       $scope.$apply()
     }
 
@@ -69,6 +69,9 @@
 
       respuesta = JSON.parse(event.data)
 
+      /////////////////
+      //Obtenemos chats
+      /////////////////
       if(respuesta.MensajeSocket == "Chats:") {
         console.log(respuesta);
 
@@ -87,15 +90,16 @@
         $scope.$apply()
       }
 
-      //Cuando el usuario se rellene se piden los chats
-      else if(respuesta.Funcion == "DatosUsuario") {
+      ////////////////
+      //Peticion chats
+      ////////////////
+      else if(respuesta.Funcion == "DatosUsuario" || respuesta.MensajeSocket == "MensajeEnviado:") {
         ws.send("chats")
       }
 
-      else if(respuesta.MensajeSocket == "MensajeEnviado:") {
-        ws.send("chats")
-      }
-
+      /////////
+      //Alertas
+      /////////
       else {
         alert(respuesta.MensajeSocket)
       }
