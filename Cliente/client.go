@@ -34,8 +34,6 @@ type MensajeSocket struct {
 	Mensajechat []byte   `json:"Mensajechat"`
 }
 
-var nombre_usuario_from string
-
 //Para pasar los datos de un usuario
 type Usuario struct {
 	Id               int    `json:"Id"`
@@ -47,13 +45,39 @@ type Usuario struct {
 	Clavehashlogin   []byte `json:"Clavehashlogin"`
 }
 
+//Para obtener todos los datos de un mensaje
+type MensajeTodo struct {
+	Id           int    `json:"Id"`
+	Texto        []byte `json:"Texto"`
+	Emisor       int    `json:"Emisor"`
+	Chat         int    `json:"Chat"`
+	IdClave      int    `json:"IdClave"`
+	NombreEmisor string `json:"NombreEmisor"`
+	Clave        []byte `json:"Clave"`
+}
+
+//Para obtener los datos de un mensaje
+type MensajeDatos struct {
+	Mensaje MensajeTodo `json:"Mensaje"`
+	Leido   bool        `json:"Leido"`
+}
+
+//Para obtener los datos del chat
+type Chat struct {
+	Id     int    `json:"Id"`
+	Nombre string `json:"Nombre"`
+}
+
+//Para obtener todos los datos del chat
+type ChatDatos struct {
+	Chat          Chat           `json:"Chat"`
+	MensajesDatos []MensajeDatos `json:"Mensajes"`
+	Clave         []byte         `json:"Clave"`
+	IdClave       int            `json:"IdClave"`
+}
+
 var ClientUsuario Usuario
-
-var datos_recibidos string
-
-//Variable global, de momento para guardar clave cifrar mensajes chat1
-var clavecifrarmensajes []byte
-var idclavecifrarmensajes int
+var chatsusuario []ChatDatos
 
 //var conn Connection
 var conn *tls.Conn
@@ -143,16 +167,6 @@ func handleServerRead() {
 		}
 		json.Unmarshal(reply[:n], &mensaje)
 
-		//Descifrar el mensaje
-		if len(mensaje.Mensajechat) != 0 {
-			mensajedescifrado, err2 := descifrarAES([]byte(mensaje.Mensajechat), clavecifrarmensajes)
-			if err2 == true {
-				fmt.Println("Error al descifrar clave con cifrado AES")
-				continue
-			}
-			mensaje.Mensajechat = mensajedescifrado
-		}
-
 		//Mostramos mensaje por pantalla
 		fmt.Println("" + mensaje.From + " -> " + mensaje.Mensaje + " -> " + string(mensaje.Mensajechat) + " Datos: ->")
 		for i := 0; i < len(mensaje.Datos); i++ {
@@ -160,10 +174,30 @@ func handleServerRead() {
 		}
 		fmt.Println()
 
-		//Enviamos el mensaje a el cliente HTML
-		escribirSocketCliente(mensaje)
+		//Descifrar los mensajes
+		if mensaje.Mensaje == "Chats:" {
+			chatsusuario = nil
+			var chatdatos ChatDatos
+			var err bool
 
-		if mensaje.Funcion == "Chats:" {
+			for i := 0; i < len(mensaje.Datos); i++ {
+				json.Unmarshal([]byte(mensaje.Datos[i]), &chatdatos)
+
+				//Descifrando cada mensaje
+				for j := 0; j < len(chatdatos.MensajesDatos); j++ {
+
+					chatdatos.MensajesDatos[j].Mensaje.Texto, err = descifrarAES(chatdatos.MensajesDatos[j].Mensaje.Texto, chatdatos.MensajesDatos[j].Mensaje.Clave)
+					if err == true {
+						fmt.Println("Error al descifrar mensajes.")
+						mensaje.Mensaje = "Error al obtener los mensajes."
+						return
+					}
+				}
+
+				chatsusuario = append(chatsusuario, chatdatos)
+				chatdatosdescifrados, _ := json.Marshal(chatdatos)
+				mensaje.Datos[i] = string(chatdatosdescifrados)
+			}
 
 		}
 
@@ -174,21 +208,18 @@ func handleServerRead() {
 			ClientUsuario.Nombre = mensaje.Datos[1]
 			ClientUsuario.Clavepubrsa = mensaje.DatosClaves[0]
 			ClientUsuario.Claveprivrsa = mensaje.DatosClaves[1]
-
-			////////////////////////
-			//PRUEBAS AFTER DE LOGIN
-			////////////////////////
-			//nuevaClaveUsuarioConIdConjuntoClaves(conn, 1, "nuevaclave1")
-			//Obtenemos la clave para cifrar mensajes del chat1
-			getClaveCifrarMensajeChat(1)
 		}
 
-		//Para enviar un mensaje, desciframos la clave obtenida para cifrar mensaje
+		/*/Para enviar un mensaje, desciframos la clave obtenida para cifrar mensaje
 		if mensaje.Funcion == "DatosClaveCifrarMensajeChat" {
 			idclavecifrarmensajes, _ = strconv.Atoi(mensaje.Datos[0])
 			laclave := mensaje.DatosClaves[0]
 			clavecifrarmensajes, _ = descifrarAES(laclave, ClientUsuario.Clavehashcifrado)
-		}
+			fmt.Println("miramos aqui:", idclavecifrarmensajes, clavecifrarmensajes)
+		}*/
+
+		//Enviamos el mensaje a el cliente HTML
+		escribirSocketCliente(mensaje)
 	}
 }
 
@@ -316,7 +347,21 @@ func obtenerChats() {
 func enviarMensaje(mensaje MensajeSocket) bool {
 
 	//Ciframos el mensaje
-	getClaveCifrarMensajeChat(mensaje.Chat)
+	//getClaveCifrarMensajeChat(mensaje.Chat)
+
+	var clavecifrarmensajes []byte
+	var idclavecifrarmensajes int
+	for i := 0; i < len(chatsusuario); i++ {
+		if chatsusuario[i].Chat.Id == mensaje.Chat {
+			clavecifrarmensajes = chatsusuario[i].Clave
+			idclavecifrarmensajes = chatsusuario[i].IdClave
+		}
+	}
+
+	fmt.Println("mira con que ciframos here1:", clavecifrarmensajes, idclavecifrarmensajes)
+	fmt.Println("mira el mensaje here1:", mensaje.Mensajechat)
+	fmt.Println("mira el mensaje here1:", []byte(mensaje.Mensajechat))
+
 	mensajecifrado, err := cifrarAES([]byte(mensaje.Mensajechat), clavecifrarmensajes)
 	if err == true {
 		fmt.Println("Error al cifrar clave con cifrado AES")

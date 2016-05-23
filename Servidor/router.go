@@ -21,12 +21,6 @@ type MensajeSocket struct {
 	Mensajechat   []byte   `json:"Mensajechat"`
 }
 
-type TodosLosDatos struct {
-	Usuario Usuario  `json:"Usuario"`
-	Claves  []string `json:"Claves"`
-	Chats   []Chat   `json:"Chats"`
-}
-
 func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Usuario) {
 
 	//Para las operaciones con la BD
@@ -93,16 +87,14 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		fmt.Println(mensaje.Idfrom)
 
 		//Llamada BD obtener chats del usuario
-		chats, mapaclaves, test := bd.getChatsUsuarioBD(mensaje.Idfrom)
+		chats, test := bd.getChatsUsuarioBD(mensaje.Idfrom)
 		if test == false {
 			mesj := MensajeSocket{From: mensaje.From, MensajeSocket: "Error al obtener los chats."}
 			EnviarMensajeSocketSocket(conexion, mesj)
 			return
 		}
 
-		fmt.Println(mapaclaves)
-
-		//Ponemos nombres bien
+		//Ponemos nombres del chat bien (los no grupales nombre del receptor)
 		for i := 0; i < len(chats); i++ {
 			if chats[i].Chat.Nombre == "" {
 				idusuarios, _ := bd.getUsuariosChatBD(chats[i].Chat.Id)
@@ -121,9 +113,6 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 			datos = append(datos, string(b))
 		}
 
-		fmt.Println(datos)
-		fmt.Println(mensaje.From)
-
 		//Enviamos los mensajes al usuario que los pidió
 		mesj := MensajeSocket{From: mensaje.From, Datos: datos, MensajeSocket: "Chats:"}
 		EnviarMensajeSocketSocket(conexion, mesj)
@@ -137,7 +126,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 
 		//Guardamos los mensajes en la BD
 		idclavemensaje, _ := strconv.Atoi(mensaje.Datos[0])
-		m := Mensaje{Texto: mensaje.Mensajechat, Chat: mensaje.Chat, Emisor: mensaje.Idfrom, NombreEmisor: mensaje.From, Clave: idclavemensaje}
+		m := Mensaje{Texto: mensaje.Mensajechat, Chat: mensaje.Chat, Emisor: mensaje.Idfrom, Clave: idclavemensaje}
 		bd.guardarMensajeBD(m)
 
 		//Obtenemos los usuarios que pertenecen en el chat

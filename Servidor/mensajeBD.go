@@ -9,14 +9,24 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-//Para guardar un mensaje con sus datos
-type Mensaje struct {
+//Para enviar todo lo de un mensaje
+type MensajeTodo struct {
 	Id           int    `json:"Id"`
 	Texto        []byte `json:"Texto"`
 	Emisor       int    `json:"Emisor"`
 	Chat         int    `json:"Chat"`
-	Clave        int    `json:"Clave"`
+	IdClave      int    `json:"IdClave"`
 	NombreEmisor string `json:"NombreEmisor"`
+	Clave        []byte `json:"Clave"`
+}
+
+//Para guardar un mensaje con sus datos
+type Mensaje struct {
+	Id     int    `json:"Id"`
+	Texto  []byte `json:"Texto"`
+	Emisor int    `json:"Emisor"`
+	Chat   int    `json:"Chat"`
+	Clave  int    `json:"Clave"`
 }
 
 type Receptoresmensaje struct {
@@ -36,8 +46,8 @@ type Clavesusuario struct {
 }
 
 type MensajeDatos struct {
-	Mensaje Mensaje `json:"Mensaje"`
-	Leido   bool    `json:"Leido"`
+	Mensaje MensajeTodo `json:"Mensaje"`
+	Leido   bool        `json:"Leido"`
 }
 
 //Guarda un mensaje para todos los receptores posibles del chat
@@ -126,6 +136,9 @@ func (bd *BD) GuardarClaveUsuarioMensajesBD(clavesusuario Clavesusuario) bool {
 //Obtenemos todos los mensajes de un chat
 func (bd *BD) getMensajesChatBD(idchat int, idusuario int) ([]MensajeDatos, bool) {
 
+	mismensajes := make([]MensajeDatos, 0, 1) //Array de mensajes
+	var err2 bool                             //Error con accesos a bd
+
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
@@ -141,8 +154,6 @@ func (bd *BD) getMensajesChatBD(idchat int, idusuario int) ([]MensajeDatos, bool
 		return []MensajeDatos{}, false
 	}
 
-	mismensajes := make([]MensajeDatos, 0, 1)
-
 	for i := 0; i < len(mensajes); i++ {
 		//Vemos más datos como si el mensaje está leído
 		var recetoresmensajes Receptoresmensaje
@@ -151,10 +162,22 @@ func (bd *BD) getMensajesChatBD(idchat int, idusuario int) ([]MensajeDatos, bool
 			fmt.Println("Error:", err.Error())
 			return []MensajeDatos{}, false
 		}
-		//Rellenamos los datos
+
+		//Rellenamos todos los datos
 		var mimensaje MensajeDatos
-		mimensaje.Mensaje = mensajes[i]
+		mimensaje.Mensaje.Chat = mensajes[i].Chat
+		mimensaje.Mensaje.IdClave = mensajes[i].Clave
+		mimensaje.Mensaje.Emisor = mensajes[i].Emisor
+		mimensaje.Mensaje.Id = mensajes[i].Id
+		mimensaje.Mensaje.Texto = mensajes[i].Texto
 		mimensaje.Leido = recetoresmensajes.Leido
+		mimensaje.Mensaje.NombreEmisor, err2 = bd.getNombreUsuario(idusuario)
+		mimensaje.Mensaje.Clave, err2 = bd.getClaveMensaje(mimensaje.Mensaje.Id, idusuario)
+		if err2 == false {
+			fmt.Println("Error al obtener datos del mensaje.")
+			return []MensajeDatos{}, false
+		}
+
 		mismensajes = append(mismensajes, mimensaje)
 	}
 

@@ -114,9 +114,16 @@ func echoHandler(ws *websocket.Conn) {
 		////////////////
 		if datos == "enviarmensaje" {
 			datos := leerDatosWS(ws)
+			fmt.Println("HOLALALALLA")
+
 			var mensaje MensajeSocket
+			fmt.Println(datos)
+
 			json.Unmarshal([]byte(datos), &mensaje)
-			mensaje.Mensajechat = []byte(mensaje.Mensaje)
+			fmt.Println(mensaje)
+
+			mensaje.Mensajechat = []byte(mensaje.Mensajechat)
+			fmt.Println(mensaje.Mensajechat)
 			test := enviarMensaje(mensaje)
 
 			if test == false {

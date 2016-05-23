@@ -25,6 +25,8 @@ type UsuariosChat struct {
 type ChatDatos struct {
 	Chat          Chat           `json:"Chat"`
 	MensajesDatos []MensajeDatos `json:"Mensajes"`
+	Clave         []byte         `json:"Clave"`
+	IdClave       int            `json:"IdClave"`
 }
 
 //Creamos nuevo chat en BD
@@ -122,16 +124,13 @@ func (bd *BD) removeUsuariosChatBD(idchat int, usuariosexpulsados []int) bool {
 	return true
 }
 
-func (bd *BD) getChatsUsuarioBD(idusuario int) ([]ChatDatos, map[int][]byte, bool) {
-
-	//Para las claves
-	mapa_claves := make(map[int][]byte)
+func (bd *BD) getChatsUsuarioBD(idusuario int) ([]ChatDatos, bool) {
 
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
 	if test == false {
-		return []ChatDatos{}, map[int][]byte{}, false
+		return []ChatDatos{}, false
 	}
 
 	//Obtenemos ids de los chats del usuario obteniendo usuarioschat
@@ -139,7 +138,7 @@ func (bd *BD) getChatsUsuarioBD(idusuario int) ([]ChatDatos, map[int][]byte, boo
 	_, err := dbmap.Select(&usuarioschat, "SELECT * FROM usuarioschat WHERE idusuario = ?", idusuario)
 	if err != nil {
 		fmt.Println("Error1:", err.Error())
-		return []ChatDatos{}, map[int][]byte{}, false
+		return []ChatDatos{}, false
 	}
 
 	//Obtenemos cada chat del usuario con sus mensajes
@@ -152,7 +151,7 @@ func (bd *BD) getChatsUsuarioBD(idusuario int) ([]ChatDatos, map[int][]byte, boo
 		err := dbmap.SelectOne(&chat, "SELECT * FROM chat WHERE id = ?", usuarioschat[i].Idchat)
 		if err != nil {
 			fmt.Println("Error:", usuarioschat[i].Idchat, err.Error())
-			return []ChatDatos{}, map[int][]byte{}, false
+			return []ChatDatos{}, false
 		}
 		chatdatos.Chat = chat
 
@@ -160,32 +159,19 @@ func (bd *BD) getChatsUsuarioBD(idusuario int) ([]ChatDatos, map[int][]byte, boo
 		mensajesdatos, test := bd.getMensajesChatBD(usuarioschat[i].Idchat, idusuario)
 		if test == false {
 			fmt.Println("Error")
-			return []ChatDatos{}, map[int][]byte{}, false
-		}
-
-		for i := 0; i < len(mensajesdatos); i++ {
-			//Nombre al emisor
-			mensajesdatos[i].Mensaje.NombreEmisor, _ = bd.getNombreUsuario(mensajesdatos[i].Mensaje.Emisor)
-
-			//Clave de cada mensaje
-			idclave := mensajesdatos[i].Mensaje.Clave
-			if mapa_claves[idclave] == nil {
-				clavemen, err2 := bd.getClaveMensaje(mensajesdatos[i].Mensaje.Id, idusuario)
-				if err2 == false {
-					fmt.Println("Error al obtener clave del mensaje.")
-					return []ChatDatos{}, map[int][]byte{}, false
-				}
-
-				mapa_claves[idclave] = clavemen
-			}
+			return []ChatDatos{}, false
 		}
 
 		//Introducimos mensajes al chat y chat al array de chats
 		chatdatos.MensajesDatos = mensajesdatos
+		clavechat, idclavechat, _ := bd.getLastKeyMensaje(usuarioschat[i].Idchat, idusuario)
+		chatdatos.Clave = clavechat
+		chatdatos.IdClave = idclavechat
+
 		chatsdatos = append(chatsdatos, chatdatos)
 	}
 
-	return chatsdatos, mapa_claves, true
+	return chatsdatos, true
 }
 
 //Ver si un usuario está en un chat

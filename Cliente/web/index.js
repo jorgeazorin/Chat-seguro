@@ -52,7 +52,7 @@
     $scope.enviarMensaje = function() {
       mensaje = {}
       mensaje.Chat = $scope.idchatactual
-      mensaje.Mensaje = $scope.textoaenviar
+      mensaje.MensajeSocket = $scope.textoaenviar
       ws.send("enviarmensaje")
       ws.send(JSON.stringify(mensaje))
     }
