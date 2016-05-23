@@ -6,7 +6,7 @@
     $scope.greeting = 'Hola!';
   	$scope.mostarlogin = true;
     $scope.mostrarregistro = false;
-$scope.chatactual='chat';
+    $scope.chatactual='chat';
     var ws = new WebSocket("wss://localhost:10443/echo");
 
     //Usuario se registra
@@ -38,19 +38,28 @@ $scope.chatactual='chat';
 
     //Ver todos los mensajes del chat
     $scope.verChat = function(id) {
-      console.log("Mira su id:"+id)
+      console.log("AQYIIIIIIIIIIIIIIIIIIIIIIIIIIIi")
       //Recorremos chats buscando el seleccionado
       for(i=0;i<chats.length;i++) {
-        console.log("viendo "+chats[i].Chat.Id )
 
         if(chats[i].Chat.Id == id) {
           $scope.mensajes = chats[i].Mensajes;
-      $scope.chatactual=chats[i].Chat.Nombre;
-
+          $scope.chatactual=chats[i].Chat.Nombre;
+          $scope.idchatactual=chats[i].Chat.Id;
           console.log(chats[i].Mensajes)
         }
+
       }
 
+    }
+
+    //Enviando mensaje por el chat
+    $scope.enviarMensaje = function() {
+      mensaje = {}
+      mensaje.Chat = $scope.idchatactual
+      mensaje.Mensaje = $scope.textoaenviar
+      ws.send("enviarmensaje")
+      ws.send(JSON.stringify(mensaje))
     }
 
     //Socket abierto, conexión establecida
@@ -80,7 +89,13 @@ $scope.chatactual='chat';
           
 
         }
-      } else {
+      }
+
+      if(respuesta.MensajeSocket == "MensajeEnviado:") {
+        $scope.verChat($scope.idchatactual)
+      }
+
+      else {
         alert(respuesta.MensajeSocket)
       }
 

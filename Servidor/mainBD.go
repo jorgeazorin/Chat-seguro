@@ -77,12 +77,12 @@ func main() {
 
 	//Prueba guardar mensaje
 	var m Mensaje
-	m.Texto = "Hola que tal?? :)"
+	m.Texto = []byte("Hola que tal?? :)")
 	m.Chat = 1
 	m.Emisor = 1
 	m.Clave = 1
-	//test = bd.guardarMensajeBD(m)
-	//fmt.Println("Mira guardar mensaje:", test)
+	test = bd.guardarMensajeBD(m)
+	fmt.Println("Mira guardar mensaje:", test)
 
 	//Prueba crear nueva clavesmensajes
 	//id, _ := bd.CrearNuevaClaveMensajesBD()
@@ -107,7 +107,7 @@ func main() {
 	men, _ := bd.getMensajeBD(11)
 	fmt.Println("mira  mensaje 11:", men)
 
-	clavlast, _ := bd.getLastKeyMensaje(1, 1)
+	clavlast, _, _ := bd.getLastKeyMensaje(1, 1)
 	fmt.Println("mira ultima clave chat 1 usu 1:", string(clavlast))
 
 	//test = bd.marcarLeidoPorUsuarioBD(23, 15)

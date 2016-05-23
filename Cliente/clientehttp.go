@@ -109,7 +109,22 @@ func echoHandler(ws *websocket.Conn) {
 			obtenerChats(ClientUsuario.Id)
 		}
 
-		//	websocket.Message.Send(ws, message)
+		////////////////
+		//Enviar mensaje
+		////////////////
+		if datos == "enviarmensaje" {
+			datos := leerDatosWS(ws)
+			var mensaje Mensaje
+			json.Unmarshal([]byte(datos), &mensaje)
+			mensaje.Mensajechat = []byte(mensaje.Mensaje)
+			test := enviarMensaje(mensaje)
+
+			if test == false {
+				mensaje := Mensaje{Mensaje: "Error al enviar el mensaje."}
+				websocket.Message.Send(ws, mensaje)
+			}
+		}
+
 	}
 
 }

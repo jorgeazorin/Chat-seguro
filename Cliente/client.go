@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bufio"
+	//	"bufio"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -16,7 +16,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"os"
+	//	"os"
 	"strconv"
 )
 
@@ -53,6 +53,7 @@ var datos_recibidos string
 
 //Variable global, de momento para guardar clave cifrar mensajes chat1
 var clavecifrarmensajes []byte
+var idclavecifrarmensajes int
 
 //var conn Connection
 var conn *tls.Conn
@@ -71,7 +72,6 @@ func decode64(s string) []byte {
 
 func main() {
 
-	//var window ui.Window
 	//LEER CERTIFICADOS DE LOS ARCHIVOS (ESTOS SON LOS CERTIFICADOS DEL CLIENTE)
 	cert2_b, _ := ioutil.ReadFile("cert2.pem")
 	priv2_b, _ := ioutil.ReadFile("cert2.key")
@@ -83,48 +83,27 @@ func main() {
 		PrivateKey:  priv2,
 	}
 	config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+
 	///////////////////////////////////
 	//    Conectar    /////////////////
 	//////////////////////////////////
 	conn, _ = tls.Dial("tcp", "127.0.0.1:444", &config)
-	/*if err != nil {
-		log.Fatalf("client: dial: %s", err)
-	}*/
 	defer conn.Close()
 	log.Println("client: connected to: ", conn.RemoteAddr())
 
-	//Por si envia algo el servidor
+	//Para manejar respuestas del servidor
 	go handleServerRead()
 
-	///////////////////////////////////
-	//    PRUEBAS    /////////////////
-	//////////////////////////////////
 	IniciarServidorWeb()
-	//probando a cifrar descifrar con AES
-	/*mensajecifrado, _ := cifrarAES([]byte("hola amigos"), ClientUsuario.clavehashcifrado)
-	mensajedescifrado, _ := descifrarAES(mensajecifrado, ClientUsuario.clavehashcifrado)
-	fmt.Println("Tu mensaje era:", string(mensajedescifrado))*/
-
-	//obtenerMensajesChat(conn, 1)
-
 	//Usuario 1 en el chat 7 al usuario 15
 	//agregarUsuariosChat(conn, 7, []string{"15"})
 	//Usuario 1 en el chat 7 al usuario 15
 	//eliminarUsuariosChat(conn, 7, []string{"15"})
-
 	//getClavePubUsuario(conn, 1)
 	//getClaveMensaje(conn, 2)
 	//getClaveCifrarMensajeChat(conn, 1)
-
 	//CrearNuevaClaveMensajes(conn)
 	//nuevaClaveUsuarioConIdConjuntoClaves(conn, 1, "nuevaclave1")
-
-	///////////////////////////////////
-	//    Enviar  y recibir      /////
-	//////////////////////////////////
-
-	//Enviar mensajes
-	go handleClientWrite()
 
 	//Para que no se cierre la consola
 	for {
@@ -153,6 +132,8 @@ func handleServerRead() {
 
 	//bucle infinito
 	for {
+
+		//Leemos mensaje
 		defer conn.Close()
 		reply := make([]byte, 1048576) //256
 		n, err := conn.Read(reply)
@@ -177,10 +158,6 @@ func handleServerRead() {
 		for i := 0; i < len(mensaje.Datos); i++ {
 			fmt.Println("dato:", i, "->", mensaje.Datos[i])
 		}
-		/*De momento no mostramos que es mucho dato grande
-		for i := 0; i < len(mensaje.DatosClaves); i++ {
-			fmt.Println("dato clave:", i, "->", mensaje.DatosClaves[i])
-		}*/
 		fmt.Println()
 
 		//Enviamos el mensaje a el cliente HTML
@@ -202,41 +179,13 @@ func handleServerRead() {
 			getClaveCifrarMensajeChat(1)
 		}
 
+		//Para enviar un mensaje, desciframos la clave obtenida para cifrar mensaje
 		if mensaje.Funcion == "DatosClaveCifrarMensajeChat" {
+			idclavecifrarmensajes, _ = strconv.Atoi(mensaje.Datos[0])
 			laclave := mensaje.DatosClaves[0]
 			clavecifrarmensajes, _ = descifrarAES(laclave, ClientUsuario.Clavehashcifrado)
 		}
 	}
-}
-
-//SI escribe algo lo envia al servidor
-func handleClientWrite() {
-
-	//bucle infinito
-	for {
-		defer conn.Close()
-
-		//Cuando escribe algo y le da a enter
-		reader := bufio.NewReader(os.Stdin)
-		message, _ := reader.ReadString('\n')
-
-		//Rellenar datos
-		mensaje := Mensaje{From: ClientUsuario.Nombre, Funcion: "enviar", Mensajechat: []byte(message[0 : len(message)-2]), Chat: 1}
-
-		//getClaveCifrarMensajeChat(conn, 1)
-
-		//Ciframos el mensaje
-		//De momento clave guardada globalmente pero sería hacer llamadas al servidor, channels, etc
-		mensajecifrado, err := cifrarAES([]byte(mensaje.Mensajechat), clavecifrarmensajes)
-		if err == true {
-			fmt.Println("Error al cifrar clave con cifrado AES")
-			continue
-		}
-		mensaje.Mensajechat = mensajecifrado
-
-		escribirSocket(mensaje)
-	}
-
 }
 
 //De la ontraseña en claro se realiza hash y se divide en 2 (login y cifrado)
@@ -359,6 +308,25 @@ func obtenerChats(idchat int) {
 	escribirSocket(mensaje)
 }
 
+//Enviar un mensaje
+func enviarMensaje(mensaje Mensaje) bool {
+	fmt.Println("mira l id chat:", mensaje.Chat)
+
+	//Ciframos el mensaje
+	getClaveCifrarMensajeChat(mensaje.Chat)
+	mensajecifrado, err := cifrarAES([]byte(mensaje.Mensajechat), clavecifrarmensajes)
+	if err == true {
+		fmt.Println("Error al cifrar clave con cifrado AES")
+		return false
+	}
+	mensaje.Mensajechat = mensajecifrado
+
+	//Rellenar datos
+	mensaje = Mensaje{From: ClientUsuario.Nombre, Idfrom: ClientUsuario.Id, Funcion: "enviar", Datos: []string{strconv.Itoa(idclavecifrarmensajes)}, Mensajechat: mensaje.Mensajechat, Chat: mensaje.Chat}
+	escribirSocket(mensaje)
+	return true
+}
+
 //Cliente pide mensajes de un chat
 func obtenerMensajesChat(idchat int) {
 
@@ -396,7 +364,6 @@ func getClaveMensaje(idmensaje int) {
 
 //Cliente pide clave cifrada para descifrar mensajes
 func getClaveCifrarMensajeChat(idchat int) {
-
 	mensaje := Mensaje{From: ClientUsuario.Nombre, Idfrom: ClientUsuario.Id, Funcion: "getclavecifrarmensajechat", Datos: []string{strconv.Itoa(idchat)}}
 	escribirSocket(mensaje)
 }

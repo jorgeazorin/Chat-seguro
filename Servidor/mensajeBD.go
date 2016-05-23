@@ -12,7 +12,7 @@ import (
 //Para guardar un mensaje con sus datos
 type Mensaje struct {
 	Id           int    `json:"Id"`
-	Texto        string `json:"Texto"`
+	Texto        []byte `json:"Texto"`
 	Emisor       int    `json:"Emisor"`
 	Chat         int    `json:"Chat"`
 	Clave        int    `json:"Clave"`
@@ -212,13 +212,13 @@ func (bd *BD) getMensajeBD(idmensaje int) (Mensaje, bool) {
 }
 
 //Obtiene la última clave (con la que se están cifrando ahora los mensajes)
-func (bd *BD) getLastKeyMensaje(idchat int, idusuario int) ([]byte, bool) {
+func (bd *BD) getLastKeyMensaje(idchat int, idusuario int) ([]byte, int, bool) {
 
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
 	if test == false {
-		return []byte{}, false
+		return []byte{}, 0, false
 	}
 
 	//Buscamos los datos de mensaje en concreto (el último mensaje de este chat)
@@ -226,7 +226,7 @@ func (bd *BD) getLastKeyMensaje(idchat int, idusuario int) ([]byte, bool) {
 	err := dbmap.SelectOne(&mensaje, "SELECT * FROM mensaje WHERE chat = ? AND id = (SELECT max(id) FROM mensaje WHERE chat = ?)", idchat, idchat)
 	if err != nil {
 		fmt.Println("Error:", err.Error())
-		return []byte{}, false
+		return []byte{}, 0, false
 	}
 
 	//Buscamos la clave que tiene ese idclave del mensaje
@@ -234,10 +234,10 @@ func (bd *BD) getLastKeyMensaje(idchat int, idusuario int) ([]byte, bool) {
 	err = dbmap.SelectOne(&clavesusuario, "SELECT * FROM clavesusuario WHERE idclavesmensajes = ? AND idusuario = ?", mensaje.Clave, idusuario)
 	if err != nil {
 		fmt.Println("Error:", err.Error())
-		return []byte{}, false
+		return []byte{}, 0, false
 	}
 
-	return clavesusuario.Clavemensajes, true
+	return clavesusuario.Clavemensajes, clavesusuario.Idclavesmensajes, true
 }
 
 func (bd *BD) marcarLeidoPorUsuarioBD(idmensaje int, idreceptor int) bool {

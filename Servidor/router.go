@@ -129,8 +129,9 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	if mensaje.Funcion == "enviar" {
 
 		//Guardamos los mensajes en la BD
-		//m := Mensaje{Texto: mensaje.MensajeSocket, Chat: 1, Emisor: mensaje.Idfrom, Clave: 1}
-		//bd.guardarMensajeBD(m)
+		idclavemensaje, _ := strconv.Atoi(mensaje.Datos[0])
+		m := Mensaje{Texto: mensaje.Mensajechat, Chat: mensaje.Chat, Emisor: mensaje.Idfrom, NombreEmisor: mensaje.From, Clave: idclavemensaje}
+		bd.guardarMensajeBD(m)
 
 		//Obtenemos los usuarios que pertenecen en el chat
 		idusuarios, test := bd.getUsuariosChatBD(mensaje.Chat)
@@ -144,7 +145,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		for i := 0; i < len(idusuarios); i++ {
 			conexion, ok := conexiones[idusuarios[i]]
 			if ok {
-				mensaje.MensajeSocket = "Mensaje enviado"
+				mensaje.MensajeSocket = "MensajeEnviado:"
 				EnviarMensajeSocketSocket(conexion, mensaje)
 			}
 		}
@@ -290,7 +291,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		}
 
 		//Lamamos a la BD para obtener la última clave con la que cifrar los mensajes
-		clavemensaje, test := bd.getLastKeyMensaje(idchat, mensaje.Idfrom)
+		clavemensaje, idclavemensaje, test := bd.getLastKeyMensaje(idchat, mensaje.Idfrom)
 		if test == false {
 			mesj := MensajeSocket{From: mensaje.From, MensajeSocket: "Error al obtener clave para cifrar mensajes."}
 			EnviarMensajeSocketSocket(conexion, mesj)
@@ -298,7 +299,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		}
 
 		//Enviamos mensaje contestación
-		mesj := MensajeSocket{From: mensaje.From, Funcion: "DatosClaveCifrarMensajeChat", DatosClaves: [][]byte{clavemensaje}, MensajeSocket: "Clave para mensajes obtenida correctamente."}
+		mesj := MensajeSocket{From: mensaje.From, Funcion: "DatosClaveCifrarMensajeChat", Datos: []string{strconv.Itoa(idclavemensaje)}, DatosClaves: [][]byte{clavemensaje}, MensajeSocket: "Clave para mensajes obtenida correctamente."}
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
