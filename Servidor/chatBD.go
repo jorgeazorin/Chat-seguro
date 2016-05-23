@@ -122,13 +122,16 @@ func (bd *BD) removeUsuariosChatBD(idchat int, usuariosexpulsados []int) bool {
 	return true
 }
 
-func (bd *BD) getChatsUsuarioBD(idusuario int) ([]ChatDatos, bool) {
+func (bd *BD) getChatsUsuarioBD(idusuario int) ([]ChatDatos, map[int][]byte, bool) {
+
+	//Para las claves
+	mapa_claves := make(map[int][]byte)
 
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
 	if test == false {
-		return []ChatDatos{}, false
+		return []ChatDatos{}, map[int][]byte{}, false
 	}
 
 	//Obtenemos ids de los chats del usuario obteniendo usuarioschat
@@ -136,7 +139,7 @@ func (bd *BD) getChatsUsuarioBD(idusuario int) ([]ChatDatos, bool) {
 	_, err := dbmap.Select(&usuarioschat, "SELECT * FROM usuarioschat WHERE idusuario = ?", idusuario)
 	if err != nil {
 		fmt.Println("Error1:", err.Error())
-		return []ChatDatos{}, false
+		return []ChatDatos{}, map[int][]byte{}, false
 	}
 
 	//Obtenemos cada chat del usuario con sus mensajes
@@ -148,21 +151,33 @@ func (bd *BD) getChatsUsuarioBD(idusuario int) ([]ChatDatos, bool) {
 		var chat Chat
 		err := dbmap.SelectOne(&chat, "SELECT * FROM chat WHERE id = ?", usuarioschat[i].Idchat)
 		if err != nil {
-			fmt.Println("Error2:", usuarioschat[i].Idchat, err.Error())
-			return []ChatDatos{}, false
+			fmt.Println("Error:", usuarioschat[i].Idchat, err.Error())
+			return []ChatDatos{}, map[int][]byte{}, false
 		}
 		chatdatos.Chat = chat
 
 		//Obtenemos mensajes del chat
 		mensajesdatos, test := bd.getMensajesChatBD(usuarioschat[i].Idchat, idusuario)
 		if test == false {
-			fmt.Println("Error3")
-			return []ChatDatos{}, false
+			fmt.Println("Error")
+			return []ChatDatos{}, map[int][]byte{}, false
 		}
 
-		//Nombre al emisor
 		for i := 0; i < len(mensajesdatos); i++ {
+			//Nombre al emisor
 			mensajesdatos[i].Mensaje.NombreEmisor, _ = bd.getNombreUsuario(mensajesdatos[i].Mensaje.Emisor)
+
+			//Clave de cada mensaje
+			idclave := mensajesdatos[i].Mensaje.Clave
+			if mapa_claves[idclave] == nil {
+				clavemen, err2 := bd.getClaveMensaje(mensajesdatos[i].Mensaje.Id, idusuario)
+				if err2 == false {
+					fmt.Println("Error al obtener clave del mensaje.")
+					return []ChatDatos{}, map[int][]byte{}, false
+				}
+
+				mapa_claves[idclave] = clavemen
+			}
 		}
 
 		//Introducimos mensajes al chat y chat al array de chats
@@ -170,7 +185,7 @@ func (bd *BD) getChatsUsuarioBD(idusuario int) ([]ChatDatos, bool) {
 		chatsdatos = append(chatsdatos, chatdatos)
 	}
 
-	return chatsdatos, true
+	return chatsdatos, mapa_claves, true
 }
 
 //Ver si un usuario está en un chat

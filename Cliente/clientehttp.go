@@ -114,13 +114,13 @@ func echoHandler(ws *websocket.Conn) {
 		////////////////
 		if datos == "enviarmensaje" {
 			datos := leerDatosWS(ws)
-			var mensaje Mensaje
+			var mensaje MensajeSocket
 			json.Unmarshal([]byte(datos), &mensaje)
 			mensaje.Mensajechat = []byte(mensaje.Mensaje)
 			test := enviarMensaje(mensaje)
 
 			if test == false {
-				mensaje := Mensaje{Mensaje: "Error al enviar el mensaje."}
+				mensaje := MensajeSocket{Mensaje: "Error al enviar el mensaje."}
 				websocket.Message.Send(ws, mensaje)
 			}
 		}

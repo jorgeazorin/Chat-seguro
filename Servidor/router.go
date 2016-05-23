@@ -93,12 +93,14 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		fmt.Println(mensaje.Idfrom)
 
 		//Llamada BD obtener chats del usuario
-		chats, test := bd.getChatsUsuarioBD(mensaje.Idfrom)
+		chats, mapaclaves, test := bd.getChatsUsuarioBD(mensaje.Idfrom)
 		if test == false {
 			mesj := MensajeSocket{From: mensaje.From, MensajeSocket: "Error al obtener los chats."}
 			EnviarMensajeSocketSocket(conexion, mesj)
 			return
 		}
+
+		fmt.Println(mapaclaves)
 
 		//Ponemos nombres bien
 		for i := 0; i < len(chats); i++ {
