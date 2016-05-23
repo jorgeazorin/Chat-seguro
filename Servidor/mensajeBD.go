@@ -18,6 +18,7 @@ type MensajeTodo struct {
 	IdClave      int    `json:"IdClave"`
 	NombreEmisor string `json:"NombreEmisor"`
 	Clave        []byte `json:"Clave"`
+	TextoClaro   string `json:"TextoClaro"`
 }
 
 //Para guardar un mensaje con sus datos

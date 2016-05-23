@@ -49,6 +49,7 @@ type Usuario struct {
 type MensajeTodo struct {
 	Id           int    `json:"Id"`
 	Texto        []byte `json:"Texto"`
+	TextoClaro   string `json:"TextoClaro"`
 	Emisor       int    `json:"Emisor"`
 	Chat         int    `json:"Chat"`
 	IdClave      int    `json:"IdClave"`
@@ -187,6 +188,10 @@ func handleServerRead() {
 				for j := 0; j < len(chatdatos.MensajesDatos); j++ {
 
 					chatdatos.MensajesDatos[j].Mensaje.Texto, err = descifrarAES(chatdatos.MensajesDatos[j].Mensaje.Texto, chatdatos.MensajesDatos[j].Mensaje.Clave)
+					chatdatos.MensajesDatos[j].Mensaje.TextoClaro = string(chatdatos.MensajesDatos[j].Mensaje.Texto)
+
+					fmt.Println("LOKKK:", chatdatos.MensajesDatos[j].Mensaje.TextoClaro)
+
 					if err == true {
 						fmt.Println("Error al descifrar mensajes.")
 						mensaje.Mensaje = "Error al obtener los mensajes."
@@ -346,9 +351,7 @@ func obtenerChats() {
 //Enviar un mensaje
 func enviarMensaje(mensaje MensajeSocket) bool {
 
-	//Ciframos el mensaje
-	//getClaveCifrarMensajeChat(mensaje.Chat)
-
+	//Obtenemos la clave para cifrar mensaje
 	var clavecifrarmensajes []byte
 	var idclavecifrarmensajes int
 	for i := 0; i < len(chatsusuario); i++ {
@@ -358,11 +361,11 @@ func enviarMensaje(mensaje MensajeSocket) bool {
 		}
 	}
 
-	fmt.Println("mira con que ciframos here1:", clavecifrarmensajes, idclavecifrarmensajes)
-	fmt.Println("mira el mensaje here1:", mensaje.Mensajechat)
-	fmt.Println("mira el mensaje here1:", []byte(mensaje.Mensajechat))
+	fmt.Println("Mira clave cifrar:", clavecifrarmensajes)
+	fmt.Println("Mira texto cifrar:", mensaje.Mensajechat)
+	fmt.Println("Mira texto cifrar:", string(mensaje.Mensajechat))
 
-	mensajecifrado, err := cifrarAES([]byte(mensaje.Mensajechat), clavecifrarmensajes)
+	mensajecifrado, err := cifrarAES(mensaje.Mensajechat, clavecifrarmensajes)
 	if err == true {
 		fmt.Println("Error al cifrar clave con cifrado AES")
 		return false
