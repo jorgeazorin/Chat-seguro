@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	//"fmt"
 	"net"
 	"strconv"
 )
@@ -83,8 +83,6 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	//OBTENER LOS CHATS
 	///////////////////
 	if mensaje.Funcion == "obtenerchats" {
-
-		fmt.Println(mensaje.Idfrom)
 
 		//Llamada BD obtener chats del usuario
 		chats, test := bd.getChatsUsuarioBD(mensaje.Idfrom)
@@ -370,7 +368,6 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		//Codigicamos con marshal
 		datos := make([]string, 0, 1)
 		for i := 0; i < len(claves); i++ {
-			fmt.Println("::::", claves[i])
 			datos = append(datos, claves[i])
 		}
 

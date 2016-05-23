@@ -155,7 +155,7 @@ func escribirSocketCliente(mensaje MensajeSocket) {
 func handleServerRead() {
 	var mensaje MensajeSocket
 
-	//bucle infinito
+	//Escuchando respuestas del servidor
 	for {
 
 		//Leemos mensaje
@@ -188,15 +188,12 @@ func handleServerRead() {
 				for j := 0; j < len(chatdatos.MensajesDatos); j++ {
 
 					chatdatos.MensajesDatos[j].Mensaje.Texto, err = descifrarAES(chatdatos.MensajesDatos[j].Mensaje.Texto, chatdatos.MensajesDatos[j].Mensaje.Clave)
-					chatdatos.MensajesDatos[j].Mensaje.TextoClaro = string(chatdatos.MensajesDatos[j].Mensaje.Texto)
-
-					fmt.Println("LOKKK:", chatdatos.MensajesDatos[j].Mensaje.TextoClaro)
-
 					if err == true {
 						fmt.Println("Error al descifrar mensajes.")
 						mensaje.Mensaje = "Error al obtener los mensajes."
 						return
 					}
+					chatdatos.MensajesDatos[j].Mensaje.TextoClaro = string(chatdatos.MensajesDatos[j].Mensaje.Texto)
 				}
 
 				chatsusuario = append(chatsusuario, chatdatos)
@@ -214,14 +211,6 @@ func handleServerRead() {
 			ClientUsuario.Clavepubrsa = mensaje.DatosClaves[0]
 			ClientUsuario.Claveprivrsa = mensaje.DatosClaves[1]
 		}
-
-		/*/Para enviar un mensaje, desciframos la clave obtenida para cifrar mensaje
-		if mensaje.Funcion == "DatosClaveCifrarMensajeChat" {
-			idclavecifrarmensajes, _ = strconv.Atoi(mensaje.Datos[0])
-			laclave := mensaje.DatosClaves[0]
-			clavecifrarmensajes, _ = descifrarAES(laclave, ClientUsuario.Clavehashcifrado)
-			fmt.Println("miramos aqui:", idclavecifrarmensajes, clavecifrarmensajes)
-		}*/
 
 		//Enviamos el mensaje a el cliente HTML
 		escribirSocketCliente(mensaje)
@@ -360,10 +349,6 @@ func enviarMensaje(mensaje MensajeSocket) bool {
 			idclavecifrarmensajes = chatsusuario[i].IdClave
 		}
 	}
-
-	fmt.Println("Mira clave cifrar:", clavecifrarmensajes)
-	fmt.Println("Mira texto cifrar:", mensaje.Mensajechat)
-	fmt.Println("Mira texto cifrar:", string(mensaje.Mensajechat))
 
 	mensajecifrado, err := cifrarAES(mensaje.Mensajechat, clavecifrarmensajes)
 	if err == true {
