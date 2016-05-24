@@ -274,6 +274,7 @@ func (bd *BD) marcarLeidoPorUsuarioBD(idmensaje int, idreceptor int) bool {
 	}
 
 	//Marcamos como leido
+	fmt.Println("UAO:", idmensaje, idreceptor)
 	_, err := dbmap.Exec("UPDATE receptoresmensaje SET leido = true WHERE idmensaje = ? and idreceptor = ?", idmensaje, idreceptor)
 	if err != nil {
 		fmt.Println(err.Error())

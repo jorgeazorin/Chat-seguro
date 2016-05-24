@@ -14,7 +14,9 @@
       <div class="menu_izq">
         <ul>
           <a class="media" ng-repeat="chat in chats"> 
-            <li ng-click="verChat(chat.Chat.Id)">{{chat.Chat.Nombre}}</li>
+            <li ng-click="verChat(chat.Chat.Id)">{{chat.Chat.Nombre}} 
+                <i class="alertamensajenoleido fa fa-bell" aria-hidden="true" ng-hide="chat.Chat.Leido"></i>
+            </li>
           </a>
         </ul>
       </div>
@@ -356,6 +358,12 @@ input:focus {
         float: right;
         margin-top: -20px;
         width: 35%;
+    }
+
+    .alertamensajenoleido {
+        float: right;
+        font-size: 15px;
+        color: #4CED69;
     }
 
     </style>

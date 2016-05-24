@@ -148,6 +148,17 @@ func echoHandler(ws *websocket.Conn) {
 			agregarUsuariosChat(mensaje.Chat, []string{mensaje.Mensaje})
 		}
 
+		///////////////////
+		//Marcar chat leido
+		///////////////////
+		if datos == "leidos" {
+			datos := leerDatosWS(ws)
+			var mensaje MensajeSocket
+			json.Unmarshal([]byte(datos), &mensaje)
+
+			MarcarChatComoLeido(mensaje.Chat)
+		}
+
 	}
 
 }

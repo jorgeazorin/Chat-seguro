@@ -194,6 +194,7 @@ func handleServerRead() {
 						return
 					}
 					chatdatos.MensajesDatos[j].Mensaje.TextoClaro = string(chatdatos.MensajesDatos[j].Mensaje.Texto)
+					chatdatos.MensajesDatos[j].Mensaje.Texto = []byte{}
 				}
 
 				chatsusuario = append(chatsusuario, chatdatos)
@@ -411,6 +412,13 @@ func getClaveCifrarMensajeChat(idchat int) {
 func CrearNuevaClaveMensajes() {
 
 	mensaje := MensajeSocket{From: ClientUsuario.Nombre, Funcion: "crearnuevoidparanuevaclavemensajes"}
+	escribirSocket(mensaje)
+}
+
+//Cliente lee mensajes del chay
+func MarcarChatComoLeido(idchat int) {
+
+	mensaje := MensajeSocket{From: ClientUsuario.Nombre, Idfrom: ClientUsuario.Id, Chat: idchat, Funcion: "marcarchatcomoleido"}
 	escribirSocket(mensaje)
 }
 

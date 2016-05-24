@@ -361,6 +361,21 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		}
 	}
 
+	////////////////////////
+	//MARCAR CHAT COMO LEIDO
+	////////////////////////
+	if mensaje.Funcion == "marcarchatcomoleido" {
+
+		//Llamamos a la BD para marcar chat como leido
+		test := bd.marcarChatLeidoPorUsuarioBD(mensaje.Chat, mensaje.Idfrom)
+		fmt.Println("mm<-->", mensaje.Chat, mensaje.Idfrom)
+		if test == false {
+			mesj := MensajeSocket{From: mensaje.From, MensajeSocket: "Error al marcar chat como leído."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+			return
+		}
+	}
+
 	/////////////////////////
 	//OBTENER CLAVES MENSAJES
 	/////////////////////////

@@ -205,6 +205,19 @@ func (bd *BD) usuarioEnChat(idusuario int, idchat int) bool {
 }
 
 //Marcar todos los mensajes del chat como leidos
-//func (bd *BD) marcarLeidoPorUsuarioBD(idmensaje int, idreceptor int) bool {
+func (bd *BD) marcarChatLeidoPorUsuarioBD(idchat int, idreceptor int) bool {
 
-//}
+	mensajes, test := bd.getMensajesChatBD(idchat, idreceptor)
+	if test == false {
+		return false
+	}
+
+	for i := 0; i < len(mensajes); i++ {
+		test = bd.marcarLeidoPorUsuarioBD(mensajes[i].Mensaje.Id, idreceptor)
+		if test == false {
+			return false
+		}
+	}
+
+	return true
+}
