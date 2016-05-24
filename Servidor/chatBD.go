@@ -81,7 +81,7 @@ func (bd *BD) modificarChatBD(chat Chat) bool {
 }
 
 //Añade una serie de usuarios a un chat
-func (bd *BD) addUsuariosChatBD(idchat int, nuevosusuarios []int) bool {
+func (bd *BD) addUsuariosChatBD(idchat int, nuevosusuarios []string) bool {
 
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
@@ -92,7 +92,13 @@ func (bd *BD) addUsuariosChatBD(idchat int, nuevosusuarios []int) bool {
 
 	//Insertamos usuarios a dicho chat
 	for i := 0; i < len(nuevosusuarios); i++ {
-		_, err := dbmap.Exec("INSERT INTO usuarioschat VALUES(?, ?)", nuevosusuarios[i], idchat)
+		usuario, err1 := bd.getUsuarioByNombreBD(nuevosusuarios[i])
+		if err1 == false {
+			fmt.Println("Error en el nombre de los usuarios a añadir al chat.")
+			return false
+		}
+
+		_, err := dbmap.Exec("INSERT INTO usuarioschat VALUES(?, ?)", usuario.Id, idchat)
 		if err != nil {
 			fmt.Println(err.Error())
 			return false

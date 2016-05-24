@@ -32,6 +32,10 @@
       </div>
       <div class="cabecerachar">
         <h3>{{chatactual}}</h3>
+        <div class="addusuario">
+            <input type="text" ng-model="usuarioadd" placeholder="">
+            <button ng-click="addUsuario()"> <i class="fa fa-plus-circle" aria-hidden="true"></i></button>
+        </div>
       </div>
       <div class="addchat">
       <i class="fa fa-plus" aria-hidden="true"></i> Crear Chat
@@ -348,6 +352,12 @@ input:focus {
     .login input::-webkit-input-placeholder {
     color: #DADADA;
 }
+    .addusuario {
+        float: right;
+        margin-top: -20px;
+        width: 35%;
+    }
+
     </style>
 
 

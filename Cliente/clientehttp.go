@@ -6,12 +6,24 @@ import (
 	"golang.org/x/net/websocket"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 )
 
 type T struct {
 	Msg   string
 	Count int
+}
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+//Generar cadena aleatoria
+func randSeq(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }
 
 // receive JSON type T
@@ -123,6 +135,17 @@ func echoHandler(ws *websocket.Conn) {
 				mensaje := MensajeSocket{Mensaje: "Error al enviar el mensaje."}
 				websocket.Message.Send(ws, mensaje)
 			}
+		}
+
+		////////////////////
+		//Add usuario a chat
+		////////////////////
+		if datos == "addusuariochat" {
+			datos := leerDatosWS(ws)
+			var mensaje MensajeSocket
+			json.Unmarshal([]byte(datos), &mensaje)
+
+			agregarUsuariosChat(mensaje.Chat, []string{mensaje.Mensaje})
 		}
 
 	}

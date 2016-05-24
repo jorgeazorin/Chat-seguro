@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	//"fmt"
+	"fmt"
 	"net"
 	"strconv"
 )
@@ -186,7 +186,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	if mensaje.Funcion == "agregarusuarioschat" {
 
 		//Comprobamos si ese usuario está en ese chat
-		permitido := bd.usuarioEnChat(usuario.Id, mensaje.Chat)
+		permitido := bd.usuarioEnChat(mensaje.Idfrom, mensaje.Chat)
 		if permitido == false {
 			//Enviamos mensaje error
 			mesj := MensajeSocket{From: mensaje.From, MensajeSocket: "Error de permiso. No perteneces al chat de estos mensajes."}
@@ -195,19 +195,28 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		}
 
 		//Todos los usuarios del mensaje
-		idusuarios := make([]int, 0, 1)
+		nombresusuarios := make([]string, 0, 1)
 		for i := 0; i < len(mensaje.Datos); i++ {
-			idusuario, _ := strconv.Atoi(mensaje.Datos[i])
-			idusuarios = append(idusuarios, idusuario)
+			nombresusuarios = append(nombresusuarios, mensaje.Datos[i])
 		}
-
-		//Los agregamos llamando a la BD
-		test := bd.addUsuariosChatBD(mensaje.Chat, idusuarios)
+		fmt.Println(nombresusuarios)
+		/*/Los agregamos llamando a la BD
+		test := bd.addUsuariosChatBD(mensaje.Chat, nombresusuarios)
 		if test == false {
 			mesj := MensajeSocket{From: mensaje.From, MensajeSocket: "Hubo un error al añadir usuarios al chat."}
 			EnviarMensajeSocketSocket(conexion, mesj)
 			return
 		}
+
+		//Creamos nueva clave para el nuevo conjunto de mensajes
+		idclave, test := bd.CrearNuevaClaveMensajesBD()
+		if test == false {
+			mesj := MensajeSocket{From: mensaje.From, MensajeSocket: "Hubo un error al añadir usuarios al chat."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+			return
+		}*/
+
+		//Asociamos a todos los usuarios con la nueva clave
 
 		//Enviamos mensaje contestación
 		mesj := MensajeSocket{From: mensaje.From, MensajeSocket: "Usuarios añadidos correctamente."}

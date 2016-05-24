@@ -373,7 +373,10 @@ func obtenerMensajesChat(idchat int) {
 //Cliente pide añadir usuarios a un chat
 func agregarUsuariosChat(idchat int, usuarios []string) {
 
-	mensaje := MensajeSocket{Chat: idchat, From: ClientUsuario.Nombre, Funcion: "agregarusuarioschat", Datos: usuarios}
+	fmt.Println(randSeq(20))
+	fmt.Println(idchat, usuarios)
+
+	mensaje := MensajeSocket{Chat: idchat, Idfrom: ClientUsuario.Id, From: ClientUsuario.Nombre, Funcion: "agregarusuarioschat", Datos: usuarios}
 	escribirSocket(mensaje)
 }
 

@@ -59,6 +59,17 @@
       $scope.$apply()
     }
 
+    //Add usuarios al chat
+    $scope.addUsuario = function() {        
+        mensaje = {}
+        mensaje.MensajeSocket = $scope.usuarioadd
+        mensaje.Chat = $scope.idchatactual
+
+        ws.send("addusuariochat");
+        ws.send(JSON.stringify(mensaje));
+    };
+
+
     //Socket abierto, conexión establecida
     ws.onopen = function(){  
       console.log("Socket has been opened!");  

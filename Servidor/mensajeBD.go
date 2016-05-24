@@ -151,7 +151,7 @@ func (bd *BD) getMensajesChatBD(idchat int, idusuario int) ([]MensajeDatos, bool
 	mensajes := make([]Mensaje, 0, 1)
 	_, err := dbmap.Select(&mensajes, "SELECT * FROM mensaje WHERE chat = ?", idchat)
 	if err != nil {
-		fmt.Println("Error:", err.Error())
+		fmt.Println("Error1:", err.Error())
 		return []MensajeDatos{}, false
 	}
 
@@ -160,8 +160,8 @@ func (bd *BD) getMensajesChatBD(idchat int, idusuario int) ([]MensajeDatos, bool
 		var recetoresmensajes Receptoresmensaje
 		_, err := dbmap.Select(&recetoresmensajes, "SELECT * FROM receptoresmensaje WHERE idmensaje = ? and idreceptor = ?", mensajes[i].Id, idusuario)
 		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return []MensajeDatos{}, false
+			fmt.Println("Error2:", err.Error())
+			continue
 		}
 
 		//Rellenamos todos los datos
@@ -175,7 +175,7 @@ func (bd *BD) getMensajesChatBD(idchat int, idusuario int) ([]MensajeDatos, bool
 		mimensaje.Mensaje.NombreEmisor, err2 = bd.getNombreUsuario(idusuario)
 		mimensaje.Mensaje.Clave, err2 = bd.getClaveMensaje(mimensaje.Mensaje.Id, idusuario)
 		if err2 == false {
-			fmt.Println("Error al obtener datos del mensaje.")
+			fmt.Println("Error3 al obtener datos del mensaje.", mimensaje.Mensaje.Id, idusuario)
 			return []MensajeDatos{}, false
 		}
 
@@ -199,7 +199,7 @@ func (bd *BD) getClaveMensaje(idmensaje int, idusuario int) ([]byte, bool) {
 	var mensaje Mensaje
 	err := dbmap.SelectOne(&mensaje, "SELECT * FROM mensaje WHERE id = ?", idmensaje)
 	if err != nil {
-		fmt.Println("Error:", err.Error())
+		fmt.Println("Error1:", err.Error())
 		return []byte{}, false
 	}
 
@@ -207,7 +207,7 @@ func (bd *BD) getClaveMensaje(idmensaje int, idusuario int) ([]byte, bool) {
 	var clavesusuario Clavesusuario
 	err = dbmap.SelectOne(&clavesusuario, "SELECT * FROM clavesusuario WHERE idclavesmensajes = ? AND idusuario = ?", mensaje.Clave, idusuario)
 	if err != nil {
-		fmt.Println("Error:", err.Error())
+		fmt.Println("Error2:", err.Error())
 		return []byte{}, false
 	}
 
