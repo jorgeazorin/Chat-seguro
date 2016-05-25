@@ -7,6 +7,7 @@ package main
 import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"strconv"
 )
 
 //Para enviar todo lo de un mensaje
@@ -28,6 +29,7 @@ type Mensaje struct {
 	Emisor int    `json:"Emisor"`
 	Chat   int    `json:"Chat"`
 	Clave  int    `json:"Clave"`
+	Admin  bool   `json:"Admin"`
 }
 
 type Receptoresmensaje struct {
@@ -183,6 +185,36 @@ func (bd *BD) getMensajesChatBD(idchat int, idusuario int) ([]MensajeDatos, bool
 	}
 
 	return mismensajes, true
+}
+
+//Obtener Mensajes de administracion chats de un usuario
+func (bd *BD) getMensajesAdmin(idusuario int) ([]MensajeDatos, bool) {
+	mismensajes := make([]MensajeDatos, 0, 1) //Array de mensajes
+
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
+	defer db.Close()
+	if test == false {
+		return []MensajeDatos{}, false
+	}
+	//De el chat buscamos los datos de los mensajes de dicho chat
+	var mensajes = make([]Mensaje, 0, 1)
+	_, err := dbmap.Select(&mensajes, "SELECT `id`,`texto`,`emisor`,`chat`,`clave`,`admin` FROM `mensaje`, `receptoresmensaje` WHERE  `admin`=true  and `idreceptor` ="+strconv.Itoa(idusuario))
+	if err != nil {
+		fmt.Println("Error1:", err.Error())
+		return []MensajeDatos{}, false
+	}
+	for i := 0; i < len(mensajes); i++ {
+		var mimensaje MensajeDatos
+		mimensaje.Mensaje.Chat = mensajes[i].Chat
+		mimensaje.Mensaje.IdClave = mensajes[i].Clave
+		mimensaje.Mensaje.Emisor = mensajes[i].Emisor
+		mimensaje.Mensaje.Id = mensajes[i].Id
+		mimensaje.Mensaje.Texto = mensajes[i].Texto
+		mismensajes = append(mismensajes, mimensaje)
+	}
+	return mismensajes, true
+
 }
 
 //Obtiene la clave cifrada con la que se cifran los mensajes

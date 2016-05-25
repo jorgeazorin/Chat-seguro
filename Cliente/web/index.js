@@ -25,7 +25,6 @@
         usuario = {}
         usuario.Nombre = $scope.username
         usuario.Claveenclaro = $scope.password
-
         ws.send("login");
         ws.send(JSON.stringify(usuario));
     };

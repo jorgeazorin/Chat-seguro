@@ -20,6 +20,18 @@ import (
 	"strconv"
 )
 
+///////////////////////////////////////////////////
+//    Claves de los chats
+
+type ClaveChat struct {
+	idclave int
+	Clave   []byte
+}
+
+var claveschats []ClaveChat
+
+///////////////////////////////////////////////
+
 //Struct de los mensajes que se envian por el socket
 type MensajeSocket struct {
 	From        string   `json:"From"`
@@ -77,6 +89,11 @@ type ChatDatos struct {
 	IdClave       int            `json:"IdClave"`
 }
 
+type MensajeAdmin struct {
+	idclavesmensajes int
+	Clave            []byte
+}
+
 var ClientUsuario Usuario
 var chatsusuario []ChatDatos
 
@@ -116,10 +133,13 @@ func main() {
 	defer conn.Close()
 	log.Println("client: connected to: ", conn.RemoteAddr())
 
+	crearChat("chat1")
+
 	//Para manejar respuestas del servidor
 	go handleServerRead()
 
 	IniciarServidorWeb()
+
 	//Usuario 1 en el chat 7 al usuario 15
 	//agregarUsuariosChat(conn, 7, []string{"15"})
 	//Usuario 1 en el chat 7 al usuario 15
@@ -133,6 +153,13 @@ func main() {
 	//Para que no se cierre la consola
 	for {
 	}
+}
+
+func crearChat(nombrechat string) {
+	datos := make([]string, 0, 1)
+	datos = append(datos, nombrechat)
+	mensaje := MensajeSocket{Idfrom: ClientUsuario.Id, From: ClientUsuario.Nombre, Datos: datos, Funcion: "crearchat"}
+	escribirSocket(mensaje)
 }
 
 //Convertir a json y escribir en el socket
@@ -204,6 +231,14 @@ func handleServerRead() {
 
 		}
 
+		if mensaje.Mensaje == "obtenermensajesAdmin" {
+
+		}
+
+		if mensaje.Mensaje == "Chatcreado" {
+			fmt.println("Chat creado con id ", mensaje.Datos[0])
+		}
+
 		//Si nos devuelven el usuario lo rellenamos. (menos claveenclaro, clavehashcifrado clavehashlogin ya estan rellenos)
 		if mensaje.Funcion == "DatosUsuario" {
 			idusuario, _ := strconv.Atoi(mensaje.Datos[0])
@@ -213,6 +248,9 @@ func handleServerRead() {
 			ClientUsuario.Claveprivrsa = mensaje.DatosClaves[1]
 		}
 
+		if mensaje.Funcion == "ClavesChats" {
+
+		}
 		//Enviamos el mensaje a el cliente HTML
 		escribirSocketCliente(mensaje)
 	}
@@ -368,6 +406,11 @@ func enviarMensaje(mensaje MensajeSocket) bool {
 func obtenerMensajesChat(idchat int) {
 
 	mensaje := MensajeSocket{Chat: idchat, From: ClientUsuario.Nombre, Funcion: "obtenermensajeschat"}
+	escribirSocket(mensaje)
+}
+
+func obtenermensajesAdmin() {
+	mensaje := MensajeSocket{From: ClientUsuario.Nombre, Funcion: "obtenermensajesAdmin"}
 	escribirSocket(mensaje)
 }
 

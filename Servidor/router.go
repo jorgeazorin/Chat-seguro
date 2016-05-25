@@ -79,6 +79,24 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 
 	}
 
+	if mensaje.Funcion == "obtenermensajesAdmin" {
+		mensajes, test := bd.getMensajesAdmin(mensaje.Idfrom)
+		if test == false {
+			mesj := MensajeSocket{From: mensaje.From, MensajeSocket: "Error obtenermensajesAdmin."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+			return
+		}
+		datos := make([]string, 0, 1)
+		for i := 0; i < len(mensajes); i++ {
+			men := Mensaje{Id: mensajes[i].Mensaje.Id, Texto: mensajes[i].Mensaje.Texto}
+			b, _ := json.Marshal(men)
+			datos = append(datos, string(b))
+		}
+		//Enviamos los mensajes al usuario que los pidió
+		mesj := MensajeSocket{From: mensaje.From, Datos: datos, MensajeSocket: "obtenermensajesAdmin:"}
+		EnviarMensajeSocketSocket(conexion, mesj)
+	}
+
 	///////////////////
 	//OBTENER LOS CHATS
 	///////////////////
@@ -380,7 +398,6 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	//OBTENER CLAVES MENSAJES
 	/////////////////////////
 	if mensaje.Funcion == "getclavesmensajes" {
-
 		//Llamada a BD obtener claves de los mensajes
 		claves, test := bd.getClavesMensajes(usuario.Id)
 		if test == false {
@@ -454,4 +471,16 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		}
 	}
 
+	if mensaje.Funcion == "crearchat" {
+		var idusuarios = make([]int, 0, 1)
+		_, id := bd.crearChatBD(idusuarios, mensaje.Datos[0])
+		datos := make([]string, 0, 1)
+		datos = append(datos, strconv.Itoa(id))
+		//		}
+
+		//Enviamos los mensajes al usuario que los pidió
+		mesj := MensajeSocket{From: usuario.Nombre, Datos: datos, MensajeSocket: "Chatcreado:"}
+		EnviarMensajeSocketSocket(conexion, mesj)
+		//	mensaje.Datos[0]
+	}
 }

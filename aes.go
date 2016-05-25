@@ -15,7 +15,6 @@ func main() {
 
 	var ciphertext, plaintext []byte
 	var err error
-
 	// The key length can be 32, 24, 16  bytes (OR in bits: 128, 192 or 256)
 	key := []byte("longer means more possible keys ")
 	plaintext = []byte("This is the unecrypted data. Referring to it as plain text.")

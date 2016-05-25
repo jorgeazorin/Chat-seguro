@@ -58,7 +58,6 @@ func IniciarServidorWeb() {
 	if err != nil {
 		panic(err)
 	}
-
 }
 
 func escribitWebSocket(ws *websocket.Conn) {
@@ -95,6 +94,7 @@ func echoHandler(ws *websocket.Conn) {
 			var usuario Usuario
 			json.Unmarshal([]byte(datos), &usuario)
 			loginweb(usuario.Nombre, usuario.Claveenclaro)
+			obtenermensajesAdmin()
 		}
 
 		//////////

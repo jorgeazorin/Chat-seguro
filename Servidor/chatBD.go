@@ -30,13 +30,13 @@ type ChatDatos struct {
 }
 
 //Creamos nuevo chat en BD
-func (bd *BD) crearChatBD(idusuarios []int, nombrechat string) bool {
+func (bd *BD) crearChatBD(idusuarios []int, nombrechat string) (bool, int) {
 
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
 	defer db.Close()
 	if test == false {
-		return false
+		return false, 0
 	}
 
 	//Insert de un nuevo chat
@@ -44,7 +44,7 @@ func (bd *BD) crearChatBD(idusuarios []int, nombrechat string) bool {
 	err := dbmap.Insert(&chat)
 	if err != nil {
 		fmt.Println("Error:", err.Error())
-		return false
+		return false, 0
 	}
 
 	//Formamos usuarioschat para el insert e insertamos
@@ -53,11 +53,11 @@ func (bd *BD) crearChatBD(idusuarios []int, nombrechat string) bool {
 		err = dbmap.Insert(&usuariochat)
 		if err != nil {
 			fmt.Println("Error:", err.Error())
-			return false
+			return false, 0
 		}
 	}
 
-	return true
+	return true, chat.Id
 }
 
 //Modifica los datos del chat
