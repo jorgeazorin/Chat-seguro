@@ -117,7 +117,7 @@ func obtenerMensajesChat(idchat int) []MensajeDatos {
 		if mensaje.Funcion == Constantes_obtenermensajeschat_ok {
 			validar = 1
 			chatsusuario = nil
-			var err bool
+			//var err bool
 
 			//Desciframos cada mensaje y lo vamos añadiendo al vector a devolver
 			for i := 0; i < len(mensaje.Datos); i++ {
@@ -128,7 +128,7 @@ func obtenerMensajesChat(idchat int) []MensajeDatos {
 				for j := 0; j < len(_clavesUsuarioDeMensajes); j++ {
 					if _clavesUsuarioDeMensajes[j].Idclavesmensajes == idClaveMensaje {
 						Clave = _clavesUsuarioDeMensajes[j].Clavemensajes
-						mensajeDatos.Mensaje.Texto, err = descifrarAES(mensajeDatos.Mensaje.Texto, Clave)
+						mensajeDatos.Mensaje.Texto, _ = descifrarAES(mensajeDatos.Mensaje.Texto, Clave)
 						returnmensajes = append(returnmensajes, mensajeDatos)
 					}
 				}
