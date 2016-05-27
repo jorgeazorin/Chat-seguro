@@ -18,23 +18,28 @@
         <ul class="elementosizquierda">
           <span class="boxbuscarusuario">
             <div>
-              <i ng-click="verchatsousuarios()" class="fa fa-search iconobusquedausuarios" aria-hidden="true"></i>
+              <i ng-click="verchatsousuarios()" ng-hide="verlistausuarios" class="fa fa-wechat iconobusquedausuarios" aria-hidden="true"></i>
+              <i ng-click="verchatsousuarios()" ng-show="verlistausuarios" class="fa fa-users iconobusquedausuarios" aria-hidden="true"></i>
             </div>
-            <input type="text" ng-model="usuariobuscado" class="" placeholder="Nombre de un usuario">
+            <input type="text" ng-model="usuariobuscado" class="" placeholder="{{placeholderbusqueda}}">
           </span>
 
           <!-- Vemos los chats -->
-          <a id="divverchats" class="media" ng-repeat="chat in chats"> 
-            <li ng-click="verChat(chat.Chat.Id)">{{chat.Chat.Nombre}} 
-                <div class="alertamensajenoleido" aria-hidden="true" ng-hide="chat.Chat.Leido">{{chat.numsinleer}}</div>
-            </li>
-          </a>
+          <div id="divverchats" class="">
+              <a class="media" ng-repeat="chat in chats | filter:usuariobuscado"> 
+                <li ng-click="verChat(chat.Chat.Id)">{{chat.Chat.Nombre}} 
+                    <div class="alertamensajenoleido" aria-hidden="true" ng-hide="chat.Chat.Leido">{{chat.numsinleer}}</div>
+                </li>
+              </a>
+          </div>
 
           <!-- Vemos los usuarios -->
-          <a id="divverusuarios" class="media oculto" ng-repeat="usuario in usuarios"> 
-            <li ng-click="verDatosUsuario(mensaje.Mensaje.NombreEmisor, mensaje.Mensaje.EstadoEmisor)">{{usuario.Nombre}}
-            </li>
-          </a>
+          <div id="divverusuarios" class="oculto">
+              <a class="media" ng-repeat="usuario in usuarios | filter:usuariobuscado"> 
+                <li ng-click="verDatosUsuario(usuario.Nombre, usuario.Estado)">{{usuario.Nombre}}
+                </li>
+              </a>
+          </div>
 
         </ul>
         <div class="addchat">
@@ -429,6 +434,7 @@
         font-weight: bold;
         padding: 10px;
         font-size: smaller;    cursor: pointer;
+        margin-top: 2px;
         margin-bottom: 1px;
         box-sizing: border-box;
         border-bottom: solid 1px rgba(144, 144, 144, 0);
@@ -573,35 +579,34 @@
     }
 
     .iconobusquedausuarios {
-      color: #49A5B1;
+      color: white;
       margin-top: 5px;
       margin-left: 7px;
     }
 
     .boxbuscarusuario {
-      background: white;
+      background: #118A8E;
       padding-bottom: 8px;
-      padding-top: 4%;
+      padding-top: 5%;
       border: solid 0px #BFBFBF;
-      border-bottom: solid 2px rgb(40, 186, 191);
     }
 
     .boxbuscarusuario > div {
       display: inline-block;
       height: 6%;
-      width: 12%;
-      background: white;
+      width: 15%;
+      background: #118A8E;
     }
 
     .boxbuscarusuario > input {
-      width: 85%;
+      width: 82%;
       border-radius: 0px;
       border: solid 0px #BFBFBF;
       border-bottom: solid 2px rgb(40, 186, 191);
       padding: 8px;
       box-sizing: border-box;
       color: #074A4A;
-      padding-left: 0px;
+      padding-left: 5px;
     }
 
     .elementosizquierda {
@@ -626,6 +631,12 @@
         border-radius: 10px;
         background-color: rgba(70, 121, 123, 0);
     }
+
+    #divverusuarios, #divverchats {
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
     </style>
 
 
