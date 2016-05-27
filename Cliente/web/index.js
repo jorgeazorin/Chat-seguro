@@ -46,6 +46,7 @@
           $scope.mensajes = chats[i].Mensajes;
           $scope.chatactual=chats[i].Chat.Nombre;
           $scope.idchatactual=chats[i].Chat.Id;
+          $scope.clavechatactual=chats[i].Chat.UltimaClave;
 
           //Llamamos a marcar como leidos
           mensaje = {}
@@ -95,6 +96,7 @@
         chat = {}
         chat.Nombre = $scope.nuevonombrechat
         chat.Id = $scope.idchatactual
+        chat.UltimaClave = $scope.clavechatactual
 
         ws.send("editarchat")
         ws.send(JSON.stringify(chat))
