@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	//"fmt"
 	"net"
 	"strconv"
 )
@@ -386,7 +386,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 
 		//Llamamos a la BD para marcar chat como leido
 		test := bd.marcarChatLeidoPorUsuarioBD(mensaje.Chat, mensaje.Idfrom)
-		fmt.Println("mm<-->", mensaje.Chat, mensaje.Idfrom)
+
 		if test == false {
 			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_marcarchatcomoleido_err, MensajeSocket: "Error al marcar chat como leído."}
 			EnviarMensajeSocketSocket(conexion, mesj)
@@ -421,7 +421,6 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 
 	if mensaje.Funcion == Constantes_getClavesDeUnUsuario {
 
-		fmt.Println("getclaves de ", mensaje.Idfrom)
 		claves, test := bd.getClavesMensajesdeUnUsuario(mensaje.Idfrom)
 		if test == false {
 			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_getClavesDeUnUsuario_err, MensajeSocket: "Error al obtener las claves de los mensajes."}
@@ -445,8 +444,9 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	}
 
 	if mensaje.Funcion == Constantes_obtenerClavesDeMuchosUsuarios {
+
 		usuarios := make([]Usuario, 0, 1)
-		//fmt.Println("getclaves de ", mensaje.Idfrom)
+
 		for i := 0; i < len(mensaje.Datos); i++ {
 			usuario, _ := strconv.Atoi(mensaje.Datos[i])
 			user, test := bd.obtenerClavePrivadaUsuario(usuario)

@@ -61,9 +61,9 @@ func main() {
 		u.Claveenclaro = "lucas"
 		registrarUsuario(u)
 	*/
-	loginweb("jorge", "jorge")
-	fmt.Println("Chats obtenidos ", chatsusuario)
-	fmt.Println("Mensjaes obtenidos ", obtenerMensajesChat(27))
+	//loginweb("jorge", "jorge")
+	//fmt.Println("Chats obtenidos ", chatsusuario)
+	//fmt.Println("Mensjaes obtenidos ", obtenerMensajesChat(27))
 
 	//agregarUsuariosChat(27, []string{"51", "52"})
 	//crearChat("chat para todos")
@@ -79,6 +79,7 @@ func main() {
 		mensaje.Mensajechat = []byte("Mensaje de marcos")
 		enviarMensaje(mensaje)
 	/*/
+	IniciarServidorWeb()
 	for {
 	}
 }
