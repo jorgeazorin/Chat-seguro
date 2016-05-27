@@ -21,6 +21,7 @@ type MensajeTodo struct {
 	EmisorEstado string `json:"EmisorEstado"`
 	Clave        []byte `json:"Clave"`
 	TextoClaro   string `json:"TextoClaro"`
+	Admin        bool   `json:"Admin"`
 }
 
 //Para guardar un mensaje con sus datos
@@ -55,7 +56,7 @@ type MensajeDatos struct {
 }
 
 //Guarda un mensaje para todos los receptores posibles del chat
-func (bd *BD) guardarMensajeBD(mensaje Mensaje) bool {
+func (bd *BD) guardarMensajeBD(mensaje Mensaje, idTO int) bool {
 
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
@@ -75,22 +76,47 @@ func (bd *BD) guardarMensajeBD(mensaje Mensaje) bool {
 	//Insert
 	err = dbmap.Insert(&mensaje)
 	if err != nil {
-		fmt.Println("Error:", err.Error())
+		fmt.Println("")
+		fmt.Println("")
+		fmt.Println("")
+		fmt.Println("")
+		fmt.Println("")
+		fmt.Println("mensaje, ", mensaje)
+		fmt.Println("Errorjajaja:", err.Error())
+		fmt.Println("")
+		fmt.Println("")
+		fmt.Println("")
+		fmt.Println("")
+		fmt.Println("")
+		fmt.Println("")
+
 		return false
 	}
-
-	//Rellenamos un receptor e insertamos, asi con todos
-	for i := 0; i < len(idreceptores); i++ {
+	if idTO > 0 {
 		var receptor Receptoresmensaje
 		receptor.Idmensaje = mensaje.Id
-		receptor.Idreceptor = idreceptores[i]
+		receptor.Idreceptor = idTO
 		receptor.Leido = false
-
 		err = dbmap.Insert(&receptor)
 		if err != nil {
 			fmt.Println("Error:", err.Error())
 			return false
 		}
+	} else {
+		//Rellenamos un receptor e insertamos, asi con todos
+		for i := 0; i < len(idreceptores); i++ {
+			var receptor Receptoresmensaje
+			receptor.Idmensaje = mensaje.Id
+			receptor.Idreceptor = idreceptores[i]
+			receptor.Leido = false
+
+			err = dbmap.Insert(&receptor)
+			if err != nil {
+				fmt.Println("Error:", err.Error())
+				return false
+			}
+		}
+
 	}
 
 	return true
@@ -151,7 +177,7 @@ func (bd *BD) getMensajesChatBD(idchat int, idusuario int) ([]MensajeDatos, bool
 
 	//De el chat buscamos los datos de los mensajes de dicho chat
 	mensajes := make([]Mensaje, 0, 1)
-	_, err := dbmap.Select(&mensajes, "SELECT * FROM mensaje WHERE chat = ?", idchat)
+	_, err := dbmap.Select(&mensajes, "SELECT * FROM mensaje WHERE `admin`=0 and chat = ?", idchat)
 	if err != nil {
 		fmt.Println("Error1:", err.Error())
 		return []MensajeDatos{}, false
@@ -172,6 +198,7 @@ func (bd *BD) getMensajesChatBD(idchat int, idusuario int) ([]MensajeDatos, bool
 		mimensaje.Mensaje.IdClave = mensajes[i].Clave
 		mimensaje.Mensaje.Emisor = mensajes[i].Emisor
 		mimensaje.Mensaje.Id = mensajes[i].Id
+		mimensaje.Mensaje.Admin = mensajes[i].Admin
 		mimensaje.Mensaje.Texto = mensajes[i].Texto
 		mimensaje.Leido = recetoresmensajes.Leido
 		usuemisor, err2 := bd.getUsuarioById(mensajes[i].Emisor)
@@ -200,17 +227,21 @@ func (bd *BD) getMensajesAdmin(idusuario int) ([]MensajeDatos, bool) {
 	if test == false {
 		return []MensajeDatos{}, false
 	}
+
 	//De el chat buscamos los datos de los mensajes de dicho chat
 	var mensajes = make([]Mensaje, 0, 1)
-	_, err := dbmap.Select(&mensajes, "SELECT `id`,`texto`,`emisor`,`chat`,`clave`,`admin` FROM `mensaje`, `receptoresmensaje` WHERE  `admin`=true  and `idreceptor` ="+strconv.Itoa(idusuario))
+	_, err := dbmap.Select(&mensajes, "SELECT Distinct `id`,`texto`,`emisor`,`chat`,`clave`,`admin` FROM `mensaje`, `receptoresmensaje` WHERE `mensaje`.`id`=`receptoresmensaje`.`idmensaje` and `leido`=false and `admin`=true  and `idreceptor` ="+strconv.Itoa(idusuario))
+
 	if err != nil {
 		fmt.Println("Error1:", err.Error())
 		return []MensajeDatos{}, false
 	}
+
 	for i := 0; i < len(mensajes); i++ {
 		var mimensaje MensajeDatos
 		mimensaje.Mensaje.Chat = mensajes[i].Chat
 		mimensaje.Mensaje.IdClave = mensajes[i].Clave
+		mimensaje.Mensaje.Admin = mensajes[i].Admin
 		mimensaje.Mensaje.Emisor = mensajes[i].Emisor
 		mimensaje.Mensaje.Id = mensajes[i].Id
 		mimensaje.Mensaje.Texto = mensajes[i].Texto

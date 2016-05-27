@@ -84,6 +84,14 @@ const (
 	Constantes_getUsuarios     = 121
 	Constantes_getUsuarios_ok  = 221
 	Constantes_getUsuarios_err = 421
+
+	Constantes_getUsuariosDeUnChat     = 122
+	Constantes_getUsuariosDeUnChat_ok  = 222
+	Constantes_getUsuariosDeUnChat_err = 422
+
+	Constantes_AsociarNuevaClaveAChat     = 123
+	Constantes_AsociarNuevaClaveAChat_ok  = 223
+	Constantes_AsociarNuevaClaveAChat_err = 423
 )
 
 type Clavesusuario struct {
@@ -122,13 +130,14 @@ type Usuario struct {
 type MensajeTodo struct {
 	Id           int    `json:"Id"`
 	Texto        []byte `json:"Texto"`
-	TextoClaro   string `json:"TextoClaro"`
 	Emisor       int    `json:"Emisor"`
 	Chat         int    `json:"Chat"`
 	IdClave      int    `json:"IdClave"`
 	NombreEmisor string `json:"NombreEmisor"`
 	EmisorEstado string `json:"EmisorEstado"`
 	Clave        []byte `json:"Clave"`
+	TextoClaro   string `json:"TextoClaro"`
+	Admin        bool   `json:"Admin"`
 }
 
 //Para obtener los datos de un mensaje
@@ -139,8 +148,9 @@ type MensajeDatos struct {
 
 //Para obtener los datos del chat
 type Chat struct {
-	Id     int    `json:"Id"`
-	Nombre string `json:"Nombre"`
+	Id          int    `json:"Id"`
+	Nombre      string `json:"Nombre"`
+	UltimaClave int    `json:"UltimaClave"`
 }
 
 //Para obtener todos los datos del chat

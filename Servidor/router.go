@@ -86,14 +86,17 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 			EnviarMensajeSocketSocket(conexion, mesj)
 			return
 		}
+		claves := make([][]byte, 0, 1)
 		datos := make([]string, 0, 1)
 		for i := 0; i < len(mensajes); i++ {
-			men := Mensaje{Id: mensajes[i].Mensaje.Id, Texto: mensajes[i].Mensaje.Texto}
+			men := mensajes[i]
+			men.Mensaje.Texto = []byte{}
 			b, _ := json.Marshal(men)
 			datos = append(datos, string(b))
+			claves = append(claves, mensajes[i].Mensaje.Texto)
 		}
 		//Enviamos los mensajes al usuario que los pidió
-		mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_obtenermensajesAdmin_ok, Datos: datos, MensajeSocket: "obtenermensajesAdmin:"}
+		mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_obtenermensajesAdmin_ok, Datos: datos, DatosClaves: claves, MensajeSocket: "obtenermensajesAdmin:"}
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
@@ -142,8 +145,14 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 
 		//Guardamos los mensajes en la BD
 		idclavemensaje, _ := strconv.Atoi(mensaje.Datos[0])
+		idTO := -1
 		m := Mensaje{Texto: mensaje.Mensajechat, Chat: mensaje.Chat, Emisor: mensaje.Idfrom, Clave: idclavemensaje}
-		bd.guardarMensajeBD(m)
+		if mensaje.From == "-200" {
+			m.Admin = true
+			idTO, _ = strconv.Atoi(mensaje.Datos[1])
+
+		}
+		bd.guardarMensajeBD(m, idTO)
 
 		//Obtenemos los usuarios que pertenecen en el chat
 		idusuarios, test := bd.getUsuariosChatBD(mensaje.Chat)
@@ -214,32 +223,20 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		}
 
 		//Todos los usuarios del mensaje
-		nombresusuarios := make([]string, 0, 1)
+		nombresusuarios := make([]int, 0, 1)
 		for i := 0; i < len(mensaje.Datos); i++ {
-			nombresusuarios = append(nombresusuarios, mensaje.Datos[i])
+			u, _ := strconv.Atoi(mensaje.Datos[i])
+			nombresusuarios = append(nombresusuarios, u)
 		}
-		fmt.Println(nombresusuarios)
-		/*/Los agregamos llamando a la BD
 		test := bd.addUsuariosChatBD(mensaje.Chat, nombresusuarios)
 		if test == false {
 			mesj := MensajeSocket{From: mensaje.From, MensajeSocket: "Hubo un error al añadir usuarios al chat."}
 			EnviarMensajeSocketSocket(conexion, mesj)
 			return
 		}
-
-		//Creamos nueva clave para el nuevo conjunto de mensajes
-		idclave, test := bd.CrearNuevaClaveMensajesBD()
-		if test == false {
-			mesj := MensajeSocket{From: mensaje.From, MensajeSocket: "Hubo un error al añadir usuarios al chat."}
-			EnviarMensajeSocketSocket(conexion, mesj)
-			return
-		}*/
-
-		//Asociamos a todos los usuarios con la nueva clave
-
-		//Enviamos mensaje contestación
 		mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_agregarusuarioschat_ok, MensajeSocket: "Usuarios añadidos correctamente."}
 		EnviarMensajeSocketSocket(conexion, mesj)
+
 	}
 
 	/////////////////////////////
@@ -561,4 +558,41 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 			EnviarMensajeSocketSocket(conexion, mesj)
 		}
 	}
+
+	//////////////
+	//GET USUARIOS DE UN CHAT
+	//////////////
+	if mensaje.Funcion == Constantes_getUsuariosDeUnChat {
+		idChat, _ := strconv.Atoi(mensaje.Datos[0])
+		usuarios, test := bd.usuariosEnChat(idChat)
+		if test {
+
+			//Los convertimos con marshall
+			datos := make([]string, 0, 1)
+			for i := 0; i < len(usuarios); i++ {
+				datos = append(datos, strconv.Itoa(usuarios[i]))
+			}
+
+			mesj := MensajeSocket{From: mensaje.From, Datos: datos, Funcion: Constantes_getUsuariosDeUnChat_ok, MensajeSocket: "getusuariosDeUnChatok"}
+			EnviarMensajeSocketSocket(conexion, mesj)
+		} else {
+			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_getUsuariosDeUnChat_err, MensajeSocket: "Error al obtener usuarios."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+		}
+	}
+
+	if mensaje.Funcion == Constantes_AsociarNuevaClaveAChat {
+		idChat, _ := strconv.Atoi(mensaje.Datos[0])
+		idClave, _ := strconv.Atoi(mensaje.Datos[1])
+		test := bd.AsociarNuevaClaveAChat(idChat, idClave)
+		if test {
+			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_AsociarNuevaClaveAChat_ok, MensajeSocket: "Ok aosciar nueva clave chat."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+		} else {
+			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_AsociarNuevaClaveAChat_err, MensajeSocket: "Error asociar nueva clave chat."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+		}
+
+	}
+
 }

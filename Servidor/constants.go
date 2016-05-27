@@ -84,4 +84,12 @@ const (
 	Constantes_getUsuarios     = 121
 	Constantes_getUsuarios_ok  = 221
 	Constantes_getUsuarios_err = 421
+
+	Constantes_getUsuariosDeUnChat     = 122
+	Constantes_getUsuariosDeUnChat_ok  = 222
+	Constantes_getUsuariosDeUnChat_err = 422
+
+	Constantes_AsociarNuevaClaveAChat     = 123
+	Constantes_AsociarNuevaClaveAChat_ok  = 223
+	Constantes_AsociarNuevaClaveAChat_err = 423
 )

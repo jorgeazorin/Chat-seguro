@@ -12,8 +12,9 @@ import (
 )
 
 type Chat struct {
-	Id     int    `json:"Id"`
-	Nombre string `json:"Nombre"`
+	Id          int    `json:"Id"`
+	Nombre      string `json:"Nombre"`
+	UltimaClave int    `json:"UltimaClave"`
 }
 
 type UsuariosChat struct {
@@ -59,6 +60,27 @@ func (bd *BD) crearChatBD(idusuarios []int, nombrechat string) (bool, int) {
 	return true, chat.Id
 }
 
+//Añade una serie de usuarios a un chat
+func (bd *BD) AsociarNuevaClaveAChat(idchat int, idClave int) bool {
+
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
+	defer db.Close()
+	if test == false {
+		return false
+	}
+
+	//Insertamos usuarios a dicho chat
+	_, err := dbmap.Exec("UPDATE `chat` SET `ultimaClave`=? WHERE `id`=?", idClave, idchat)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+
+	}
+
+	return true
+}
+
 //Modifica los datos del chat
 func (bd *BD) modificarChatBD(chat Chat) bool {
 
@@ -80,7 +102,7 @@ func (bd *BD) modificarChatBD(chat Chat) bool {
 }
 
 //Añade una serie de usuarios a un chat
-func (bd *BD) addUsuariosChatBD(idchat int, nuevosusuarios []string) bool {
+func (bd *BD) addUsuariosChatBD(idchat int, nuevosusuarios []int) bool {
 
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
@@ -91,13 +113,7 @@ func (bd *BD) addUsuariosChatBD(idchat int, nuevosusuarios []string) bool {
 
 	//Insertamos usuarios a dicho chat
 	for i := 0; i < len(nuevosusuarios); i++ {
-		usuario, err1 := bd.getUsuarioByNombreBD(nuevosusuarios[i])
-		if err1 == false {
-			fmt.Println("Error en el nombre de los usuarios a añadir al chat.")
-			return false
-		}
-
-		_, err := dbmap.Exec("INSERT INTO usuarioschat VALUES(?, ?)", usuario.Id, idchat)
+		_, err := dbmap.Exec("INSERT INTO usuarioschat VALUES(?, ?)", nuevosusuarios[i], idchat)
 		if err != nil {
 			fmt.Println(err.Error())
 			return false
@@ -212,11 +228,38 @@ func (bd *BD) marcarChatLeidoPorUsuarioBD(idchat int, idreceptor int) bool {
 	}
 
 	for i := 0; i < len(mensajes); i++ {
-		test = bd.marcarLeidoPorUsuarioBD(mensajes[i].Mensaje.Id, idreceptor)
-		if test == false {
-			return false
+		if !mensajes[i].Mensaje.Admin {
+			test = bd.marcarLeidoPorUsuarioBD(mensajes[i].Mensaje.Id, idreceptor)
+			if test == false {
+				return false
+			}
 		}
 	}
 
 	return true
+}
+
+func (bd *BD) usuariosEnChat(idchat int) ([]int, bool) {
+	usuarios := make([]int, 0, 1)
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
+	defer db.Close()
+	if test == false {
+		return usuarios, false
+	}
+	//usuariosChat := UsuariosChat[]{}
+	usuarioschat := make([]UsuariosChat, 0, 1)
+
+	//Vemos si el usuario esta en el chat
+	_, err := dbmap.Select(&usuarioschat, "SELECT idusuario FROM usuarioschat WHERE idchat = ?", idchat)
+	if err != nil {
+		fmt.Println(err.Error())
+		return usuarios, false
+	}
+
+	for i := 0; i < len(usuarioschat); i++ {
+		usuarios = append(usuarios, usuarioschat[i].Idusuario)
+	}
+
+	return usuarios, true
 }

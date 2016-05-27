@@ -10,6 +10,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"golang.org/x/net/websocket"
 	"io"
@@ -46,10 +47,38 @@ func main() {
 	defer conn.Close()
 	log.Println("client: connected to: ", conn.RemoteAddr())
 	go handleServerRead()
+	/*
+		u := Usuario{}
+		u.Nombre = "jorge"
+		u.Claveenclaro = "jorge"
+		registrarUsuario(u)
 
-	loginweb("jorgre", "jorge")
-	fmt.Println("chat chreado, ", crearChat("unchar cerea"))
-	IniciarServidorWeb()
+		u.Nombre = "marcos"
+		u.Claveenclaro = "marcos"
+		registrarUsuario(u)
+
+		u.Nombre = "lucas"
+		u.Claveenclaro = "lucas"
+		registrarUsuario(u)
+	*/
+	loginweb("jorge", "jorge")
+	fmt.Println("Chats obtenidos ", chatsusuario)
+	fmt.Println("Mensjaes obtenidos ", obtenerMensajesChat(27))
+
+	//agregarUsuariosChat(27, []string{"51", "52"})
+	//crearChat("chat para todos")
+
+	/*
+		//fmt.Println(obtenerMensajesChat(25))
+		agregarUsuariosChat(25, []string{"43", "44", "45", "46"})
+
+	*/ //agregarUsuariosChat(24, []string{"43"})/*
+	/*
+		mensaje := MensajeSocket{}
+		mensaje.Chat = 27
+		mensaje.Mensajechat = []byte("Mensaje de marcos")
+		enviarMensaje(mensaje)
+	/*/
 	for {
 	}
 }
@@ -127,11 +156,25 @@ func generarClavesRSA() ([]byte, []byte) {
 	}
 
 	clavepublica := &claveprivada.PublicKey
+	pemblock := &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(claveprivada)}
 
-	priv := x509.MarshalPKCS1PrivateKey(claveprivada)
-	pub, _ := x509.MarshalPKIXPublicKey(clavepublica)
+	fd, _ := x509.MarshalPKIXPublicKey(clavepublica)
+	pemblockPublica := &pem.Block{Type: "RSA PUBLIC KEY", Bytes: fd}
 
-	return pub, priv
+	return pemblock.Bytes, pemblockPublica.Bytes
+}
+
+func cifrarRSA(textocifrar []byte, clave []byte) ([]byte, bool) {
+	r, _ := x509.ParsePKIXPublicKey(clave)
+	rsaPub, _ := r.(*rsa.PublicKey)
+	out, _ := rsa.EncryptOAEP(sha256.New(), rand.Reader, rsaPub, textocifrar, []byte{})
+	return out, true
+}
+
+func descifrarRSA(textocifrar []byte, clave []byte) ([]byte, bool) {
+	privateKey, _ := x509.ParsePKCS1PrivateKey(clave)
+	out, _ := rsa.DecryptOAEP(sha256.New(), rand.Reader, privateKey, textocifrar, []byte{})
+	return out, true
 }
 
 //Cifrar con AES en modo CTR
