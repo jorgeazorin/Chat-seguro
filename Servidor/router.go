@@ -51,7 +51,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		}
 
 		//Enviamos mensaje contestación
-		mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_registrarusuario_ok, Datos: []string{strconv.Itoa(usuario.Id), usuario.Nombre}, DatosClaves: [][]byte{usuario.Clavepubrsa, usuario.Claveprivrsa}, MensajeSocket: "Registrado correctamente"}
+		mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_registrarusuario_ok, Datos: []string{strconv.Itoa(usuario.Id), usuario.Nombre, usuario.Estado}, DatosClaves: [][]byte{usuario.Clavepubrsa, usuario.Claveprivrsa}, MensajeSocket: "Registrado correctamente"}
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
@@ -74,7 +74,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		conexiones[usuario.Id] = conexion
 
 		//Enviamos un mensaje de todo OK al usuario logeado
-		mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_login_ok, Datos: []string{strconv.Itoa(usuario.Id), usuario.Nombre}, DatosClaves: [][]byte{usuario.Clavepubrsa, usuario.Claveprivrsa}, MensajeSocket: "Logeado correctamente"}
+		mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_login_ok, Datos: []string{strconv.Itoa(usuario.Id), usuario.Nombre, usuario.Estado}, DatosClaves: [][]byte{usuario.Clavepubrsa, usuario.Claveprivrsa}, MensajeSocket: "Logeado correctamente"}
 		EnviarMensajeSocketSocket(conexion, mesj)
 
 	}
@@ -404,7 +404,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	/////////////////////////
 	if mensaje.Funcion == Constantes_getclavesmensajes {
 		//Llamada a BD obtener claves de los mensajes
-		claves, test := bd.getClavesMensajes(usuario.Id)
+		claves, test := bd.getClavesMensajes(mensaje.Idfrom)
 		if test == false {
 			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_getclavesmensajes_err, MensajeSocket: "Error al obtener las claves de los mensajes."}
 			EnviarMensajeSocketSocket(conexion, mesj)
@@ -418,7 +418,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		}
 
 		//Enviamos los mensajes al usuario que los pidió
-		mesj := MensajeSocket{From: usuario.Nombre, Funcion: Constantes_getclavesmensajes_ok, Datos: datos, MensajeSocket: "getclavesmensajes"}
+		mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_getclavesmensajes_ok, Datos: datos, MensajeSocket: "getclavesmensajes"}
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
@@ -443,7 +443,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		}
 
 		//Enviamos los mensajes al usuario que los pidió
-		mesj := MensajeSocket{From: usuario.Nombre, Funcion: Constantes_getClavesDeUnUsuario_ok, Datos: datos, DatosClaves: datosClaves, MensajeSocket: "getClavesDeUnUsuario"}
+		mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_getClavesDeUnUsuario_ok, Datos: datos, DatosClaves: datosClaves, MensajeSocket: "getClavesDeUnUsuario"}
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
@@ -475,7 +475,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		}
 
 		//Enviamos los mensajes al usuario que los pidió
-		mesj := MensajeSocket{From: usuario.Nombre, Datos: datos, Funcion: Constantes_obtenerClavesDeMuchosUsuarios_ok, DatosClaves: datosClaves, MensajeSocket: "getClavesDeMuchosUsuario"}
+		mesj := MensajeSocket{From: mensaje.From, Datos: datos, Funcion: Constantes_obtenerClavesDeMuchosUsuarios_ok, DatosClaves: datosClaves, MensajeSocket: "getClavesDeMuchosUsuario"}
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
@@ -485,14 +485,14 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	if mensaje.Funcion == Constantes_modificarusuario {
 
 		//Llamada a la BD para modificar usuario
-		usuarioAux := Usuario{Id: mensaje.Idfrom, Nombre: mensaje.From, Claveprivrsa: mensaje.DatosClaves[1], Clavepubrsa: mensaje.DatosClaves[2], Clavelogin: mensaje.DatosClaves[0]}
-		boolean := bd.modificarUsuarioBD(usuarioAux)
+		usuarioAux := Usuario{Id: mensaje.Idfrom, Nombre: mensaje.From, Estado: mensaje.Datos[0]}
+		boolean := bd.modificarUsuarioNombreEstadoBD(usuarioAux)
 
 		if boolean {
-			mesj := MensajeSocket{From: usuario.Nombre, Funcion: Constantes_modificarusuario_ok, MensajeSocket: "Usuario cambiado correctamente"}
+			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_modificarusuario_ok, Datos: []string{usuarioAux.Nombre, usuarioAux.Estado}, MensajeSocket: "usuariocambiaok"}
 			EnviarMensajeSocketSocket(conexion, mesj)
 		} else {
-			mesj := MensajeSocket{From: usuario.Nombre, Funcion: Constantes_modificarusuario_err, MensajeSocket: "Error al cambiar usuario"}
+			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_modificarusuario_err, MensajeSocket: "Error al cambiar usuario"}
 			EnviarMensajeSocketSocket(conexion, mesj)
 		}
 
@@ -503,21 +503,14 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	/////////////
 	if mensaje.Funcion == Constantes_modificarchat {
 
-		i, err := strconv.Atoi(mensaje.Datos[0])
-		if err != nil {
-			mesj := MensajeSocket{From: usuario.Nombre, Funcion: Constantes_modificarchat_err, MensajeSocket: "Error con los parámetros recibidos."}
-			EnviarMensajeSocketSocket(conexion, mesj)
-			return
-		}
-
 		//Creamos el char con sus datos
-		chat := Chat{Id: i, Nombre: mensaje.Datos[1]}
+		chat := Chat{Id: mensaje.Chat, Nombre: mensaje.Datos[0]}
 
 		//Comprobamos si ese usuario está en ese chat
-		permitido := bd.usuarioEnChat(usuario.Id, chat.Id)
+		permitido := bd.usuarioEnChat(mensaje.Idfrom, chat.Id)
 		if permitido == false {
 			//Enviamos mensaje error
-			mesj := MensajeSocket{From: usuario.Nombre, Funcion: Constantes_modificarchat_err, MensajeSocket: "No tienes permiso para realizar esta acción, noperteneces al chat de estos mensajes."}
+			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_modificarchat_err, MensajeSocket: "No tienes permiso para realizar esta acción, noperteneces al chat de estos mensajes."}
 			EnviarMensajeSocketSocket(conexion, mesj)
 			return
 		}
@@ -525,15 +518,16 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		//Llamamos a la BD para modificar al chat
 		boolean := bd.modificarChatBD(chat)
 		if boolean {
-			mesj := MensajeSocket{From: usuario.Nombre, Funcion: Constantes_modificarchat_ok, MensajeSocket: "Chat cambiado correctamente"}
+			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_modificarchat_ok, MensajeSocket: "chatcambiadook"}
 			EnviarMensajeSocketSocket(conexion, mesj)
 		} else {
-			mesj := MensajeSocket{From: usuario.Nombre, Funcion: Constantes_modificarchat_err, MensajeSocket: "Error al cambiar el chat"}
+			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_modificarchat_err, MensajeSocket: "Error al cambiar el chat"}
 			EnviarMensajeSocketSocket(conexion, mesj)
 		}
 	}
 
 	if mensaje.Funcion == Constantes_crearchat {
+
 		var idusuarios = make([]int, 0, 1)
 		idusuarios = append(idusuarios, mensaje.Idfrom)
 		_, id := bd.crearChatBD(idusuarios, mensaje.Datos[0])
@@ -541,5 +535,30 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		datos = append(datos, strconv.Itoa(id))
 		mesj := MensajeSocket{From: "usuario", Datos: datos, Funcion: Constantes_crearchat_ok, MensajeSocket: "Chatcreado:"}
 		EnviarMensajeSocketSocket(conexion, mesj)
+
+	}
+
+	//////////////
+	//GET USUARIOS
+	//////////////
+	if mensaje.Funcion == Constantes_getUsuarios {
+
+		usuarios, test := bd.getUsuarios()
+		if test {
+
+			//Los convertimos con marshall
+			datos := make([]string, 0, 1)
+			for i := 0; i < len(usuarios); i++ {
+				usu := Usuario{Id: usuarios[i].Id, Nombre: usuarios[i].Nombre, Estado: usuarios[i].Estado}
+				b, _ := json.Marshal(usu)
+				datos = append(datos, string(b))
+			}
+
+			mesj := MensajeSocket{From: mensaje.From, Datos: datos, Funcion: Constantes_getUsuarios_ok, MensajeSocket: "getusuariosok"}
+			EnviarMensajeSocketSocket(conexion, mesj)
+		} else {
+			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_getUsuarios_err, MensajeSocket: "Error al obtener usuarios."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+		}
 	}
 }

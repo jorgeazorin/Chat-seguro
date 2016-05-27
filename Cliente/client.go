@@ -13,9 +13,10 @@ import (
 
 //Cliente realiza login
 func loginweb(usuario string, password string) {
-	//reader := bufio.NewReader(os.Stdin)
+
 	ClientUsuario.Nombre = usuario
 	ClientUsuario.Claveenclaro = password
+
 	//Generamos los hash de las claves
 	ClientUsuario.Clavehashlogin, ClientUsuario.Clavehashcifrado = generarHashClaves(ClientUsuario.Claveenclaro)
 	mensaje := MensajeSocket{From: ClientUsuario.Nombre, DatosClaves: [][]byte{ClientUsuario.Clavehashlogin}, Funcion: Constantes_login, To: -1}
@@ -40,6 +41,7 @@ func loginweb(usuario string, password string) {
 			ClientUsuario.Clavepubrsa = mensaje.DatosClaves[0]
 			ClientUsuario.Claveprivrsa = mensaje.DatosClaves[1]
 			ClientUsuario.Claveprivrsa, _ = descifrarAES(ClientUsuario.Claveprivrsa, ClientUsuario.Clavehashcifrado)
+			ClientUsuario.Estado = mensaje.Datos[2]
 		}
 		//Si el login es correcto y se ha rellenado correctamente obtemenos sus mensajes de administración
 		if validar == 2 {
@@ -69,6 +71,7 @@ func registrarUsuario(cliente Usuario) bool {
 		fmt.Println("Error al cifrar clave con cifrado AES")
 		return false
 	}
+	ClientUsuario = cliente
 
 	//Rellenar datos del mensaje
 	mensaje := MensajeSocket{From: cliente.Nombre, Funcion: Constantes_registrarusuario, Datos: []string{cliente.Nombre}, DatosClaves: [][]byte{cliente.Clavehashlogin, cliente.Clavepubrsa, cliente.Claveprivrsa}}
@@ -273,6 +276,27 @@ func getTodasLasClavesDeUnUsuario() []Clavesusuario {
 		}
 	}
 	return clavesUsuarioDeMensajes
+}
+
+//Modificar chat
+func editarChat(chat Chat) {
+
+	mensaje := MensajeSocket{From: ClientUsuario.Nombre, Idfrom: ClientUsuario.Id, Chat: chat.Id, Datos: []string{chat.Nombre}, Funcion: Constantes_modificarchat}
+	escribirSocket(mensaje)
+}
+
+//Modificar usuario
+func editarUsuario(usuario Usuario) {
+
+	mensaje := MensajeSocket{From: usuario.Nombre, Idfrom: ClientUsuario.Id, Datos: []string{usuario.Estado}, Funcion: Constantes_modificarusuario}
+	escribirSocket(mensaje)
+}
+
+//Obtener usuarios
+func getUsuarios() {
+
+	mensaje := MensajeSocket{Funcion: Constantes_getUsuarios}
+	escribirSocket(mensaje)
 }
 
 //Cliente pide clave cifrada para descifrar mensajes

@@ -3,13 +3,36 @@
   myApp.controller('controlador', ['$scope', function($scope) {
 
     //Inicializamos datos, mostramos htmls
-  	$scope.mostarlogin = true;
+    $scope.mostarlogin = true;
     $scope.mostrarregistro = false;
+    $scope.editarnombrechat = false;
     $scope.chatactual='chat';
+    $scope.editarchat = false;
+    $scope.verdatosusuario = false;
+    $scope.vericonoperfil = false;
+    $scope.datosusuarioeditar = false;
+    $scope.modificarDatosUsuarioValue = false;
     var ws = new WebSocket("wss://localhost:10443/echo");
 
+    $scope.verchatsousuarios = function() {
+
+      console.log($scope.usuariobuscado)
+
+      if($scope.usuariobuscado != undefined) {
+        console.log(1)
+        divverchats.className = "oculto"
+        divverusuarios.className = ""
+      } else {
+         console.log(2)
+        divverchats.className = ""
+        divverusuarios.className = "oculto"
+      }
+
+      $scope.$apply()
+    }
+
     //Usuario se registra
-        $scope.Registro = function() {
+    $scope.Registro = function() {
         $scope.greeting="Registro";
         
         usuario = {}
@@ -25,6 +48,7 @@
         usuario = {}
         usuario.Nombre = $scope.username
         usuario.Claveenclaro = $scope.password
+
         ws.send("login");
         ws.send(JSON.stringify(usuario));
     };
@@ -49,6 +73,10 @@
         }        
       }
       
+      //Mostramos que se puede editar
+      if(id != undefined)
+        $scope.editarchat = true;
+
       $scope.$apply()
     }
 
@@ -73,15 +101,96 @@
         ws.send(JSON.stringify(mensaje));
     };
 
+    //Editar nombre del chat
+    $scope.editarChat = function() {
+      
+      //Modo editar
+      if($scope.editarnombrechat == false) {
+        $scope.editarnombrechat = true;
+      } 
+      //Modo normal y guardar lo editado
+      else {
+        chat = {}
+        chat.Nombre = $scope.nuevonombrechat
+        chat.Id = $scope.idchatactual
+
+        ws.send("editarchat")
+        ws.send(JSON.stringify(chat))
+        $scope.editarnombrechat = false;
+        $scope.$apply()
+      }
+
+    }
+
+    $scope.verDatosUsuario = function(nombre, estado) {
+
+      //Es perfil de usuario
+      if(nombre == $scope.username) {
+        $scope.botonmodificardatosusuario = true
+        $scope.usuariousername = $scope.username
+        $scope.usuarioestadousuario = $scope.estadousuario
+      } else {
+        $scope.botonmodificardatosusuario = false
+        $scope.usuariousername = nombre
+        $scope.usuarioestadousuario = estado
+      }
+
+      if($scope.usuarioestadousuario==undefined || $scope.usuarioestadousuario=="")
+        $scope.usuarioestadousuario = "Sin estado."
+
+      //Modo editar
+      if($scope.verdatosusuario == false || nombre != undefined) {
+        $scope.verdatosusuario = true;
+      } 
+      //Modo normal y guardar lo editado
+      else {
+        $scope.verdatosusuario = false;
+      }
+
+      $scope.$apply()
+    }
+
+    $scope.modificarDatosUsuario = function() {
+      //Modo editar
+      if($scope.modificarDatosUsuarioValue == false) {
+
+        datosusuariomodonoeditar.className = "oculto"
+        datosusuariomodoeditar.className = ""
+        $scope.modificarDatosUsuarioValue = true;
+      } 
+      //Modo normal y guardar lo editado
+      else {
+        usuario = {}
+        usuario.Nombre = $scope.nuevonombreusuario
+        usuario.Estado = $scope.nuevoestadousuario
+
+        if($scope.nuevonombreusuario == "" || $scope.nuevonombreusuario == undefined)
+          usuario.Nombre = $scope.username
+
+        ws.send("editarusuario")
+        ws.send(JSON.stringify(usuario))
+
+        datosusuariomodonoeditar.className = ""
+        datosusuariomodoeditar.className = "oculto"
+        $scope.modificarDatosUsuarioValue = false;
+        $scope.$apply()
+      }
+    }
+
+
     function versiestanleidos() {
       //Vemos si hay mensajes sin leer
       for(i=0;i<$scope.chats.length;i++) {
         $scope.chats[i].Chat.Leido = true
+        $scope.chats[i].numsinleer = 0
         
+        //Para un chat      
         for(j=0;j<$scope.chats[i].Mensajes.length;j++) {
           if($scope.chats[i].Mensajes[j].Leido == false && $scope.chats[i].Mensajes[j].Mensaje.Emisor != $scope.idusuario) {
-            $scope.chat.Chat.Leido = false
-            continue
+            {
+              $scope.chats[i].Chat.Leido = false
+              $scope.chats[i].numsinleer ++;
+            }
           }
         }
       } 
@@ -105,6 +214,7 @@
         if(respuesta.Datos.length != 0) {
           losdatos = eval(respuesta.Datos)
           $scope.idusuario = losdatos[0]
+           $scope.estadousuario = losdatos[2]
         }
       }
 
@@ -131,11 +241,37 @@
         $scope.$apply()
       }
 
-      ////////////////
-      //Peticion chats
-      ////////////////
-      else if(respuesta.Funcion == "DatosUsuario" || respuesta.MensajeSocket == "MensajeEnviado:") {
+      //////////////////////
+      //Cuando chats cambian
+      //////////////////////
+      else if(respuesta.Funcion == "DatosUsuario" || respuesta.MensajeSocket == "MensajeEnviado:" || respuesta.MensajeSocket == "chatcambiadook") {
         ws.send("chats")
+        $scope.vericonoperfil = true;
+      }
+
+      ///////////////////////
+      //Cuando usuario cambia
+      ///////////////////////
+      else if(respuesta.MensajeSocket == "usuariocambiaok") {
+        $scope.username = respuesta.Datos[0]
+        $scope.estadousuario = respuesta.Datos[1]
+        $scope.$apply()
+      }
+
+      ////////////////////////
+      //Obtenemos los usuarios
+      ////////////////////////
+      else if(respuesta.MensajeSocket == "getusuariosok") {
+
+        if(respuesta.Datos.length != 0) {
+          usuarios = eval(respuesta.Datos)
+
+          for(i=0;i<usuarios.length;i++) {
+            usuarios[i] = JSON.parse(usuarios[i])
+          }
+
+          $scope.usuarios = usuarios          
+        }
       }
 
       /////////

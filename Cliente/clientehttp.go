@@ -58,6 +58,7 @@ func IniciarServidorWeb() {
 	if err != nil {
 		panic(err)
 	}
+
 }
 
 func escribitWebSocket(ws *websocket.Conn) {
@@ -94,7 +95,9 @@ func echoHandler(ws *websocket.Conn) {
 			var usuario Usuario
 			json.Unmarshal([]byte(datos), &usuario)
 			loginweb(usuario.Nombre, usuario.Claveenclaro)
+
 			obtenermensajesAdmin()
+			getUsuarios()
 		}
 
 		//////////
@@ -112,6 +115,8 @@ func echoHandler(ws *websocket.Conn) {
 			} else {
 				websocket.Message.Send(ws, "registronook")
 			}
+
+			getUsuarios()
 		}
 
 		////////////////
@@ -157,6 +162,28 @@ func echoHandler(ws *websocket.Conn) {
 			json.Unmarshal([]byte(datos), &mensaje)
 
 			MarcarChatComoLeido(mensaje.Chat)
+		}
+
+		////////////////
+		//Modificar chat
+		////////////////
+		if datos == "editarchat" {
+			datos := leerDatosWS(ws)
+			var chat Chat
+			json.Unmarshal([]byte(datos), &chat)
+
+			editarChat(chat)
+		}
+
+		///////////////////
+		//Modificar usuario
+		///////////////////
+		if datos == "editarusuario" {
+			datos := leerDatosWS(ws)
+			var usuario Usuario
+			json.Unmarshal([]byte(datos), &usuario)
+
+			editarUsuario(usuario)
 		}
 
 	}

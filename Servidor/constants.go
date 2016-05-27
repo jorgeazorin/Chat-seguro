@@ -80,4 +80,8 @@ const (
 	Constantes_crearchat     = 120
 	Constantes_crearchat_ok  = 220
 	Constantes_crearchat_err = 420
+
+	Constantes_getUsuarios     = 121
+	Constantes_getUsuarios_ok  = 221
+	Constantes_getUsuarios_err = 421
 )

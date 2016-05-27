@@ -18,6 +18,7 @@ type MensajeTodo struct {
 	Chat         int    `json:"Chat"`
 	IdClave      int    `json:"IdClave"`
 	NombreEmisor string `json:"NombreEmisor"`
+	EmisorEstado string `json:"EmisorEstado"`
 	Clave        []byte `json:"Clave"`
 	TextoClaro   string `json:"TextoClaro"`
 }
@@ -140,7 +141,6 @@ func (bd *BD) GuardarClaveUsuarioMensajesBD(clavesusuario Clavesusuario) bool {
 func (bd *BD) getMensajesChatBD(idchat int, idusuario int) ([]MensajeDatos, bool) {
 
 	mismensajes := make([]MensajeDatos, 0, 1) //Array de mensajes
-	var err2 bool                             //Error con accesos a bd
 
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
@@ -174,7 +174,10 @@ func (bd *BD) getMensajesChatBD(idchat int, idusuario int) ([]MensajeDatos, bool
 		mimensaje.Mensaje.Id = mensajes[i].Id
 		mimensaje.Mensaje.Texto = mensajes[i].Texto
 		mimensaje.Leido = recetoresmensajes.Leido
-		mimensaje.Mensaje.NombreEmisor, err2 = bd.getNombreUsuario(idusuario)
+		usuemisor, err2 := bd.getUsuarioById(mensajes[i].Emisor)
+		mimensaje.Mensaje.NombreEmisor = usuemisor.Nombre
+		mimensaje.Mensaje.EmisorEstado = usuemisor.Estado
+
 		mimensaje.Mensaje.Clave, err2 = bd.getClaveMensaje(mimensaje.Mensaje.Id, idusuario)
 		if err2 == false {
 			fmt.Println("Error3 al obtener datos del mensaje.", mimensaje.Mensaje.Id, idusuario)

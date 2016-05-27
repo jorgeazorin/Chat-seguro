@@ -16,6 +16,7 @@ import (
 type Usuario struct {
 	Id           int    `json:"Id"`
 	Nombre       string `json:"Nombre"`
+	Estado       string `json:"Estado"`
 	Clavepubrsa  []byte `json:"Clavepubrsa"`
 	Claveprivrsa []byte `json:"Claveprivrsa"`
 	Clavelogin   []byte `json:"Clavelogin"`
@@ -118,7 +119,6 @@ func (bd *BD) obtenerClavePrivadaUsuario(id int) (Usuario, bool) {
 	if test == false {
 		return Usuario{}, false
 	}
-
 	//Select
 	var usuario Usuario
 	err := dbmap.SelectOne(&usuario, "SELECT * FROM usuario WHERE id = ?", id)
@@ -236,7 +236,14 @@ func (bd *BD) getUsuariosChatBD(id int) ([]int, bool) {
 }
 
 //Modificamos los datos de un usuario
-func (bd *BD) modificarUsuarioBD(usuario Usuario) bool {
+func (bd *BD) modificarUsuarioNombreEstadoBD(usuario Usuario) bool {
+
+	usuarionuevo, test := bd.getUsuarioById(usuario.Id)
+	if test == false {
+		return false
+	}
+	usuarionuevo.Nombre = usuario.Nombre
+	usuarionuevo.Estado = usuario.Estado
 
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
@@ -246,7 +253,7 @@ func (bd *BD) modificarUsuarioBD(usuario Usuario) bool {
 	}
 
 	//Update
-	_, err := dbmap.Update(&usuario)
+	_, err := dbmap.Update(&usuarionuevo)
 	if err != nil {
 		fmt.Println("Error:", err.Error())
 		return false
@@ -273,4 +280,25 @@ func (bd *BD) getClavesMensajes(usuario int) ([]string, bool) {
 	}
 
 	return claves, true
+}
+
+//Obtenemos una instancia de usuario según id usuario
+func (bd *BD) getUsuarios() ([]Usuario, bool) {
+
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
+	defer db.Close()
+	if test == false {
+		return []Usuario{}, false
+	}
+
+	//Select
+	var usuarios []Usuario
+	_, err := dbmap.Select(&usuarios, "SELECT * FROM usuario")
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return []Usuario{}, false
+	}
+
+	return usuarios, true
 }

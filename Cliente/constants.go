@@ -80,6 +80,10 @@ const (
 	Constantes_crearchat     = 120
 	Constantes_crearchat_ok  = 220
 	Constantes_crearchat_err = 420
+
+	Constantes_getUsuarios     = 121
+	Constantes_getUsuarios_ok  = 221
+	Constantes_getUsuarios_err = 421
 )
 
 type Clavesusuario struct {
@@ -106,6 +110,7 @@ type MensajeSocket struct {
 type Usuario struct {
 	Id               int    `json:"Id"`
 	Nombre           string `json:"Nombre"`
+	Estado           string `json:"Estado"`
 	Clavepubrsa      []byte `json:"Clavepubrsa"`
 	Claveprivrsa     []byte `json:"Claveprivrsa"`
 	Claveenclaro     string `json:"Claveenclaro"`
@@ -122,6 +127,7 @@ type MensajeTodo struct {
 	Chat         int    `json:"Chat"`
 	IdClave      int    `json:"IdClave"`
 	NombreEmisor string `json:"NombreEmisor"`
+	EmisorEstado string `json:"EmisorEstado"`
 	Clave        []byte `json:"Clave"`
 }
 
