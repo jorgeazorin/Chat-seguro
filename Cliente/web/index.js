@@ -12,23 +12,8 @@
     $scope.vericonoperfil = false;
     $scope.datosusuarioeditar = false;
     $scope.modificarDatosUsuarioValue = false;
+    $scope.verlistausuarios = false;
     var ws = new WebSocket("wss://localhost:10443/echo");
-
-    $scope.verchatsousuarios = function() {
-      console.log($scope.usuariobuscado)
-
-      if($scope.usuariobuscado != undefined) {
-        console.log(1)
-        divverchats.className = "oculto"
-        divverusuarios.className = ""
-      } else {
-         console.log(2)
-        divverchats.className = ""
-        divverusuarios.className = "oculto"
-      }
-
-      $scope.$apply()
-    }
 
     //Usuario se registra
     $scope.Registro = function() {
@@ -55,8 +40,8 @@
     //Ver todos los mensajes del chat
     $scope.verChat = function(id) {
 
-      //Recorremos chats buscando el seleccionado
       for(i=0;i<chats.length;i++) {
+
         if(chats[i].Chat.Id == id) {
           $scope.mensajes = chats[i].Mensajes;
           $scope.chatactual=chats[i].Chat.Nombre;
@@ -65,12 +50,11 @@
           //Llamamos a marcar como leidos
           mensaje = {}
           mensaje.Chat = $scope.idchatactual
-
           ws.send("leidos");
           ws.send(JSON.stringify(mensaje));
         }        
       }
-      
+
       //Mostramos que se puede editar
       if(id != undefined)
         $scope.editarchat = true;
@@ -176,8 +160,28 @@
     }
 
 
+    //Vemos los usuarios si se busca algo si no, los chats del usuario
+    $scope.verchatsousuarios = function() {
+
+      if($scope.verlistausuarios == false) {
+        divverchats.className = "oculto"
+        divverusuarios.className = ""
+        $scope.verlistausuarios = true
+        $scope.placeholderbusqueda = "Buscador de usuarios"
+      } else {
+        divverchats.className = ""
+        divverusuarios.className = "oculto"
+        $scope.verlistausuarios = false
+        $scope.placeholderbusqueda = "Buscador de chats"
+      }
+
+      console.log("Mira:"+$scope.verlistausuarios)
+
+      $scope.$apply()
+    }
+
+    //Vemos si hay mensajes sin leer
     function versiestanleidos() {
-      //Vemos si hay mensajes sin leer
       for(i=0;i<$scope.chats.length;i++) {
         $scope.chats[i].Chat.Leido = true
         $scope.chats[i].numsinleer = 0
@@ -223,6 +227,9 @@
 
           //Pedimos chats
           ws.send("chats")
+
+          //Pedimos usuarios
+          ws.send("getusuarios");
         }
       }
 
@@ -242,7 +249,7 @@
       }
 
       //Cuando usuario cambia
-      else if(respuesta.MensajeSocket == "usuariocambiaok") {
+      if(respuesta.MensajeSocket == "usuariocambiaok") {
         $scope.username = respuesta.Datos[0]
         $scope.estadousuario = respuesta.Datos[1]
         $scope.usuariousername = $scope.username
@@ -251,23 +258,19 @@
       }
 
       //Obtenemos los usuarios
-      else if(respuesta.MensajeSocket == "getusuariosok") {
-
+      if(respuesta.MensajeSocket == "getusuariosok") {
+        
         if(respuesta.Datos.length != 0) {
-          usuarios = eval(respuesta.Datos)
-
-          for(i=0;i<usuarios.length;i++) {
-            usuarios[i] = JSON.parse(usuarios[i])
-          }
-
-          $scope.usuarios = usuarios          
+          datos = eval(respuesta.Datos)
+          usuarios = eval(datos[0])
+          $scope.usuarios = usuarios  
         }
       }
 
       /////////
       //Alertas
       /////////
-      else {
+      if (true) {
         //Nada
         console.log(respuesta.MensajeSocket + ", " + respuesta.Funcion)
       }

@@ -99,12 +99,11 @@ func echoHandler(ws *websocket.Conn) {
 			json.Unmarshal([]byte(datos), &usuario)
 			loginweb(usuario.Nombre, usuario.Claveenclaro)
 
+			obtenermensajesAdmin()
+
 			b, _ := json.Marshal(ClientUsuario)
 			mensaje := MensajeSocket{Mensaje: "DatosUsuario", Datos: []string{string(b)}}
 			escribirSocketCliente(mensaje)
-
-			obtenermensajesAdmin()
-			getUsuarios()
 		}
 
 		//////////
@@ -120,13 +119,23 @@ func echoHandler(ws *websocket.Conn) {
 				websocket.Message.Send(ws, "registronook")
 			}
 
+			getUsuarios()
+
 			b, _ := json.Marshal(ClientUsuario)
 			mensaje := MensajeSocket{Mensaje: "DatosUsuario", Datos: []string{string(b)}}
 			escribirSocketCliente(mensaje)
-
-			getUsuarios()
 		}
 
+		//////////////
+		//Get Usuarios
+		//////////////
+		if datos == "getusuarios" {
+			usuarios := getUsuarios()
+
+			b, _ := json.Marshal(usuarios)
+			mensaje := MensajeSocket{Mensaje: "getusuariosok", Datos: []string{string(b)}}
+			escribirSocketCliente(mensaje)
+		}
 		////////////////
 		//Obtener chats
 		////////////////
@@ -177,6 +186,8 @@ func echoHandler(ws *websocket.Conn) {
 			json.Unmarshal([]byte(datos), &mensaje)
 
 			MarcarChatComoLeido(mensaje.Chat)
+			mensaje = MensajeSocket{Mensaje: "mensajesleidos"}
+			escribirSocketCliente(mensaje)
 		}
 
 		////////////////
