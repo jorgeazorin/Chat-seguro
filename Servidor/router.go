@@ -189,7 +189,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		//Los convertimos con marshall
 		datos := make([]string, 0, 1)
 		for i := 0; i < len(mensajes); i++ {
-			men := Mensaje{Id: mensajes[i].Mensaje.Id, Texto: mensajes[i].Mensaje.Texto}
+			men := mensajes[i]
 			b, _ := json.Marshal(men)
 			datos = append(datos, string(b))
 		}
@@ -467,11 +467,11 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 
 		for i := 0; i < len(usuarios); i++ {
 			usuarios[i].Clavelogin = []byte{}
-			usuarios[i].Clavepubrsa = []byte{}
+			usuarios[i].Claveprivrsa = []byte{}
 			usuarios[i].Salt = []byte{}
 			b, _ := json.Marshal(usuarios[i])
 			datos = append(datos, string(b))
-			datosClaves = append(datosClaves, usuarios[i].Claveprivrsa)
+			datosClaves = append(datosClaves, usuarios[i].Clavepubrsa)
 		}
 
 		//Enviamos los mensajes al usuario que los pidió
