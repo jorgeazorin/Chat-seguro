@@ -43,16 +43,15 @@ func (bd *BD) crearChatBD(idusuarios []int, nombrechat string) (bool, int) {
 	chat := Chat{Nombre: nombrechat}
 	err := dbmap.Insert(&chat)
 	if err != nil {
-		fmt.Println("Error:", err.Error())
+		fmt.Println("Error1:", err.Error())
 		return false, 0
 	}
-
 	//Formamos usuarioschat para el insert e insertamos
 	for i := 0; i < len(idusuarios); i++ {
 		usuariochat := UsuariosChat{Idchat: chat.Id, Idusuario: idusuarios[i]}
 		err = dbmap.Insert(&usuariochat)
 		if err != nil {
-			fmt.Println("Error:", err.Error())
+			fmt.Println("Error2:", err.Error())
 			return false, 0
 		}
 	}

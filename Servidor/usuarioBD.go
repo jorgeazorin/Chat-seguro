@@ -46,6 +46,16 @@ func generarClaveLoginClaves(clavehashlogin []byte) ([]byte, []byte) {
 	return clavebcryptlogin, salt
 }
 
+/*
+func (bd *BD) insertClavesMensajes(usuario int, clave []byte) bool {
+	dbmap, db, test := bd.conectarBD()
+	defer db.Close()
+	if test == false {
+		return false
+	}
+	//	err:=dbmap.Insert(...)
+}
+*/
 //Insertamos a un nuevo usuario en BD
 func (bd *BD) insertUsuarioBD(usuario Usuario) (Usuario, bool) {
 
@@ -96,6 +106,25 @@ func (bd *BD) loginUsuarioBD(nombre string, clavehashlogin []byte) (Usuario, boo
 
 	if string(clavelogin) != string(usuario.Clavelogin) {
 		return usuario, false
+	}
+
+	return usuario, true
+}
+
+func (bd *BD) obtenerClavePrivadaUsuario(id int) (Usuario, bool) {
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
+	defer db.Close()
+	if test == false {
+		return Usuario{}, false
+	}
+
+	//Select
+	var usuario Usuario
+	err := dbmap.SelectOne(&usuario, "SELECT * FROM usuario WHERE id = ?", id)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return Usuario{}, false
 	}
 
 	return usuario, true

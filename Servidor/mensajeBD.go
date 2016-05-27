@@ -246,6 +246,27 @@ func (bd *BD) getClaveMensaje(idmensaje int, idusuario int) ([]byte, bool) {
 	return clavesusuario.Clavemensajes, true
 }
 
+func (bd *BD) getClavesMensajesdeUnUsuario(idusuario int) ([]Clavesusuario, bool) {
+
+	//Conexion y dbmapa
+	dbmap, db, test := bd.conectarBD()
+	defer db.Close()
+	if test == false {
+		return []Clavesusuario{}, false
+	}
+
+	//Buscamos la clave que tiene ese idclave
+	var clavesusuario = make([]Clavesusuario, 0, 1)
+
+	_, err := dbmap.Select(&clavesusuario, "SELECT * FROM clavesusuario WHERE  idusuario ="+strconv.Itoa(idusuario))
+	if err != nil {
+		fmt.Println("Error2:", err.Error())
+		return []Clavesusuario{}, false
+	}
+
+	return clavesusuario, true
+}
+
 //Obtiene los datos de un mensaje
 func (bd *BD) getMensajeBD(idmensaje int) (Mensaje, bool) {
 
