@@ -15,7 +15,6 @@
     var ws = new WebSocket("wss://localhost:10443/echo");
 
     $scope.verchatsousuarios = function() {
-
       console.log($scope.usuariobuscado)
 
       if($scope.usuariobuscado != undefined) {
@@ -62,7 +61,6 @@
           $scope.mensajes = chats[i].Mensajes;
           $scope.chatactual=chats[i].Chat.Nombre;
           $scope.idchatactual=chats[i].Chat.Id;
-          console.log(chats[i].Mensajes)
 
           //Llamamos a marcar como leidos
           mensaje = {}
@@ -125,7 +123,7 @@
     $scope.verDatosUsuario = function(nombre, estado) {
 
       //Es perfil de usuario
-      if(nombre == $scope.username) {
+      if(nombre == $scope.username || nombre == undefined) {
         $scope.botonmodificardatosusuario = true
         $scope.usuariousername = $scope.username
         $scope.usuarioestadousuario = $scope.estadousuario
@@ -202,65 +200,57 @@
       console.log("Socket has been opened!");  
     };
 
-    //Cliente servidor http nos envía algo
+    /////////////////////////////////////////////
+    //Cuando cliente servidor http nos envía algo
+    /////////////////////////////////////////////
     ws.onmessage = function (event) {
 
       respuesta = JSON.parse(event.data)
+      console.log("mira la respuesta")
+      console.log(respuesta)
 
-      ///////////////
       //Datos usuario
-      ///////////////
-      if(respuesta.Funcion == "DatosUsuario") {
+      if(respuesta.MensajeSocket == "DatosUsuario") {
+
         if(respuesta.Datos.length != 0) {
-          losdatos = eval(respuesta.Datos)
-          $scope.idusuario = losdatos[0]
-           $scope.estadousuario = losdatos[2]
+
+          //Ontenemos datos usuario
+          usuario = JSON.parse(respuesta.Datos)
+          $scope.idusuario = usuario.Id
+          $scope.username = usuario.Nombre
+          $scope.estadousuario = usuario.Estado
+          $scope.vericonoperfil = true;
+
+          //Pedimos chats
+          ws.send("chats")
         }
       }
 
-      /////////////////
-      //Obtenemos chats
-      /////////////////
-      if(respuesta.MensajeSocket == "Chats:") {
-        console.log(respuesta);
-
-        if(respuesta.Datos.length != 0) {
-          
-          $scope.mostarlogin = false;
-          chats = eval(respuesta.Datos)
-
-          for(i=0;i<chats.length;i++) {
-            chats[i] = JSON.parse(chats[i])
-          }
-
-          $scope.chats = chats
-          versiestanleidos()
-          
-        }
+      //Obtenemos chats al principio
+      if(respuesta.MensajeSocket == "chats") {
+        $scope.mostarlogin = false;
+        chats = JSON.parse(respuesta.Datos[0])
+        $scope.chats = chats
         $scope.verChat($scope.idchatactual)
+        versiestanleidos()
         $scope.$apply()
       }
 
-      //////////////////////
-      //Cuando chats cambian
-      //////////////////////
-      else if(respuesta.Funcion == "DatosUsuario" || respuesta.MensajeSocket == "MensajeEnviado:" || respuesta.MensajeSocket == "chatcambiadook") {
+      //Pedimos chats si algo cambia
+      if (respuesta.MensajeSocket == "mensajeenviado:" || respuesta.MensajeSocket == "chatcambiadook") {
         ws.send("chats")
-        $scope.vericonoperfil = true;
       }
 
-      ///////////////////////
       //Cuando usuario cambia
-      ///////////////////////
       else if(respuesta.MensajeSocket == "usuariocambiaok") {
         $scope.username = respuesta.Datos[0]
         $scope.estadousuario = respuesta.Datos[1]
+        $scope.usuariousername = $scope.username
+        $scope.usuarioestadousuario = $scope.estadousuario
         $scope.$apply()
       }
 
-      ////////////////////////
       //Obtenemos los usuarios
-      ////////////////////////
       else if(respuesta.MensajeSocket == "getusuariosok") {
 
         if(respuesta.Datos.length != 0) {
@@ -278,7 +268,8 @@
       //Alertas
       /////////
       else {
-        alert(respuesta.MensajeSocket)
+        //Nada
+        console.log(respuesta.MensajeSocket + ", " + respuesta.Funcion)
       }
 
     }
