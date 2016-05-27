@@ -164,6 +164,7 @@ func obtenerMensajesChat(idchat int) []MensajeDatos {
 
 						Clave = Clave[0:32]
 						mensajeDatos.Mensaje.Texto, _ = descifrarAES(mensajeDatos.Mensaje.Texto, Clave)
+
 						mensajeDatos.Mensaje.TextoClaro = string(mensajeDatos.Mensaje.Texto)
 						mensajeDatos.Mensaje.Texto = []byte{}
 						returnmensajes = append(returnmensajes, mensajeDatos)
@@ -173,6 +174,7 @@ func obtenerMensajesChat(idchat int) []MensajeDatos {
 		}
 
 	}
+
 	return returnmensajes
 }
 
@@ -253,7 +255,6 @@ func crearChat(nombrechat string) int {
 func obtenerChats() []ChatDatos {
 	chats := []ChatDatos{}
 	mensaje := MensajeSocket{Idfrom: ClientUsuario.Id, From: ClientUsuario.Nombre, Funcion: Constantes_obtenerchats}
-	var err bool
 	escribirSocket(mensaje)
 
 	for validar := 0; validar == 0; {
@@ -272,18 +273,6 @@ func obtenerChats() []ChatDatos {
 			for i := 0; i < len(mensaje.Datos); i++ {
 				var chatsusuario = ChatDatos{}
 				json.Unmarshal([]byte(mensaje.Datos[i]), &chatsusuario)
-
-				//Descifrando cada mensaje
-				for j := 0; j < len(chatsusuario.MensajesDatos); j++ {
-
-					chatsusuario.MensajesDatos[j].Mensaje.Texto, err = descifrarAES(chatsusuario.MensajesDatos[j].Mensaje.Texto, chatsusuario.MensajesDatos[j].Mensaje.Clave)
-					if err == true {
-						fmt.Println("Error al descifrar mensajes.")
-						return []ChatDatos{}
-					}
-					chatsusuario.MensajesDatos[j].Mensaje.TextoClaro = string(chatsusuario.MensajesDatos[j].Mensaje.Texto)
-					chatsusuario.MensajesDatos[j].Mensaje.Texto = []byte{}
-				}
 				chats = append(chats, chatsusuario)
 			}
 
@@ -385,6 +374,7 @@ func getTodasLasClavesDeUnUsuario() []Clavesusuario {
 
 		if mensaje.Funcion == Constantes_getClavesDeUnUsuario_ok {
 			validar = 1
+
 			for i := 0; i < len(mensaje.Datos); i++ {
 				var clave = Clavesusuario{}
 				json.Unmarshal([]byte(mensaje.Datos[i]), &clave)
@@ -394,6 +384,7 @@ func getTodasLasClavesDeUnUsuario() []Clavesusuario {
 			for i := 0; i < len(clavesUsuarioDeMensajes); i++ {
 				clavesUsuarioDeMensajes[i].Clavemensajes, _ = descifrarAES(clavesUsuarioDeMensajes[i].Clavemensajes, ClientUsuario.Clavehashcifrado)
 			}
+
 		} else if mensaje.Funcion == Constantes_getClavesDeUnUsuario_err {
 			validar = 1
 			fmt.Println("Error obteniendo las claves de un usuario")

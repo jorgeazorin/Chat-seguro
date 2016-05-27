@@ -106,6 +106,14 @@
 
     }
 
+    //Editar nombre del chat
+    $scope.crearChat = function() {    
+      datos = "Nuevo chat"
+
+      ws.send("crearchat")
+      ws.send(datos)
+    }
+
     $scope.verDatosUsuario = function(nombre, estado) {
 
       //Es perfil de usuario
@@ -246,7 +254,7 @@
       }
 
       //Pedimos chats si algo cambia
-      if (respuesta.MensajeSocket == "mensajeenviado:" || respuesta.MensajeSocket == "chatcambiadook") {
+      if (respuesta.MensajeSocket == "mensajeenviado:" || respuesta.MensajeSocket == "chatcambiadook" || respuesta.MensajeSocket == "chatcreadook") {
         ws.send("chats")
       }
 

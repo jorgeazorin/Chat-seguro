@@ -83,12 +83,9 @@ func leerDatosWS(ws *websocket.Conn) string {
 func echoHandler(ws *websocket.Conn) {
 	wbSocket = ws
 
-	//Esto para que es Jorge?
-	var message = "hello"
-	websocket.Message.Send(ws, message)
-
 	for {
 		datos := leerDatosWS(ws)
+		fmt.Println(datos)
 
 		///////
 		//Login
@@ -136,13 +133,17 @@ func echoHandler(ws *websocket.Conn) {
 			mensaje := MensajeSocket{Mensaje: "getusuariosok", Datos: []string{string(b)}}
 			escribirSocketCliente(mensaje)
 		}
+
 		////////////////
 		//Obtener chats
 		////////////////
 		if datos == "chats" {
 			chats := obtenerChats()
-			b, _ := json.Marshal(chats)
+			for i := 0; i < len(chats); i++ {
+				chats[i].MensajesDatos = obtenerMensajesChat(chats[i].Chat.Id)
+			}
 
+			b, _ := json.Marshal(chats)
 			mensaje := MensajeSocket{Mensaje: "chats", Datos: []string{string(b)}}
 			escribirSocketCliente(mensaje)
 		}
@@ -155,6 +156,8 @@ func echoHandler(ws *websocket.Conn) {
 			var mensaje MensajeSocket
 			json.Unmarshal([]byte(datos), &mensaje)
 			mensaje.Mensajechat = []byte(mensaje.Mensaje)
+
+			fmt.Println("Mira:", mensaje)
 
 			test := enviarMensaje(mensaje)
 			if test == false {
@@ -200,6 +203,17 @@ func echoHandler(ws *websocket.Conn) {
 
 			editarChat(chat)
 			mensaje := MensajeSocket{Mensaje: "chatcambiadook"}
+			escribirSocketCliente(mensaje)
+		}
+
+		////////////
+		//Crear chat
+		////////////
+		if datos == "crearchat" {
+			datos := leerDatosWS(ws)
+
+			crearChat(datos)
+			mensaje := MensajeSocket{Mensaje: "chatcreadook"}
 			escribirSocketCliente(mensaje)
 		}
 
