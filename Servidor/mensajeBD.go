@@ -184,11 +184,17 @@ func (bd *BD) getMensajesChatBD(idchat int, idusuario int) ([]MensajeDatos, bool
 	}
 
 	for i := 0; i < len(mensajes); i++ {
+
 		//Vemos más datos como si el mensaje está leído
 		var recetoresmensajes Receptoresmensaje
-		_, err := dbmap.Select(&recetoresmensajes, "SELECT * FROM receptoresmensaje WHERE idmensaje = ? and idreceptor = ?", mensajes[i].Id, idusuario)
+		_, err = dbmap.Select(&recetoresmensajes, "SELECT * FROM receptoresmensaje WHERE idmensaje = ? and idreceptor = ?", mensajes[i].Id, idusuario)
 		if err != nil {
 			fmt.Println("Error2:", err.Error())
+			continue
+		}
+
+		//Miramos si es emisor o receptor del mensaje
+		if mensajes[i].Emisor != idusuario && recetoresmensajes.Idreceptor != idusuario {
 			continue
 		}
 
