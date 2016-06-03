@@ -187,7 +187,7 @@ func agregarUsuariosChat(idchat int, usuarios []string) {
 		if mensaje.Funcion == Constantes_agregarusuarioschat_err {
 			validar = -1
 		}
-		if mensaje.Funcion == Constantes_agregarusuarioschat_err {
+		if mensaje.Funcion == Constantes_agregarusuarioschat_ok {
 			CrearNuevaClaveMensajes(idchat)
 			validar = 1
 		}
@@ -422,6 +422,7 @@ func CrearNuevaClaveMensajes(idChat int) (int, []byte, []byte) {
 			//Asociar ultima clave creada al chat
 			mensaje := MensajeSocket{From: ClientUsuario.Nombre, Idfrom: ClientUsuario.Id, Funcion: Constantes_AsociarNuevaClaveAChat, Datos: []string{strconv.Itoa(idChat), strconv.Itoa(id)}}
 			escribirSocket(mensaje)
+			validar = 1
 
 		}
 		if mensaje.Funcion == Constantes_crearnuevoidparanuevaclavemensajes_err {

@@ -7,22 +7,31 @@
     <script src="https://use.fontawesome.com/960b8c7259.js"></script>
   </head>
   <body ng-controller="controlador">
-   
+   <div class="todomenoslogin"  ng-class="{blurred : mostarlogin==true}">
+
     <div class="main" >
 
       <!-- PARTE IZQUIEDA: chats, busqueda de usuarios o datos usuario -->
 
       <!-- Datos chats, etc -->
-      <div class="menu_izq" ng-hide="verdatosusuario">
-      <span ng-click="verDatosUsuario()" ng-show="vericonoperfil"> <i class="fa fa-user" aria-hidden="true"></i></span>
-        <ul class="elementosizquierda">
-          <span class="boxbuscarusuario">
-            <div>
-              <i ng-click="verchatsousuarios()" ng-hide="verlistausuarios" class="fa fa-wechat iconobusquedausuarios" aria-hidden="true"></i>
-              <i ng-click="verchatsousuarios()" ng-show="verlistausuarios" class="fa fa-users iconobusquedausuarios" aria-hidden="true"></i>
+      <div class="menu_izq" >
+        <div class="menu_izq_arrivba">
+            <div style="cursor:pointer;" ng-click="verDatosUsuario()" ng-show="vericonoperfil"> 
+                <i class="fa fa-user" aria-hidden="true"></i>  Mi perfil
             </div>
-            <input type="text" ng-model="usuariobuscado" class="" placeholder="{{placeholderbusqueda}}">
-          </span>
+
+            <div class="boxbuscarusuario">
+                    <p  style="cursor:pointer;" ng-click="verchatsousuarios()">
+                        <i  ng-hide="verlistausuarios" class="fa fa-wechat iconobusquedausuarios" aria-hidden="true"> </i>
+                        <i  ng-show="verlistausuarios" class="fa fa-users iconobusquedausuarios" aria-hidden="true"></i>
+                         Ver usuarios / chats
+                    </p>            
+                    <input type="text" ng-model="usuariobuscado" class="" placeholder="Buscar chats o usuarios">
+            </div>
+        
+        </div>
+        <ul class="elementosizquierda">
+          
 
           <!-- Vemos los chats -->
           <div id="divverchats" class="">
@@ -34,7 +43,7 @@
           </div>
 
           <!-- Vemos los usuarios -->
-          <div id="divverusuarios" class="oculto">
+          <div id="divverusuarios"  class="oculto">
               <a class="media" ng-repeat="usuario in usuarios | filter:usuariobuscado"> 
                 <li ng-click="verDatosUsuario(usuario.Nombre, usuario.Estado)">{{usuario.Nombre}}
                 </li>
@@ -48,7 +57,7 @@
       </div>
 
       <!-- Datos de un usuario -->
-      <div class="panelusuario" ng-show="verdatosusuario">
+      <div class="panelusuario"   ng-class="{ocultar : verdatosusuario}">
         <div class="cabecerausu">
           <div>
             <span ng-click="verDatosUsuario()"> 
@@ -123,7 +132,7 @@
 
       </div>
     </div>
-
+</div>
     <!-- Formulario login y registro -->
     <div class="login" ng-show="mostarlogin">
         <div class="loginlogin">
@@ -144,6 +153,54 @@
     <!-- ESTILOS -->
 
     <style type="text/css">
+
+
+
+
+.boxbuscarusuario input {
+    background: none;
+    border: none;
+    border-bottom: solid 1px #28BABF;
+    width: 100%;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.81);
+    margin-top: 16px;
+}
+.boxbuscarusuario input::-webkit-input-placeholder ,.boxbuscarusuario input:-moz-placeholder ,.boxbuscarusuario input::-moz-placeholder,.boxbuscarusuario input:-ms-input-placeholder {
+   color: rgba(255, 255, 255, 0.49);
+}
+
+.menu_izq i {
+    padding-right: 9px;
+}
+
+ .menu_izq_arrivba {
+    padding-top: 30px;
+    padding-bottom: 0px;
+    background: #184D4E;
+    color: rgba(255, 255, 255, 0.48);
+}
+.panelusuario.ocultar {
+    left: 0 !important;
+}
+.panelusuario {
+    width: 21%;
+    background: #D0D0D0;
+    top: 0;
+    position: absolute;
+    height: 100%;
+    left: 21%;
+    transition: all ease 0.3s;
+}
+    .blurred {
+    -webkit-filter: blur(36px);
+    filter: blur(36px);
+}
+
+.todomenoslogin {
+    transition: all 0.3s;
+}
     .addchat {
         position: absolute;
         bottom: 0;
@@ -386,7 +443,7 @@
         background: #118A8E;
         height: 100%;
         box-sizing: border-box;
-        padding-top: 30px;
+        padding-top: 0px;
             padding-bottom: 50px;
     }
 
@@ -557,7 +614,6 @@
     }
 
     .fa-user {
-      color: white;
       font-size: 20px;
       margin-left: 10px;
     }
@@ -579,35 +635,16 @@
     }
 
     .iconobusquedausuarios {
-      color: white;
       margin-top: 5px;
       margin-left: 7px;
     }
+.boxbuscarusuario {
+    padding-bottom: 0px;
+    padding-top: 5%;
+    border: solid 0px #BFBFBF;
+    border-bottom: 0;
+}
 
-    .boxbuscarusuario {
-      background: #118A8E;
-      padding-bottom: 8px;
-      padding-top: 5%;
-      border: solid 0px #BFBFBF;
-    }
-
-    .boxbuscarusuario > div {
-      display: inline-block;
-      height: 6%;
-      width: 15%;
-      background: #118A8E;
-    }
-
-    .boxbuscarusuario > input {
-      width: 82%;
-      border-radius: 0px;
-      border: solid 0px #BFBFBF;
-      border-bottom: solid 2px rgb(40, 186, 191);
-      padding: 8px;
-      box-sizing: border-box;
-      color: #074A4A;
-      padding-left: 5px;
-    }
 
     .elementosizquierda {
       overflow: auto;

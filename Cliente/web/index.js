@@ -23,8 +23,8 @@
         usuario.Nombre = $scope.username
         usuario.Claveenclaro = $scope.password
 
-        ws.send("registro");
-        ws.send(JSON.stringify(usuario));
+        //ws.send("registro");
+        ws.send("registro@/@"+JSON.stringify(usuario));
     };
 
     //Usuario se logea
@@ -32,9 +32,7 @@
         usuario = {}
         usuario.Nombre = $scope.username
         usuario.Claveenclaro = $scope.password
-
-        ws.send("login");
-        ws.send(JSON.stringify(usuario));
+        ws.send("login@/@"+JSON.stringify(usuario));
     };
 
     //Ver todos los mensajes del chat
@@ -51,8 +49,8 @@
           //Llamamos a marcar como leidos
           mensaje = {}
           mensaje.Chat = $scope.idchatactual
-          ws.send("leidos");
-          ws.send(JSON.stringify(mensaje));
+          //ws.send("leidos");
+          ws.send("leidos@/@"+JSON.stringify(mensaje));
         }        
       }
 
@@ -68,10 +66,10 @@
       mensaje = {}
       mensaje.Chat = $scope.idchatactual
       mensaje.MensajeSocket = $scope.textoaenviar
-      ws.send("enviarmensaje")
-      ws.send(JSON.stringify(mensaje))
+      //ws.send("enviarmensaje")
+      ws.send("enviarmensaje@/@"+JSON.stringify(mensaje))
       $scope.textoaenviar = ""
-      $scope.$apply()
+      //$scope.$apply()
     }
 
     //Add usuarios al chat
@@ -80,8 +78,8 @@
         mensaje.MensajeSocket = $scope.usuarioadd
         mensaje.Chat = $scope.idchatactual
 
-        ws.send("addusuariochat");
-        ws.send(JSON.stringify(mensaje));
+        //ws.send("addusuariochat");
+        ws.send("addusuariochat@/@"+JSON.stringify(mensaje));
     };
 
     //Editar nombre del chat
@@ -98,8 +96,8 @@
         chat.Id = $scope.idchatactual
         chat.UltimaClave = $scope.clavechatactual
 
-        ws.send("editarchat")
-        ws.send(JSON.stringify(chat))
+        //ws.send("editarchat")
+        ws.send("editarchat@/@"+JSON.stringify(chat))
         $scope.editarnombrechat = false;
         $scope.$apply()
       }
@@ -110,8 +108,8 @@
     $scope.crearChat = function() {    
       datos = "Nuevo chat"
 
-      ws.send("crearchat")
-      ws.send(datos)
+      //ws.send("crearchat")
+      ws.send("crearchat@/@"+datos)
     }
 
     $scope.verDatosUsuario = function(nombre, estado) {
@@ -159,8 +157,8 @@
         if($scope.nuevonombreusuario == "" || $scope.nuevonombreusuario == undefined)
           usuario.Nombre = $scope.username
 
-        ws.send("editarusuario")
-        ws.send(JSON.stringify(usuario))
+        //ws.send("editarusuario")
+        ws.send("editarusuario@/@"+JSON.stringify(usuario))
 
         datosusuariomodonoeditar.className = ""
         datosusuariomodoeditar.className = "oculto"
@@ -236,10 +234,10 @@
           $scope.vericonoperfil = true;
 
           //Pedimos chats
-          ws.send("chats")
+          ws.send("chats@/@")
 
           //Pedimos usuarios
-          ws.send("getusuarios");
+          ws.send("getusuarios@/@");
         }
       }
 
@@ -255,7 +253,7 @@
 
       //Pedimos chats si algo cambia
       if (respuesta.MensajeSocket == "mensajeenviado:" || respuesta.MensajeSocket == "chatcambiadook" || respuesta.MensajeSocket == "chatcreadook") {
-        ws.send("chats")
+        ws.send("chats@/@")
       }
 
       //Cuando usuario cambia

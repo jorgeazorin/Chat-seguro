@@ -47,38 +47,6 @@ func main() {
 	defer conn.Close()
 	log.Println("client: connected to: ", conn.RemoteAddr())
 	go handleServerRead()
-	/*
-		u := Usuario{}
-		u.Nombre = "jorge"
-		u.Claveenclaro = "jorge"
-		registrarUsuario(u)
-
-		u.Nombre = "marcos"
-		u.Claveenclaro = "marcos"
-		registrarUsuario(u)
-
-		u.Nombre = "lucas"
-		u.Claveenclaro = "lucas"
-		registrarUsuario(u)
-	*/
-	//loginweb("jorge", "jorge")
-	//fmt.Println("Chats obtenidos ", chatsusuario)
-	//fmt.Println("Mensjaes obtenidos ", obtenerMensajesChat(27))
-
-	//agregarUsuariosChat(27, []string{"51", "52"})
-	//crearChat("chat para todos")
-
-	/*
-		//fmt.Println(obtenerMensajesChat(25))
-		agregarUsuariosChat(25, []string{"43", "44", "45", "46"})
-
-	*/ //agregarUsuariosChat(24, []string{"43"})/*
-	/*
-		mensaje := MensajeSocket{}
-		mensaje.Chat = 27
-		mensaje.Mensajechat = []byte("Mensaje de marcos")
-		enviarMensaje(mensaje)
-	/*/
 	IniciarServidorWeb()
 	for {
 	}
