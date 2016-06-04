@@ -184,13 +184,13 @@ func (bd *BD) getMensajesChatBD(idchat int, idusuario int) ([]MensajeDatos, bool
 	}
 
 	for i := 0; i < len(mensajes); i++ {
-
+		fmt.Println("...", mensajes[i].Id, " ,", idusuario)
 		//Vemos más datos como si el mensaje está leído
 		var recetoresmensajes Receptoresmensaje
-		_, err = dbmap.Select(&recetoresmensajes, "SELECT * FROM receptoresmensaje WHERE idmensaje = ? and idreceptor = ?", mensajes[i].Id, idusuario)
+		err = dbmap.SelectOne(&recetoresmensajes, "SELECT * FROM receptoresmensaje WHERE idmensaje = ? and idreceptor = ?", mensajes[i].Id, idusuario)
 		if err != nil {
-			fmt.Println("Error2:", err.Error())
-			continue
+			fmt.Println("Error2getMensajesChatBD:", err.Error())
+
 		}
 
 		//Miramos si es emisor o receptor del mensaje
@@ -279,7 +279,7 @@ func (bd *BD) getClaveMensaje(idmensaje int, idusuario int) ([]byte, bool) {
 	var clavesusuario Clavesusuario
 	err = dbmap.SelectOne(&clavesusuario, "SELECT * FROM clavesusuario WHERE idclavesmensajes = ? AND idusuario = ?", mensaje.Clave, idusuario)
 	if err != nil {
-		fmt.Println("Error2:", err.Error())
+		fmt.Println("Error2getClaveMensaje:", err.Error())
 		return []byte{}, false
 	}
 
@@ -300,7 +300,7 @@ func (bd *BD) getClavesMensajesdeUnUsuario(idusuario int) ([]Clavesusuario, bool
 
 	_, err := dbmap.Select(&clavesusuario, "SELECT * FROM clavesusuario WHERE  idusuario ="+strconv.Itoa(idusuario))
 	if err != nil {
-		fmt.Println("Error2:", err.Error())
+		fmt.Println("Error2getClavesMensajesdeUnUsuario:", err.Error())
 		return []Clavesusuario{}, false
 	}
 

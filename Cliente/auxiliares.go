@@ -76,6 +76,7 @@ func handleServerRead() {
 
 //Convertir a json y escribir en el socket
 func escribirSocket(mensaje MensajeSocket) {
+	mensaje.Idfrom = ClientUsuario.Id
 	b, _ := json.Marshal(mensaje)
 	conn.Write(b)
 }
@@ -141,6 +142,25 @@ func cifrarRSA(textocifrar []byte, clave []byte) ([]byte, bool) {
 }
 
 func descifrarRSA(textocifrar []byte, clave []byte) ([]byte, bool) {
+	fmt.Println("...")
+	fmt.Println("...")
+	fmt.Println("...")
+	fmt.Println("...")
+	fmt.Println("...")
+	fmt.Println("...")
+	fmt.Println("...")
+	fmt.Println("...")
+	fmt.Println(clave)
+	fmt.Println("...")
+	fmt.Println("...")
+	fmt.Println("...")
+	fmt.Println("...")
+	fmt.Println("...")
+	fmt.Println("...")
+	fmt.Println("...")
+	fmt.Println("...")
+	fmt.Println("...")
+	fmt.Println("...")
 	privateKey, _ := x509.ParsePKCS1PrivateKey(clave)
 	out, _ := rsa.DecryptOAEP(sha256.New(), rand.Reader, privateKey, textocifrar, []byte{})
 	return out, true
@@ -188,5 +208,12 @@ func descifrarAES(ciphertext []byte, clave []byte) ([]byte, bool) {
 	stream := cipher.NewCTR(block, iv)
 	stream.XORKeyStream(textodescifrado, ciphertext[aes.BlockSize:])
 
+	for {
+		if textodescifrado[len(textodescifrado)-1] != 0 {
+			return textodescifrado, false
+		} else {
+			textodescifrado = textodescifrado[0 : len(textodescifrado)-2]
+		}
+	}
 	return textodescifrado, false
 }

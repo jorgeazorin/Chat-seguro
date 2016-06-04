@@ -105,6 +105,7 @@ func echoHandler(ws *websocket.Conn) {
 			b, _ := json.Marshal(ClientUsuario)
 			mensaje := MensajeSocket{Mensaje: "DatosUsuario", Datos: []string{string(b)}}
 			escribirSocketCliente(mensaje)
+			datos1[0] = "chats"
 		}
 
 		//////////
@@ -139,6 +140,9 @@ func echoHandler(ws *websocket.Conn) {
 		//Obtener chats
 		////////////////
 		if datos1[0] == "chats" {
+			fmt.Println(" eeeeeeeeeeeeeee eeeeeeeeeeeeeee              eeeeeeeeeeeeeeeeee")
+			fmt.Println("...")
+			fmt.Println(ClientUsuario)
 			chats := obtenerChats()
 			for i := 0; i < len(chats); i++ {
 				chats[i].MensajesDatos = obtenerMensajesChat(chats[i].Chat.Id)
