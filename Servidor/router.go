@@ -238,10 +238,9 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		}
 
 		//Todos los usuarios del mensaje
-		nombresusuarios := make([]int, 0, 1)
+		nombresusuarios := make([]string, 0, 1)
 		for i := 0; i < len(mensaje.Datos); i++ {
-			u, _ := strconv.Atoi(mensaje.Datos[i])
-			nombresusuarios = append(nombresusuarios, u)
+			nombresusuarios = append(nombresusuarios, mensaje.Datos[i])
 		}
 
 		//Los añadimos al chat
@@ -270,15 +269,14 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 			return
 		}
 
-		//Obtenemos los usuarios del mensaje
-		idusuarios := make([]int, 0, 1)
+		//Todos los usuarios del mensaje
+		nombresusuarios := make([]string, 0, 1)
 		for i := 0; i < len(mensaje.Datos); i++ {
-			idusuario, _ := strconv.Atoi(mensaje.Datos[i])
-			idusuarios = append(idusuarios, idusuario)
+			nombresusuarios = append(nombresusuarios, mensaje.Datos[i])
 		}
 
 		//Los eliminamos llamando a la BD
-		test := bd.removeUsuariosChatBD(mensaje.Chat, idusuarios)
+		test := bd.removeUsuariosChatBD(mensaje.Chat, nombresusuarios)
 		if test == false {
 			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_eliminarusuarioschat_err, MensajeSocket: "Hubo un error al eliminar usuarios del chat."}
 			EnviarMensajeSocketSocket(conexion, mesj)

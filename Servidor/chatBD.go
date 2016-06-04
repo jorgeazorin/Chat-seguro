@@ -102,7 +102,7 @@ func (bd *BD) modificarChatBD(chat Chat) bool {
 }
 
 //Añade una serie de usuarios a un chat
-func (bd *BD) addUsuariosChatBD(idchat int, nuevosusuarios []int) bool {
+func (bd *BD) addUsuariosChatBD(idchat int, nuevosusuarios []string) bool {
 
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
@@ -111,9 +111,20 @@ func (bd *BD) addUsuariosChatBD(idchat int, nuevosusuarios []int) bool {
 		return false
 	}
 
-	//Insertamos usuarios a dicho chat
+	//Obtenemos sus ids
+	idnuevosusuarios := make([]int, 0, 1)
 	for i := 0; i < len(nuevosusuarios); i++ {
-		_, err := dbmap.Exec("INSERT INTO usuarioschat VALUES(?, ?)", nuevosusuarios[i], idchat)
+		usu, err0 := bd.getUsuarioByNombreBD(nuevosusuarios[i])
+		if err0 == false {
+			fmt.Println("Error al buscar al usuario queriendo añadirlo al chat.")
+			return false
+		}
+		idnuevosusuarios = append(idnuevosusuarios, usu.Id)
+	}
+
+	//Insertamos usuarios a dicho chat
+	for i := 0; i < len(idnuevosusuarios); i++ {
+		_, err := dbmap.Exec("INSERT INTO usuarioschat VALUES(?, ?)", idnuevosusuarios[i], idchat)
 		if err != nil {
 			fmt.Println(err.Error())
 			return false
@@ -124,7 +135,7 @@ func (bd *BD) addUsuariosChatBD(idchat int, nuevosusuarios []int) bool {
 }
 
 //Elimina una serie de usuarios a un chat
-func (bd *BD) removeUsuariosChatBD(idchat int, usuariosexpulsados []int) bool {
+func (bd *BD) removeUsuariosChatBD(idchat int, usuariosexpulsados []string) bool {
 
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
@@ -133,9 +144,20 @@ func (bd *BD) removeUsuariosChatBD(idchat int, usuariosexpulsados []int) bool {
 		return false
 	}
 
+	//Obtenemos sus ids
+	idusuariosexpulsados := make([]int, 0, 1)
+	for i := 0; i < len(usuariosexpulsados); i++ {
+		usu, err0 := bd.getUsuarioByNombreBD(usuariosexpulsados[i])
+		if err0 == false {
+			fmt.Println("Error al buscar al usuario queriendo eliminarlo del chat.")
+			return false
+		}
+		idusuariosexpulsados = append(idusuariosexpulsados, usu.Id)
+	}
+
 	//Insertamos usuarios a dicho chat
 	for i := 0; i < len(usuariosexpulsados); i++ {
-		_, err := dbmap.Exec("DELETE FROM usuarioschat where idusuario = ? and idchat = ?", usuariosexpulsados[i], idchat)
+		_, err := dbmap.Exec("DELETE FROM usuarioschat where idusuario = ? and idchat = ?", idusuariosexpulsados[i], idchat)
 		if err != nil {
 			fmt.Println(err.Error())
 			return false
