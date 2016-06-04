@@ -76,20 +76,7 @@ func (bd *BD) guardarMensajeBD(mensaje Mensaje, idTO int) bool {
 	//Insert
 	err = dbmap.Insert(&mensaje)
 	if err != nil {
-		fmt.Println("")
-		fmt.Println("")
-		fmt.Println("")
-		fmt.Println("")
-		fmt.Println("")
-		fmt.Println("mensaje, ", mensaje)
-		fmt.Println("Errorjajaja:", err.Error())
-		fmt.Println("")
-		fmt.Println("")
-		fmt.Println("")
-		fmt.Println("")
-		fmt.Println("")
-		fmt.Println("")
-
+		fmt.Println("Error:", err.Error())
 		return false
 	}
 	if idTO > 0 {
@@ -184,12 +171,12 @@ func (bd *BD) getMensajesChatBD(idchat int, idusuario int) ([]MensajeDatos, bool
 	}
 
 	for i := 0; i < len(mensajes); i++ {
-		fmt.Println("...", mensajes[i].Id, " ,", idusuario)
+
 		//Vemos más datos como si el mensaje está leído
 		var recetoresmensajes Receptoresmensaje
 		err = dbmap.SelectOne(&recetoresmensajes, "SELECT * FROM receptoresmensaje WHERE idmensaje = ? and idreceptor = ?", mensajes[i].Id, idusuario)
 		if err != nil {
-			fmt.Println("Error2getMensajesChatBD:", err.Error())
+			//	fmt.Println("Error2getMensajesChatBD:", err.Error())
 
 		}
 
@@ -213,7 +200,7 @@ func (bd *BD) getMensajesChatBD(idchat int, idusuario int) ([]MensajeDatos, bool
 
 		mimensaje.Mensaje.Clave, err2 = bd.getClaveMensaje(mimensaje.Mensaje.Id, idusuario)
 		if err2 == false {
-			fmt.Println("Error3 al obtener datos del mensaje.", mimensaje.Mensaje.Id, idusuario)
+			//	fmt.Println("Error3 al obtener datos del mensaje.", mimensaje.Mensaje.Id, idusuario)
 			return []MensajeDatos{}, false
 		}
 
@@ -367,7 +354,7 @@ func (bd *BD) marcarLeidoPorUsuarioBD(idmensaje int, idreceptor int) bool {
 	}
 
 	//Marcamos como leido
-	fmt.Println("UAO:", idmensaje, idreceptor)
+	//fmt.Println("UAO:", idmensaje, idreceptor)
 	_, err := dbmap.Exec("UPDATE receptoresmensaje SET leido = true WHERE idmensaje = ? and idreceptor = ?", idmensaje, idreceptor)
 	if err != nil {
 		fmt.Println(err.Error())

@@ -13,7 +13,7 @@
     $scope.datosusuarioeditar = false;
     $scope.modificarDatosUsuarioValue = false;
     $scope.verlistausuarios = false;
-    var ws = new WebSocket("wss://localhost:10443/echo");
+    var ws = new WebSocket("wss://localhost:"+location.port+"/echo");
 
     //Usuario se registra
     $scope.Registro = function() {
@@ -262,7 +262,7 @@
       }
 
       //Pedimos chats si algo cambia
-      if (respuesta.MensajeSocket == "mensajeenviado:" || respuesta.MensajeSocket == "chatcambiadook" || respuesta.MensajeSocket == "chatcreadook") {
+      if (respuesta.MensajeSocket == "mensajeenviado:" || respuesta.MensajeSocket == "chatcambiadook" || respuesta.MensajeSocket == "chatcreadook" || respuesta.MensajeSocket == "mensajedeotrocliente") {
         ws.send("chats@/@")
       }
 

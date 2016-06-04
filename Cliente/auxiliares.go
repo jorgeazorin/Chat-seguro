@@ -55,6 +55,7 @@ func main() {
 func handleServerRead() {
 	var mensaje MensajeSocket
 	for {
+		fmt.Println("Estoy escuchando")
 		defer conn.Close()
 		reply := make([]byte, 1048576) //256
 		n, err := conn.Read(reply)
@@ -63,19 +64,30 @@ func handleServerRead() {
 			conn.Close()
 		}
 		json.Unmarshal(reply[:n], &mensaje)
-		fmt.Println("" + mensaje.From + " -> " + mensaje.Mensaje + " -> " + string(mensaje.Mensajechat) + " Datos: ->")
-		for i := 0; i < len(mensaje.Datos); i++ {
-			fmt.Println("dato:", i, "->", mensaje.Datos[i])
+		fmt.Println("Recibido:", mensaje.From, " -> ", mensaje.Funcion)
+
+		if mensaje.Funcion == Constantes_MensajeOtroClienteConectado {
+			//	fmt.Println("bueno he recibido de otro cliente")
+			//	chats := obtenerChats()
+			//		for i := 0; i < len(chats); i++ {
+			//				chats[i].MensajesDatos = obtenerMensajesChat(chats[i].Chat.Id)/
+			//			}
+
+			//			b, _ := json.Marshal(chats)
+			mensaje := MensajeSocket{Mensaje: "mensajedeotrocliente", Datos: []string{}}
+			escribirSocketCliente(mensaje)
+		} else {
+			_canalMensajeSocket <- mensaje
+
 		}
-		fmt.Println("")
-		fmt.Println("--------------------------------------------------------------")
-		fmt.Println("")
-		_canalMensajeSocket <- mensaje
+
 	}
+
 }
 
 //Convertir a json y escribir en el socket
 func escribirSocket(mensaje MensajeSocket) {
+	fmt.Println("Enviado: ", mensaje.Idfrom, " -> ", mensaje.Funcion)
 	mensaje.Idfrom = ClientUsuario.Id
 	b, _ := json.Marshal(mensaje)
 	conn.Write(b)
@@ -142,25 +154,6 @@ func cifrarRSA(textocifrar []byte, clave []byte) ([]byte, bool) {
 }
 
 func descifrarRSA(textocifrar []byte, clave []byte) ([]byte, bool) {
-	fmt.Println("...")
-	fmt.Println("...")
-	fmt.Println("...")
-	fmt.Println("...")
-	fmt.Println("...")
-	fmt.Println("...")
-	fmt.Println("...")
-	fmt.Println("...")
-	fmt.Println(clave)
-	fmt.Println("...")
-	fmt.Println("...")
-	fmt.Println("...")
-	fmt.Println("...")
-	fmt.Println("...")
-	fmt.Println("...")
-	fmt.Println("...")
-	fmt.Println("...")
-	fmt.Println("...")
-	fmt.Println("...")
 	privateKey, _ := x509.ParsePKCS1PrivateKey(clave)
 	out, _ := rsa.DecryptOAEP(sha256.New(), rand.Reader, privateKey, textocifrar, []byte{})
 	return out, true

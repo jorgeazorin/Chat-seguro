@@ -92,4 +92,6 @@ const (
 	Constantes_AsociarNuevaClaveAChat     = 123
 	Constantes_AsociarNuevaClaveAChat_ok  = 223
 	Constantes_AsociarNuevaClaveAChat_err = 423
+
+	Constantes_MensajeOtroClienteConectado = 124
 )

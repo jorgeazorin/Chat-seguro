@@ -22,7 +22,7 @@ type MensajeSocket struct {
 }
 
 func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Usuario) {
-
+	fmt.Println("Mensaje recibido: ", conexion.RemoteAddr(), "Funcion ", mensaje.Funcion)
 	//Para las operaciones con la BD
 	var bd BD
 	bd.username = "root"
@@ -152,13 +152,11 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 			m.Admin = true
 			idTO, _ = strconv.Atoi(mensaje.Datos[1])
 		}
-		fmt.Println("hola0")
 
 		bd.guardarMensajeBD(m, idTO)
-		fmt.Println("hola1")
 
 		//Obtenemos los usuarios que pertenecen en el chat
-		_, test := bd.getUsuariosChatBD(mensaje.Chat)
+		idusuarios, test := bd.getUsuariosChatBD(mensaje.Chat)
 		if test == false {
 			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_enviar_err, MensajeSocket: "Error al enviar mensaje."}
 			EnviarMensajeSocketSocket(conexion, mesj)
@@ -167,21 +165,20 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_enviar_ok, MensajeSocket: "Mensaje enviado."}
 		EnviarMensajeSocketSocket(conexion, mesj)
 
-		fmt.Println("hola2")
+		fmt.Println("Mensajes a clientes conectados")
 		//Enviamos el mensaje a todos los usuarios de ese chat (incluido el emisor)
 
-		/*
-			for i := 0; i < len(idusuarios); i++ {
-				conexion, ok := conexiones[idusuarios[i]]
-				if ok {
-					mensaje.MensajeSocket = "MensajeEnviado:"
-					mensaje.Funcion = Constantes_enviar_ok
-					fmt.Println("hola3")
-					EnviarMensajeSocketSocket(conexion, mensaje)
-				}
+		for i := 0; i < len(idusuarios); i++ {
+			conexion, ok := conexiones[idusuarios[i]]
+			if ok {
+				mensaje.To = idusuarios[i]
+				mensaje.MensajeSocket = "Mensaje de otro usuario al chat:"
+				fmt.Println("enviandomensaje a usuario ", idusuarios[i])
+				mensaje.Funcion = Constantes_MensajeOtroClienteConectado
+				EnviarMensajeSocketSocket(conexion, mensaje)
 			}
 
-		*/
+		}
 
 	}
 
@@ -189,10 +186,6 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	//OBTENER MENSAJES DE UN CHAT
 	/////////////////////////////
 	if mensaje.Funcion == Constantes_obtenermensajeschat {
-		fmt.Println("...............")
-		fmt.Println("...............")
-		fmt.Println("...............")
-		fmt.Println(mensaje.Idfrom)
 		//mensaje.Idfrom = usuario.Id
 		//Comprobamos si ese usuario está en ese chat
 		permitido := bd.usuarioEnChat(mensaje.Idfrom, mensaje.Chat)

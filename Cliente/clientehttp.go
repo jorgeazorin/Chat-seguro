@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"golang.org/x/net/websocket"
@@ -8,6 +9,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -49,13 +51,18 @@ func js(w http.ResponseWriter, req *http.Request) {
 	io.WriteString(w, string(webpage))
 }
 
+var puerto = ""
+
 func IniciarServidorWeb() {
 	go http.Handle("/echo", websocket.Handler(echoHandler))
 
 	http.HandleFunc("/", HelloServer)
 	http.HandleFunc("/index.js", js)
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter text: ")
+	puerto, _ := reader.ReadString('\n')
 
-	var err = http.ListenAndServeTLS(":10443", "cert.pem", "key.pem", nil)
+	var err = http.ListenAndServeTLS(":"+puerto, "cert.pem", "key.pem", nil)
 	if err != nil {
 		panic(err)
 	}
@@ -87,7 +94,7 @@ func echoHandler(ws *websocket.Conn) {
 
 	for {
 		datos := leerDatosWS(ws)
-		fmt.Println(datos)
+		//	fmt.Println(datos)
 		if datos == "-1" {
 
 			break
@@ -140,9 +147,7 @@ func echoHandler(ws *websocket.Conn) {
 		//Obtener chats
 		////////////////
 		if datos1[0] == "chats" {
-			fmt.Println(" eeeeeeeeeeeeeee eeeeeeeeeeeeeee              eeeeeeeeeeeeeeeeee")
-			fmt.Println("...")
-			fmt.Println(ClientUsuario)
+			//fmt.Println(ClientUsuario)
 			chats := obtenerChats()
 			for i := 0; i < len(chats); i++ {
 				chats[i].MensajesDatos = obtenerMensajesChat(chats[i].Chat.Id)
@@ -162,7 +167,7 @@ func echoHandler(ws *websocket.Conn) {
 			json.Unmarshal([]byte(datos1[1]), &mensaje)
 			mensaje.Mensajechat = []byte(mensaje.Mensaje)
 			mensaje.Idfrom = ClientUsuario.Id
-			fmt.Println("Mira:", mensaje)
+			//fmt.Println("Mira:", mensaje)
 
 			test := enviarMensaje(mensaje)
 			if test == false {

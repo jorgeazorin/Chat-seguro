@@ -5,10 +5,10 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
-	//"sync"
 )
 
 //Mapa con las conexiones de los usuarios [ key=nombreusuario: value=conexion del usuario ]
@@ -16,10 +16,11 @@ var conexiones map[int]net.Conn
 
 //Función que envia un mensaje a un cliente mediante un id y un string
 func EnviarMensajeSocketSocket(conexion net.Conn, s MensajeSocket) {
-
+	fmt.Println("Mensaje enviado: ", conexion.RemoteAddr(), "Funcion ", s.Funcion)
+	fmt.Println()
 	//Codifica el mensaje en json
 	b, _ := json.Marshal(s)
-	log.Println(string(b))
+	//log.Println(string(b))
 	//Lo escribe en el socket
 	_, err := conexion.Write(b)
 	if err != nil {

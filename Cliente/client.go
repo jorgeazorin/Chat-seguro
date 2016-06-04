@@ -42,9 +42,9 @@ func loginweb(usuario string, password string) {
 			ClientUsuario.Claveprivrsa = mensaje.DatosClaves[1]
 			ClientUsuario.Claveprivrsa, _ = descifrarAES(ClientUsuario.Claveprivrsa, ClientUsuario.Clavehashcifrado)
 			ClientUsuario.Claveprivrsa = ClientUsuario.Claveprivrsa
-			fmt.Println("..................................................................................................................................................................................................")
-			fmt.Println("Se ha logeado con la clave privada: ")
-			fmt.Println(ClientUsuario.Claveprivrsa)
+			//		fmt.Println("..................................................................................................................................................................................................")
+			//			fmt.Println("Se ha logeado con la clave privada: ")
+			//fmt.Println(ClientUsuario.Claveprivrsa)
 		}
 		//Si el login es correcto y se ha rellenado correctamente obtemenos sus mensajes de administración
 		if validar == 2 {
@@ -68,9 +68,9 @@ func registrarUsuario(cliente Usuario) bool {
 	//Generamos clave pública y privada RSA
 	cliente.Claveprivrsa, cliente.Clavepubrsa = generarClavesRSA()
 	//	fmt.Println("Privada: ", cliente.Claveprivrsa)
-	fmt.Println("..................................................................................................................................................................................................")
-	fmt.Println("Se ha registrado con la clave privada: ")
-	fmt.Println(cliente.Claveprivrsa)
+	//fmt.Println("..................................................................................................................................................................................................")
+	//fmt.Println("Se ha registrado con la clave privada: ")
+	//fmt.Println(cliente.Claveprivrsa)
 	//Clave privada del usuario cifrar
 	cliente.Claveprivrsa, err = cifrarAES(cliente.Claveprivrsa, cliente.Clavehashcifrado)
 
@@ -128,13 +128,13 @@ func enviarMensaje(mensaje MensajeSocket) bool {
 		}
 		idclavecifrarmensajes = idUltimaClaveDelChat
 	}
-	fmt.Println("...........................................................................................")
+	//fmt.Println("...........................................................................................")
 
-	fmt.Println("Este chat : ", mensaje.Chat)
-	fmt.Println("Este chat tiene la clave: ", idUltimaClaveDelChat)
-	fmt.Println("Se va a descifrar con : ", clavecifrarmensajes)
+	//	fmt.Println("Este chat : ", mensaje.Chat)
+	//	fmt.Println("Este chat tiene la clave: ", idUltimaClaveDelChat)
+	//	fmt.Println("Se va a descifrar con : ", clavecifrarmensajes)
 
-	fmt.Println("...........................................................................................")
+	//	fmt.Println("...........................................................................................")
 	clavecifrarmensajes = clavecifrarmensajes[0:32]
 	mensajecifrado, err := cifrarAES(mensaje.Mensajechat, clavecifrarmensajes)
 	//key := []byte
@@ -144,7 +144,7 @@ func enviarMensaje(mensaje MensajeSocket) bool {
 	}
 	mensaje.Mensajechat = mensajecifrado
 
-	fmt.Println("A ver que pasa que estoy enviando eeeh")
+	//	fmt.Println("A ver que pasa que estoy enviando eeeh")
 
 	//Rellenar datos
 	mensaje = MensajeSocket{From: ClientUsuario.Nombre, Idfrom: ClientUsuario.Id, Funcion: Constantes_enviar, Datos: []string{strconv.Itoa(idclavecifrarmensajes)}, Mensajechat: mensaje.Mensajechat, Chat: mensaje.Chat}
@@ -156,7 +156,7 @@ func enviarMensaje(mensaje MensajeSocket) bool {
 			fmt.Println("Error enviando")
 		}
 		if mensaje.Funcion == Constantes_enviar_ok {
-			fmt.Println(" enviando ok")
+			//			fmt.Println(" enviando ok")
 			validar = 1
 		}
 	}
@@ -165,8 +165,8 @@ func enviarMensaje(mensaje MensajeSocket) bool {
 
 //Cliente pide mensajes de un chat
 func obtenerMensajesChat(idchat int) []MensajeDatos {
-	fmt.Println("eeeeeeeeeeeeeeeeeeeeeeeeeh chaaats")
-	fmt.Println(ClientUsuario.Id)
+	///	fmt.Println("eeeeeeeeeeeeeeeeeeeeeeeeeh chaaats")
+	//	fmt.Println(ClientUsuario.Id)
 	returnmensajes := []MensajeDatos{}
 	mensaje := MensajeSocket{Chat: idchat, Idfrom: ClientUsuario.Id, From: ClientUsuario.Nombre, Funcion: Constantes_obtenermensajeschat}
 	escribirSocket(mensaje)
@@ -242,11 +242,32 @@ func MarcarChatComoLeido(idchat int) {
 
 	mensaje := MensajeSocket{From: ClientUsuario.Nombre, Idfrom: ClientUsuario.Id, Chat: idchat, Funcion: Constantes_marcarchatcomoleido}
 	escribirSocket(mensaje)
+	for validar := 0; validar == 0; {
+		mensaje = <-_canalMensajeSocket
+		//Si el login es incorrecto lo mostramos por pantalla
+		if mensaje.Funcion == Constantes_marcarchatcomoleido_err {
+			validar = 1
+		}
+		if mensaje.Funcion == Constantes_marcarchatcomoleido_ok {
+			validar = 2
+		}
+	}
 }
 
 func MarcarMensajeComoLeido(id int) {
 	mensaje := MensajeSocket{From: ClientUsuario.Nombre, Idfrom: ClientUsuario.Id, Datos: []string{strconv.Itoa(id)}, Funcion: Constantes_marcarmensajeleido}
 	escribirSocket(mensaje)
+	for validar := 0; validar == 0; {
+		mensaje = <-_canalMensajeSocket
+		//Si el login es incorrecto lo mostramos por pantalla
+		if mensaje.Funcion == Constantes_marcarmensajeleido_err {
+			validar = 1
+		}
+		if mensaje.Funcion == Constantes_marcarmensajeleido_ok {
+			validar = 2
+		}
+	}
+
 }
 
 func crearChat(nombrechat string) int {
@@ -312,6 +333,16 @@ func editarChat(chat Chat) {
 
 	mensaje := MensajeSocket{From: ClientUsuario.Nombre, Idfrom: ClientUsuario.Id, Chat: chat.Id, Datos: []string{chat.Nombre}, Funcion: Constantes_modificarchat}
 	escribirSocket(mensaje)
+	for validar := 0; validar == 0; {
+		mensaje = <-_canalMensajeSocket
+		if mensaje.Funcion == Constantes_modificarchat_ok {
+			validar = 1
+		}
+		if mensaje.Funcion == Constantes_modificarchat_err {
+			validar = 1
+		}
+	}
+
 }
 
 //Modificar usuario
@@ -319,6 +350,15 @@ func editarUsuario(usuario Usuario) {
 
 	mensaje := MensajeSocket{From: usuario.Nombre, Idfrom: ClientUsuario.Id, Datos: []string{usuario.Estado}, Funcion: Constantes_modificarusuario}
 	escribirSocket(mensaje)
+	for validar := 0; validar == 0; {
+		mensaje = <-_canalMensajeSocket
+		if mensaje.Funcion == Constantes_modificarusuario_ok {
+			validar = 1
+		}
+		if mensaje.Funcion == Constantes_modificarusuario_err {
+			validar = 1
+		}
+	}
 }
 
 //Obtener usuarios
@@ -443,9 +483,6 @@ func CrearNuevaClaveMensajes(idChat int) (int, []byte, []byte) {
 				claveCifradaAEnviar, _ := cifrarRSA(clavenuevassincifrar, UsuariosAEnviarLasClaves[i].Clavepubrsa)
 				//Enviamos la clave en un mensaje de administracion al usuario
 				mensaje = MensajeSocket{From: "-200", Idfrom: ClientUsuario.Id, Funcion: Constantes_enviar, Datos: []string{strconv.Itoa(id), strconv.Itoa(UsuariosAEnviarLasClaves[i].Id)}, Mensajechat: claveCifradaAEnviar, Chat: idChat}
-				fmt.Println("........................ Mensajeadministracion enviando........................")
-				fmt.Println(mensaje)
-				fmt.Println("...............................................................................")
 				escribirSocket(mensaje)
 			}
 
@@ -496,7 +533,7 @@ func nuevaClaveUsuarioConIdConjuntoClaves(idconjuntoclaves int) ([]byte, []byte)
 
 //Asocia nueva clave de un usuario con el id que indica ese nuevo conjunto de claves
 func GuardarClaveUsuarioConIdConjuntoClaves(idconjuntoclaves int, clave []byte) bool {
-	fmt.Println("Se va a ver un follon ", idconjuntoclaves)
+	//	fmt.Println("Se va a ver un follon ", idconjuntoclaves)
 	var keycifrada, err = cifrarAES(clave, ClientUsuario.Clavehashcifrado)
 	if err == true {
 		fmt.Println("Error al cifrar clave con cifrado AES")
