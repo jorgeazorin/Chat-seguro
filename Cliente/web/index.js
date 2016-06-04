@@ -78,9 +78,19 @@
         mensaje.MensajeSocket = $scope.usuarioadd
         mensaje.Chat = $scope.idchatactual
 
-        //ws.send("addusuariochat");
+        $scope.usuarioadd = ""
         ws.send("addusuariochat@/@"+JSON.stringify(mensaje));
-    };
+    }
+
+    //Remove usuarios del chat
+    $scope.removeUsuario = function() {        
+        mensaje = {}
+        mensaje.MensajeSocket = $scope.usuarioremove
+        mensaje.Chat = $scope.idchatactual
+
+        $scope.usuarioremove = ""
+        ws.send("removeusuariochat@/@"+JSON.stringify(mensaje));
+    }
 
     //Editar nombre del chat
     $scope.editarChat = function() {

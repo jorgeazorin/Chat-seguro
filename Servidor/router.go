@@ -243,6 +243,8 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 			u, _ := strconv.Atoi(mensaje.Datos[i])
 			nombresusuarios = append(nombresusuarios, u)
 		}
+
+		//Los añadimos al chat
 		test := bd.addUsuariosChatBD(mensaje.Chat, nombresusuarios)
 		if test == false {
 			mesj := MensajeSocket{From: mensaje.From, MensajeSocket: "Hubo un error al añadir usuarios al chat."}
@@ -260,7 +262,7 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	if mensaje.Funcion == Constantes_eliminarusuarioschat {
 
 		//Comprobamos si ese usuario está en ese chat
-		permitido := bd.usuarioEnChat(usuario.Id, mensaje.Chat)
+		permitido := bd.usuarioEnChat(mensaje.Idfrom, mensaje.Chat)
 		if permitido == false {
 			//Enviamos mensaje error
 			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_eliminarusuarioschat_err, MensajeSocket: "Error de permiso. No perteneces al chat de estos mensajes."}

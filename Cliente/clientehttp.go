@@ -185,6 +185,17 @@ func echoHandler(ws *websocket.Conn) {
 			agregarUsuariosChat(mensaje.Chat, []string{mensaje.Mensaje})
 		}
 
+		////////////////////////
+		//Remove usuario de chat
+		////////////////////////
+		if datos1[0] == "removeusuariochat" {
+			//datos := leerDatosWS(ws)
+			var mensaje MensajeSocket
+			json.Unmarshal([]byte(datos1[1]), &mensaje)
+
+			eliminarUsuariosChat(mensaje.Chat, []string{mensaje.Mensaje})
+		}
+
 		///////////////////
 		//Marcar chat leido
 		///////////////////
