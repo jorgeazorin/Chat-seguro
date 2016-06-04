@@ -101,7 +101,7 @@
       <!-- PARTE DERECHA: mensajes chats -->
 
       <!-- Mensajes del chat -->
-      <div class="centro">
+      <div id="centro" class="centro">
         <div class="media "  ng-class="{propio : mensaje.Mensaje.NombreEmisor===username,mensaje : mensaje.Mensaje.NombreEmisor!=username}"  ng-repeat="mensaje in mensajes" class="enviar_mensaje">
             <div class="men">
               <a class="mensaje_Nombreemisor" ng-click="verDatosUsuario(mensaje.Mensaje.NombreEmisor, mensaje.Mensaje.EstadoEmisor)">{{mensaje.Mensaje.NombreEmisor}}</a>

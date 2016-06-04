@@ -24,7 +24,8 @@ func EnviarMensajeSocketSocket(conexion net.Conn, s MensajeSocket) {
 	//Lo escribe en el socket
 	_, err := conexion.Write(b)
 	if err != nil {
-		log.Fatalf("client: write: %s", err)
+		//log.Fatalf("client: write: %s", err)
+		fmt.Println("usuario desconectado")
 	}
 
 }

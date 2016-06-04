@@ -250,6 +250,12 @@
           ws.send("getusuarios@/@");
         }
       }
+      if(respuesta.MensajeSocket == "getusuariosok") {
+
+        
+        //  ws.send("chats@/@");
+        
+      }
 
       //Obtenemos chats al principio
       if(respuesta.MensajeSocket == "chats") {
@@ -258,7 +264,13 @@
         $scope.chats = chats
         $scope.verChat($scope.idchatactual)
         versiestanleidos()
+        var div = document.getElementById('centro');
+        div.scrollTop = '999999';
         $scope.$apply()
+      }
+
+      if(respuesta.MensajeSocket=="Error"){
+        alert(respuesta.Datos[0])
       }
 
       //Pedimos chats si algo cambia

@@ -55,7 +55,6 @@ func main() {
 func handleServerRead() {
 	var mensaje MensajeSocket
 	for {
-		fmt.Println("Estoy escuchando")
 		defer conn.Close()
 		reply := make([]byte, 1048576) //256
 		n, err := conn.Read(reply)
@@ -67,15 +66,8 @@ func handleServerRead() {
 		fmt.Println("Recibido:", mensaje.From, " -> ", mensaje.Funcion)
 
 		if mensaje.Funcion == Constantes_MensajeOtroClienteConectado {
-			//	fmt.Println("bueno he recibido de otro cliente")
-			//	chats := obtenerChats()
-			//		for i := 0; i < len(chats); i++ {
-			//				chats[i].MensajesDatos = obtenerMensajesChat(chats[i].Chat.Id)/
-			//			}
-
-			//			b, _ := json.Marshal(chats)
 			mensaje := MensajeSocket{Mensaje: "mensajedeotrocliente", Datos: []string{}}
-			escribirSocketCliente(mensaje)
+			escribirWebSocket(mensaje)
 		} else {
 			_canalMensajeSocket <- mensaje
 
@@ -94,10 +86,8 @@ func escribirSocket(mensaje MensajeSocket) {
 }
 
 //Convertir a json y escribir en el socket con cliente
-func escribirSocketCliente(mensaje MensajeSocket) {
+func escribirWebSocket(mensaje MensajeSocket) {
 	var s string
-
-	//mensaje = mensaje
 	b, _ := json.Marshal(mensaje)
 	s = string(b)
 	websocket.Message.Send(wbSocket, s)
