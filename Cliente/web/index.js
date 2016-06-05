@@ -50,6 +50,10 @@
           mensaje.Chat = $scope.idchatactual
 
           ws.send("leidos@/@"+JSON.stringify(mensaje));
+
+          //Lo dejamos como leido
+          $scope.chats[i].Chat.Leido = true
+          $scope.$apply()
         }        
       }
 
