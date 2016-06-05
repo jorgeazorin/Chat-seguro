@@ -68,6 +68,9 @@ func handleServerRead() {
 		if mensaje.Funcion == Constantes_MensajeOtroClienteConectado {
 			mensaje := MensajeSocket{Mensaje: "mensajedeotrocliente", Datos: []string{}}
 			escribirWebSocket(mensaje)
+		} else if mensaje.Funcion == Constantes_MensajeAdminOtroClienteConectado {
+			mensaje := MensajeSocket{Mensaje: "mensajeadmindeotrocliente", Datos: []string{}}
+			escribirWebSocket(mensaje)
 		} else {
 			_canalMensajeSocket <- mensaje
 

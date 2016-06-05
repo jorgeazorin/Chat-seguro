@@ -174,7 +174,12 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 				mensaje.To = idusuarios[i]
 				mensaje.MensajeSocket = "Mensaje de otro usuario al chat:"
 				fmt.Println("enviandomensaje a usuario ", idusuarios[i])
-				mensaje.Funcion = Constantes_MensajeOtroClienteConectado
+				if m.Admin {
+					mensaje.Funcion = Constantes_MensajeAdminOtroClienteConectado
+
+				} else {
+					mensaje.Funcion = Constantes_MensajeOtroClienteConectado
+				}
 				EnviarMensajeSocketSocket(conexion, mensaje)
 			}
 
@@ -281,55 +286,6 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 	}
 
 	//////////////////////////////////
-	//OBTENER CLAVE PÚBLICA DE USUARIO
-	//////////////////////////////////
-	if mensaje.Funcion == Constantes_getclavepubusuario {
-
-		//Obtenemos id del usuario
-		idusuario, _ := strconv.Atoi(mensaje.Datos[0])
-
-		//Llamamos a la bd para obtener la clave pública de un usuario
-		clavepub, test := bd.getClavePubUsuario(idusuario)
-		if test == false {
-			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_getclavepubusuario_err, MensajeSocket: "Error al obtener la clave del usuario."}
-			EnviarMensajeSocketSocket(conexion, mesj)
-			return
-		}
-
-		//Enviamos mensaje contestación
-		mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_getclavepubusuario_ok, DatosClaves: [][]byte{clavepub}, MensajeSocket: "Clave publica del usuario obtenida correctamente."}
-		EnviarMensajeSocketSocket(conexion, mesj)
-	}
-
-	////////////////////////////////////////////
-	//OBTENER CLAVE PARA CIFRAR MENSAJES DE CHAT
-	////////////////////////////////////////////
-	if mensaje.Funcion == Constantes_getclavecifrarmensajechat {
-
-		//Obtenemos id del mensaje
-		idchat, _ := strconv.Atoi(mensaje.Datos[0])
-
-		prueba := bd.usuarioEnChat(usuario.Id, idchat)
-		if prueba == false {
-			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_getclavecifrarmensajechat_err, MensajeSocket: "No tienes permiso para acceder a los datos de este mensaje."}
-			EnviarMensajeSocketSocket(conexion, mesj)
-			return
-		}
-
-		//Lamamos a la BD para obtener la última clave con la que cifrar los mensajes
-		clavemensaje, idclavemensaje, test := bd.getLastKeyMensaje(idchat, usuario.Id)
-		if test == false {
-			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_getclavecifrarmensajechat_err, MensajeSocket: "Error al obtener clave para cifrar mensajes."}
-			EnviarMensajeSocketSocket(conexion, mesj)
-			return
-		}
-
-		//Enviamos mensaje contestación
-		mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_getclavecifrarmensajechat_ok, Datos: []string{strconv.Itoa(idclavemensaje)}, DatosClaves: [][]byte{clavemensaje}, MensajeSocket: "Clave para mensajes obtenida correctamente."}
-		EnviarMensajeSocketSocket(conexion, mesj)
-	}
-
-	//////////////////////////////////
 	//NUEVA CLAVE PARA CIFRAR MENSAJES
 	//////////////////////////////////
 	if mensaje.Funcion == Constantes_crearnuevoidparanuevaclavemensajes {
@@ -400,29 +356,6 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 			return
 		}
 		mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_marcarchatcomoleido_ok, MensajeSocket: "OK al marcar chat como leído."}
-		EnviarMensajeSocketSocket(conexion, mesj)
-	}
-
-	/////////////////////////
-	//OBTENER CLAVES MENSAJES
-	/////////////////////////
-	if mensaje.Funcion == Constantes_getclavesmensajes {
-		//Llamada a BD obtener claves de los mensajes
-		claves, test := bd.getClavesMensajes(usuario.Id)
-		if test == false {
-			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_getclavesmensajes_err, MensajeSocket: "Error al obtener las claves de los mensajes."}
-			EnviarMensajeSocketSocket(conexion, mesj)
-			return
-		}
-
-		//Codigicamos con marshal
-		datos := make([]string, 0, 1)
-		for i := 0; i < len(claves); i++ {
-			datos = append(datos, claves[i])
-		}
-
-		//Enviamos los mensajes al usuario que los pidió
-		mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_getclavesmensajes_ok, Datos: datos, MensajeSocket: "getclavesmensajes"}
 		EnviarMensajeSocketSocket(conexion, mesj)
 	}
 
@@ -601,5 +534,83 @@ func ProcesarMensajeSocket(mensaje MensajeSocket, conexion net.Conn, usuario *Us
 		}
 
 	}
+
+	/* Desterradas por falta de uso
+
+
+
+		//////////////////////////////////
+		//OBTENER CLAVE PÚBLICA DE USUARIO
+		//////////////////////////////////
+		if mensaje.Funcion == Constantes_getclavepubusuario {
+
+			//Obtenemos id del usuario
+			idusuario, _ := strconv.Atoi(mensaje.Datos[0])
+
+			//Llamamos a la bd para obtener la clave pública de un usuario
+			clavepub, test := bd.getClavePubUsuario(idusuario)
+			if test == false {
+				mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_getclavepubusuario_err, MensajeSocket: "Error al obtener la clave del usuario."}
+				EnviarMensajeSocketSocket(conexion, mesj)
+				return
+			}
+
+			//Enviamos mensaje contestación
+			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_getclavepubusuario_ok, DatosClaves: [][]byte{clavepub}, MensajeSocket: "Clave publica del usuario obtenida correctamente."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+		}
+
+		////////////////////////////////////////////
+		//OBTENER CLAVE PARA CIFRAR MENSAJES DE CHAT
+		////////////////////////////////////////////
+		if mensaje.Funcion == Constantes_getclavecifrarmensajechat {
+
+			//Obtenemos id del mensaje
+			idchat, _ := strconv.Atoi(mensaje.Datos[0])
+
+			prueba := bd.usuarioEnChat(usuario.Id, idchat)
+			if prueba == false {
+				mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_getclavecifrarmensajechat_err, MensajeSocket: "No tienes permiso para acceder a los datos de este mensaje."}
+				EnviarMensajeSocketSocket(conexion, mesj)
+				return
+			}
+
+			//Lamamos a la BD para obtener la última clave con la que cifrar los mensajes
+			clavemensaje, idclavemensaje, test := bd.getLastKeyMensaje(idchat, usuario.Id)
+			if test == false {
+				mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_getclavecifrarmensajechat_err, MensajeSocket: "Error al obtener clave para cifrar mensajes."}
+				EnviarMensajeSocketSocket(conexion, mesj)
+				return
+			}
+
+			//Enviamos mensaje contestación
+			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_getclavecifrarmensajechat_ok, Datos: []string{strconv.Itoa(idclavemensaje)}, DatosClaves: [][]byte{clavemensaje}, MensajeSocket: "Clave para mensajes obtenida correctamente."}
+			EnviarMensajeSocketSocket(conexion, mesj)
+		}
+
+	/////////////////////////
+		//OBTENER CLAVES MENSAJES
+		/////////////////////////
+		if mensaje.Funcion == Constantes_getclavesmensajes {
+			//Llamada a BD obtener claves de los mensajes
+			claves, test := bd.getClavesMensajes(usuario.Id)
+			if test == false {
+				mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_getclavesmensajes_err, MensajeSocket: "Error al obtener las claves de los mensajes."}
+				EnviarMensajeSocketSocket(conexion, mesj)
+				return
+			}
+
+			//Codigicamos con marshal
+			datos := make([]string, 0, 1)
+			for i := 0; i < len(claves); i++ {
+				datos = append(datos, claves[i])
+			}
+
+			//Enviamos los mensajes al usuario que los pidió
+			mesj := MensajeSocket{From: mensaje.From, Funcion: Constantes_getclavesmensajes_ok, Datos: datos, MensajeSocket: "getclavesmensajes"}
+			EnviarMensajeSocketSocket(conexion, mesj)
+		}
+
+	*/
 
 }

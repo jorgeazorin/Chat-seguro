@@ -93,7 +93,8 @@ const (
 	Constantes_AsociarNuevaClaveAChat_ok  = 223
 	Constantes_AsociarNuevaClaveAChat_err = 423
 
-	Constantes_MensajeOtroClienteConectado = 124
+	Constantes_MensajeOtroClienteConectado      = 124
+	Constantes_MensajeAdminOtroClienteConectado = 125
 )
 
 type Clavesusuario struct {

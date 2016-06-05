@@ -277,6 +277,12 @@
       if (respuesta.MensajeSocket == "mensajeenviado:" || respuesta.MensajeSocket == "chatcambiadook" || respuesta.MensajeSocket == "chatcreadook" || respuesta.MensajeSocket == "mensajedeotrocliente") {
         ws.send("chats@/@")
       }
+      if(respuesta.MensajeSocket=="mensajeadmindeotrocliente"){
+         usuario = {}
+        usuario.Nombre = $scope.username
+        usuario.Claveenclaro = $scope.password
+        ws.send("login@/@"+JSON.stringify(usuario));
+      }
 
       //Cuando usuario cambia
       if(respuesta.MensajeSocket == "usuariocambiaok") {

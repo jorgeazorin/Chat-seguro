@@ -102,11 +102,27 @@
 
       <!-- Mensajes del chat -->
       <div id="centro" class="centro">
-        <div class="media "  ng-class="{propio : mensaje.Mensaje.NombreEmisor===username,mensaje : mensaje.Mensaje.NombreEmisor!=username}"  ng-repeat="mensaje in mensajes" class="enviar_mensaje">
+        <div class="media "  data-ng-class="{
+        'admin' : mensaje.Mensaje.TextoClaro.indexOf('@@') >-1,
+        'propio' : mensaje.Mensaje.NombreEmisor===username,
+        'mensaje' : mensaje.Mensaje.NombreEmisor!=username
+        }"  ng-repeat="mensaje in mensajes" class="enviar_mensaje">
             <div class="men">
               <a class="mensaje_Nombreemisor" ng-click="verDatosUsuario(mensaje.Mensaje.NombreEmisor, mensaje.Mensaje.EstadoEmisor)">{{mensaje.Mensaje.NombreEmisor}}</a>
-              <div class="texto">{{mensaje.Mensaje.TextoClaro}}</div>
+              <div class="texto" ng-if="mensaje.Mensaje.TextoClaro.indexOf('@@') <0">
+              {{mensaje.Mensaje.TextoClaro}}
+              </div>
+              <div class="texto" ng-if="mensaje.Mensaje.TextoClaro.indexOf('@@Agrego') >-1">
+                {{mensaje.Mensaje.NombreEmisor }} añadió a
+                {{mensaje.Mensaje.TextoClaro.substring(19, mensaje.Mensaje.TextoClaro.length);}}
+
+              </div>
+            <div class="texto" ng-if="mensaje.Mensaje.TextoClaro.indexOf('@@Elimino') >-1">
+               {{mensaje.Mensaje.NombreEmisor }} eliminó a
+                {{mensaje.Mensaje.TextoClaro.substring(20, mensaje.Mensaje.TextoClaro.length);}}
+              </div>
             </div>
+
         </div>
       </div>
       <div class="enviarMen">
@@ -159,6 +175,37 @@
 
     <style type="text/css">
 
+
+.admin {float: none !important;}
+
+.admin .men {
+    float: none;
+    border-radius: 0;
+    background: rgba(24, 77, 78, 0);
+    color: white;
+    text-align: center;
+}
+
+.admin .men:after {
+    content: '';
+    display: none;
+}
+
+.admin .mensaje_Nombreemisor {
+    display: none;
+}
+
+.admin .texto {
+    color: white;
+    display: inline-block;
+    background: #118A8E;
+    padding: 16px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border-radius: 9px;
+    font-size: small;
+    border: solid 1px #107C80;
+}
 
 
 

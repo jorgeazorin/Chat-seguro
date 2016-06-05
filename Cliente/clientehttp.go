@@ -59,9 +59,9 @@ func IniciarServidorWeb() {
 	http.HandleFunc("/", HelloServer)
 	http.HandleFunc("/index.js", js)
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter text: ")
+	fmt.Print("Introducir puerto cliente web: ")
 	puerto, _ := reader.ReadString('\n')
-
+	puerto = puerto[0 : len(puerto)-2]
 	var err = http.ListenAndServeTLS(":"+puerto, "cert.pem", "key.pem", nil)
 	if err != nil {
 		panic(err)
@@ -207,7 +207,15 @@ func echoHandler(ws *websocket.Conn) {
 			if !correcto {
 				mensaje := MensajeSocket{Mensaje: "Error", Datos: []string{"Error añadiendo usuario"}}
 				escribirWebSocket(mensaje)
+			} else {
+				var mensaje1 MensajeSocket
+				mensaje1.Mensaje = "@@Agrego al chat a " + mensaje.Mensaje
+				mensaje1.Chat = mensaje.Chat
+				mensaje1.Mensajechat = []byte(mensaje1.Mensaje)
+				mensaje1.Idfrom = ClientUsuario.Id
+				_ = enviarMensaje(mensaje1)
 			}
+
 		}
 
 		////////////////////////
@@ -222,7 +230,15 @@ func echoHandler(ws *websocket.Conn) {
 			if !correcto {
 				mensaje := MensajeSocket{Mensaje: "Error", Datos: []string{"Error eliminando usuario del chat"}}
 				escribirWebSocket(mensaje)
+			} else {
+				var mensaje1 MensajeSocket
+				mensaje1.Mensaje = "@@Elimino del chat a " + mensaje.Mensaje
+				mensaje1.Chat = mensaje.Chat
+				mensaje1.Mensajechat = []byte(mensaje1.Mensaje)
+				mensaje1.Idfrom = ClientUsuario.Id
+				_ = enviarMensaje(mensaje1)
 			}
+
 		}
 
 		///////////////////
