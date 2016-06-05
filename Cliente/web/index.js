@@ -23,7 +23,6 @@
         usuario.Nombre = $scope.username
         usuario.Claveenclaro = $scope.password
 
-        //ws.send("registro");
         ws.send("registro@/@"+JSON.stringify(usuario));
     };
 
@@ -49,7 +48,7 @@
           //Llamamos a marcar como leidos
           mensaje = {}
           mensaje.Chat = $scope.idchatactual
-          //ws.send("leidos");
+
           ws.send("leidos@/@"+JSON.stringify(mensaje));
         }        
       }
@@ -63,19 +62,21 @@
 
     //Enviando mensaje por el chat
     $scope.enviarMensaje = function() {
+      //Si es vacio no se hace nada
+      if($scope.textoaenviar == "" || $scope.textoaenviar == undefined) {
+        return
+      }
+
       mensaje = {}
       mensaje.Chat = $scope.idchatactual
       mensaje.MensajeSocket = $scope.textoaenviar
-      //ws.send("enviarmensaje")
+
       ws.send("enviarmensaje@/@"+JSON.stringify(mensaje))
       $scope.textoaenviar = ""
-      //$scope.$apply()
     }
 
     //Add usuarios al chat
-    $scope.addUsuario = function() {       
-        console.log("MIRA USUARIO:", $scope.usuarioselect)
-
+    $scope.addUsuario = function() {
         mensaje = {}
         mensaje.MensajeSocket = $scope.usuarioadd
         mensaje.Chat = $scope.idchatactual
@@ -120,7 +121,6 @@
     $scope.crearChat = function() {    
       datos = "Nuevo chat"
 
-      //ws.send("crearchat")
       ws.send("crearchat@/@"+datos)
     }
 
@@ -195,8 +195,6 @@
         $scope.placeholderbusqueda = "Buscador de chats"
       }
 
-      console.log("Mira:"+$scope.verlistausuarios)
-
       $scope.$apply()
     }
 
@@ -252,11 +250,8 @@
           ws.send("getusuarios@/@");
         }
       }
-      if(respuesta.MensajeSocket == "getusuariosok") {
-
-        
-        //  ws.send("chats@/@");
-        
+      if(respuesta.MensajeSocket == "getusuariosok") {        
+        //  ws.send("chats@/@");        
       }
 
       //Obtenemos chats al principio

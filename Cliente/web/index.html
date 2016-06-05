@@ -140,13 +140,13 @@
         <div class="editarchat" ng-show="editarchat">
             
             <select ng-model="usuarioadd">
-              <option value="" id="defaulselect">Selecciona a un usuario para añadir</option>
+              <option value="" id="defaulselect">Usuario a añadir</option>
               <option ng-repeat="usuario in usuarios" value={{usuario.Nombre}}>{{usuario.Nombre}}</option>
             </select>
             <span ng-click="addUsuario()"> <i class="fa fa-plus-circle" aria-hidden="true"></i></span>
 
             <select ng-model="usuarioremove">
-              <option value="" id="defaulselect">Selecciona a un usuario para eliminar</option>
+              <option value="" id="defaulselect">Usuario a eliminar</option>
               <option ng-repeat="usuario in usuarios" value={{usuario.Nombre}}>{{usuario.Nombre}}</option>
             </select>
             <span ng-click="removeUsuario()"> <i class="fa fa-times-circle" aria-hidden="true"></i></span>
