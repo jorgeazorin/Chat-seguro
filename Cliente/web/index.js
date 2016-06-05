@@ -73,7 +73,9 @@
     }
 
     //Add usuarios al chat
-    $scope.addUsuario = function() {        
+    $scope.addUsuario = function() {       
+        console.log("MIRA USUARIO:", $scope.usuarioselect)
+
         mensaje = {}
         mensaje.MensajeSocket = $scope.usuarioadd
         mensaje.Chat = $scope.idchatactual
