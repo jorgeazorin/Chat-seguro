@@ -5,18 +5,18 @@
 package main
 
 import (
-	//	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	//	"strconv"
 )
 
+//Datos tabla chat
 type Chat struct {
 	Id          int    `json:"Id"`
 	Nombre      string `json:"Nombre"`
 	UltimaClave int    `json:"UltimaClave"`
 }
 
+//Datos tabla usuarios chat
 type UsuariosChat struct {
 	Idusuario int `json:"Idusuario"`
 	Idchat    int `json:"Idchat"`
@@ -47,6 +47,7 @@ func (bd *BD) crearChatBD(idusuarios []int, nombrechat string) (bool, int) {
 		fmt.Println("Error1:", err.Error())
 		return false, 0
 	}
+
 	//Formamos usuarioschat para el insert e insertamos
 	for i := 0; i < len(idusuarios); i++ {
 		usuariochat := UsuariosChat{Idchat: chat.Id, Idusuario: idusuarios[i]}
@@ -261,6 +262,7 @@ func (bd *BD) marcarChatLeidoPorUsuarioBD(idchat int, idreceptor int) bool {
 	return true
 }
 
+//Devolvemos id usuarios que están en un chat
 func (bd *BD) usuariosEnChat(idchat int) ([]int, bool) {
 	usuarios := make([]int, 0, 1)
 	//Conexion y dbmapa

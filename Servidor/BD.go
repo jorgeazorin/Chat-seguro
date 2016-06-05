@@ -11,6 +11,7 @@ import (
 	"gopkg.in/gorp.v1"
 )
 
+//Datos para la conexión con la BD
 type BD struct {
 	username string
 	password string
@@ -35,7 +36,7 @@ func (bd *BD) conectarBD() (*gorp.DbMap, *sql.DB, bool) {
 	//Construye un mapa gorp DbMap
 	dbmap = &gorp.DbMap{Db: db, Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
 
-	//Añade la tabla especificando el nombre, con true el id automático
+	//Añade la tabla especificando el nombre, con true el id automático o no
 	dbmap.AddTableWithName(Usuario{}, "usuario").SetKeys(true, "Id")
 	dbmap.AddTableWithName(Mensaje{}, "mensaje").SetKeys(true, "Id")
 	dbmap.AddTableWithName(Receptoresmensaje{}, "receptoresmensaje")

@@ -7,7 +7,6 @@ import (
 	"golang.org/x/net/websocket"
 	"io"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"os"
 	"strings"
@@ -18,21 +17,10 @@ type T struct {
 	Count int
 }
 
-var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-//Generar cadena aleatoria
-func randSeq(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
-}
-
-// receive JSON type T
 var data T
 var wbSocket *websocket.Conn
 
+//Proporcionamos el archivo html
 func HelloServer(w http.ResponseWriter, req *http.Request) {
 	webpage, err := ioutil.ReadFile("web/index.html")
 	if err != nil {
@@ -42,6 +30,7 @@ func HelloServer(w http.ResponseWriter, req *http.Request) {
 	io.WriteString(w, string(webpage))
 }
 
+//Proporcionamos el archivo js que es el controlador con AngularJS
 func js(w http.ResponseWriter, req *http.Request) {
 	webpage, err := ioutil.ReadFile("web/index.js")
 	if err != nil {
@@ -53,15 +42,18 @@ func js(w http.ResponseWriter, req *http.Request) {
 
 var puerto = ""
 
+//Inicio de conexion cliente web y cliente go
 func IniciarServidorWeb() {
 	go http.Handle("/echo", websocket.Handler(echoHandler))
 
 	http.HandleFunc("/", HelloServer)
 	http.HandleFunc("/index.js", js)
+
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Introducir puerto cliente web: ")
 	puerto, _ := reader.ReadString('\n')
 	puerto = puerto[0 : len(puerto)-2]
+
 	var err = http.ListenAndServeTLS(":"+puerto, "cert.pem", "key.pem", nil)
 	if err != nil {
 		panic(err)
@@ -69,11 +61,7 @@ func IniciarServidorWeb() {
 
 }
 
-func escribitWebSocket(ws *websocket.Conn) {
-	//var message = "hello"
-	//websocket.Message.Send(ws, message)
-}
-
+//Leer los datos que recibamos de cliente web
 func leerDatosWS(ws *websocket.Conn) string {
 	receivedtext := make([]byte, 100)
 	n, err := ws.Read(receivedtext)
@@ -86,19 +74,20 @@ func leerDatosWS(ws *websocket.Conn) string {
 	return s
 }
 
-/////////////////////////////
-//Envio de mensajes a cliente
-/////////////////////////////
+////////////////////////////////
+//Envio de mensajes a cliente go
+////////////////////////////////
 func echoHandler(ws *websocket.Conn) {
 	wbSocket = ws
 
 	for {
 		datos := leerDatosWS(ws)
-		//	fmt.Println(datos)
+
 		if datos == "-1" {
 			break
 		}
 		var datos1 = strings.Split(datos, "@/@")
+
 		//////////
 		//Registro
 		//////////
@@ -118,8 +107,6 @@ func echoHandler(ws *websocket.Conn) {
 		///////
 		//Login
 		///////
-
-		fmt.Println(datos1)
 		if datos1[0] == "login" {
 			var usuario Usuario
 			json.Unmarshal([]byte(datos1[1]), &usuario)
@@ -178,12 +165,11 @@ func echoHandler(ws *websocket.Conn) {
 		//Enviar mensaje
 		////////////////
 		if datos1[0] == "enviarmensaje" {
-			//datos := leerDatosWS(ws)
+
 			var mensaje MensajeSocket
 			json.Unmarshal([]byte(datos1[1]), &mensaje)
 			mensaje.Mensajechat = []byte(mensaje.Mensaje)
 			mensaje.Idfrom = ClientUsuario.Id
-			//fmt.Println("Mira:", mensaje)
 
 			test := enviarMensaje(mensaje)
 			if test == false {
@@ -199,7 +185,7 @@ func echoHandler(ws *websocket.Conn) {
 		//Add usuario a chat
 		////////////////////
 		if datos1[0] == "addusuariochat" {
-			//datos := leerDatosWS(ws)
+
 			var mensaje MensajeSocket
 			json.Unmarshal([]byte(datos1[1]), &mensaje)
 
@@ -222,7 +208,7 @@ func echoHandler(ws *websocket.Conn) {
 		//Remove usuario de chat
 		////////////////////////
 		if datos1[0] == "removeusuariochat" {
-			//datos := leerDatosWS(ws)
+
 			var mensaje MensajeSocket
 			json.Unmarshal([]byte(datos1[1]), &mensaje)
 
@@ -245,7 +231,7 @@ func echoHandler(ws *websocket.Conn) {
 		//Marcar chat leido
 		///////////////////
 		if datos1[0] == "leidos" {
-			//datos := leerDatosWS(ws)
+
 			var mensaje MensajeSocket
 			json.Unmarshal([]byte(datos1[1]), &mensaje)
 
@@ -264,7 +250,7 @@ func echoHandler(ws *websocket.Conn) {
 		//Modificar chat
 		////////////////
 		if datos1[0] == "editarchat" {
-			//datos := leerDatosWS(ws)
+
 			var chat Chat
 			json.Unmarshal([]byte(datos1[1]), &chat)
 
@@ -283,7 +269,6 @@ func echoHandler(ws *websocket.Conn) {
 		//Crear chat
 		////////////
 		if datos1[0] == "crearchat" {
-			//datos := leerDatosWS(ws)
 
 			_, correcto := crearChat(datos1[1])
 			if correcto {

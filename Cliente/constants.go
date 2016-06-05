@@ -1,5 +1,6 @@
 package main
 
+//Constantes para el entendimiento en las comunicaciones servidor cliente
 const (
 	Constantes_registrarusuario     = 101
 	Constantes_registrarusuario_ok  = 201
@@ -97,6 +98,7 @@ const (
 	Constantes_MensajeAdminOtroClienteConectado = 125
 )
 
+//Las claves de un usuario para los mensajes de un chat
 type Clavesusuario struct {
 	Idusuario        int    `json:"Idusuario"`
 	Idclavesmensajes int    `json:"Idclavesmensajes"`
@@ -164,6 +166,7 @@ type ChatDatos struct {
 	IdClave       int            `json:"IdClave"`
 }
 
+//Mensajes del tipo admin
 type MensajeAdmin struct {
 	idclavesmensajes int
 	Clave            []byte

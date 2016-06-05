@@ -1,4 +1,5 @@
 <html  ng-app="myApp">
+
   <head>
     <meta charset="utf-8">
     <title>Angular.js Example</title>
@@ -6,12 +7,14 @@
     <script src="index.js"></script>
     <script src="https://use.fontawesome.com/960b8c7259.js"></script>
   </head>
+
   <body ng-controller="controlador">
+   
    <div class="todomenoslogin"  ng-class="{blurred : mostarlogin==true}">
 
-    <div class="main" >
+    <div class="main">
 
-      <!-- PARTE IZQUIEDA: chats, busqueda de usuarios o datos usuario -->
+      <!-- PARTE IZQUIEDA: busqueda de chats, de usuarios o ver datos de un usuario -->
 
       <!-- Datos chats, etc -->
       <div class="menu_izq" >
@@ -33,7 +36,7 @@
         <ul class="elementosizquierda">
           
 
-          <!-- Vemos los chats -->
+          <!-- Ver los chats -->
           <div id="divverchats" class="">
               <a class="media" ng-repeat="chat in chats | filter:usuariobuscado"> 
                 <li ng-click="verChat(chat.Chat.Id)">{{chat.Chat.Nombre}} 
@@ -42,7 +45,7 @@
               </a>
           </div>
 
-          <!-- Vemos los usuarios -->
+          <!-- Ver los usuarios -->
           <div id="divverusuarios"  class="oculto">
               <a class="media" ng-repeat="usuario in usuarios | filter:usuariobuscado"> 
                 <li ng-click="verDatosUsuario(usuario.Nombre, usuario.Estado)">{{usuario.Nombre}}
@@ -51,12 +54,14 @@
           </div>
 
         </ul>
+
+        <!-- Crear chat -->
         <div ng-click="crearChat()" class="addchat">
         <i class="fa fa-plus" aria-hidden="true"></i> Crear Chat
         </div>
       </div>
 
-      <!-- Datos de un usuario -->
+      <!-- Ver datos de un usuario -->
       <div class="panelusuario"   ng-class="{ocultar : verdatosusuario}">
         <div class="cabecerausu">
           <div>
@@ -69,7 +74,7 @@
 
         <div class="divimagenusuario"><img src="https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-9/12994481_603177546499614_1876254484032969855_n.jpg?oh=e3e5b8a256205ff5bb58f77cc0c5699a&oe=57E643E0"></img></div>
         
-        <!-- Modo espectador -->
+        <!-- Ver datos del perfil: modo espectador -->
         <div class="" id="datosusuariomodonoeditar">
           <div class="datosusuario">
             <p class="titulodatosusuario">Datos</p>
@@ -83,7 +88,7 @@
           </div>
         </div>
 
-        <!-- Modo edición -->
+        <!-- Ver datos del perfil: modo edición -->
         <div class="oculto" id="datosusuariomodoeditar">
           <div class="datosusuario">
             <p class="titulodatosusuario">Datos</p>
@@ -98,7 +103,7 @@
         </div>
       </div>
 
-      <!-- PARTE DERECHA: mensajes chats -->
+      <!-- PARTE DERECHA: mensajes del chat seleccionado -->
 
       <!-- Mensajes del chat -->
       <div id="centro" class="centro">
@@ -125,20 +130,25 @@
 
         </div>
       </div>
+
+      <!-- Para enviar un mensaje al chat seleccionado -->
       <div class="enviarMen">
         <input type="text" ng-model="textoaenviar" placeholder="Texto">
         <button ng-click="enviarMensaje()"> <i class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
       </div>
 
-      <!-- Cabecera del chat-->
+      <!-- Cabecera del chat -->
       <div class="cabecerachar">
-        <!--Modo lectura-->
+        
+        <!-- Chat modo lectura -->
         <h3 ng-hide="editarnombrechat">{{chatactual}}</h3>
-        <!--Modo edicion-->
+        
+        <!-- Chat modo edicion -->
         <input type="text" ng-show="editarnombrechat" ng-model="nuevonombrechat" class="boxeditarchat" placeholder="{{chatactual}}">
 
-        <div class="editarchat" ng-show="editarchat">
-            
+        <div class="editarchat" ng-show="editarchat">            
+
+            <!-- Add o remove usuario -->
             <select ng-model="usuarioadd">
               <option value="" id="defaulselect">Usuario a añadir</option>
               <option ng-repeat="usuario in usuarios" value={{usuario.Nombre}}>{{usuario.Nombre}}</option>
@@ -155,110 +165,113 @@
             <span ng-hide="editarnombrechat" ng-click="editarChat()"><i class="fa fa-pencil" aria-hidden="true"></i></span>
             <!-- Para guardar -->
             <span ng-show="editarnombrechat" ng-click="editarChat()"><i class="fa fa-check" aria-hidden="true"></i></span>
+
         </div>
 
       </div>
+
     </div>
-</div>
-    <!-- Formulario login y registro -->
-    <div class="login" ng-show="mostarlogin">
-        <div class="loginlogin">
-            <h3>Inciciar Sesión</h3>
-            <input type="text" ng-model="username" placeholder="Usuario" >
-            <input type="password"  ng-model="password" placeholder="Contraseña" >
-            <button ng-click="Login()">Log In</button>
-        </div>
-        <div class="loginregistro">
-            <h3>Registro</h3>
-            <input type="text" ng-model="username" placeholder="Usuario" >
-            <input type="password"  ng-model="password" placeholder="Contraseña" >
-            <button ng-click="Registro()">Registrarme</button>
-        </div>
-    </div>
+
+  </div>
+
+  <!-- Formulario login y registro -->
+  <div class="login" ng-show="mostarlogin">
+      <div class="loginlogin">
+          <h3>Inciciar Sesión</h3>
+          <input type="text" ng-model="username" placeholder="Usuario" >
+          <input type="password"  ng-model="password" placeholder="Contraseña" >
+          <button ng-click="Login()">Log In</button>
+      </div>
+      <div class="loginregistro">
+          <h3>Registro</h3>
+          <input type="text" ng-model="username" placeholder="Usuario" >
+          <input type="password"  ng-model="password" placeholder="Contraseña" >
+          <button ng-click="Registro()">Registrarme</button>
+      </div>
+  </div>
 
 
     <!-- ESTILOS -->
 
     <style type="text/css">
 
+    .admin {float: none !important;}
 
-.admin {float: none !important;}
+    .admin .men {
+        float: none;
+        border-radius: 0;
+        background: rgba(24, 77, 78, 0);
+        color: white;
+        text-align: center;
+    }
 
-.admin .men {
-    float: none;
-    border-radius: 0;
-    background: rgba(24, 77, 78, 0);
-    color: white;
-    text-align: center;
-}
+    .admin .men:after {
+        content: '';
+        display: none;
+    }
 
-.admin .men:after {
-    content: '';
-    display: none;
-}
+    .admin .mensaje_Nombreemisor {
+        display: none;
+    }
 
-.admin .mensaje_Nombreemisor {
-    display: none;
-}
-
-.admin .texto {
-    color: white;
-    display: inline-block;
-    background: #118A8E;
-    padding: 16px;
-    padding-top: 8px;
-    padding-bottom: 8px;
-    border-radius: 9px;
-    font-size: small;
-    border: solid 1px #107C80;
-}
-
+    .admin .texto {
+        color: white;
+        display: inline-block;
+        background: #118A8E;
+        padding: 16px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        border-radius: 9px;
+        font-size: small;
+        border: solid 1px #107C80;
+    }
 
 
-.boxbuscarusuario input {
-    background: none;
-    border: none;
-    border-bottom: solid 1px #28BABF;
-    width: 100%;
-    padding: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.81);
-    margin-top: 16px;
-}
-.boxbuscarusuario input::-webkit-input-placeholder ,.boxbuscarusuario input:-moz-placeholder ,.boxbuscarusuario input::-moz-placeholder,.boxbuscarusuario input:-ms-input-placeholder {
-   color: rgba(255, 255, 255, 0.49);
-}
 
-.menu_izq i {
-    padding-right: 9px;
-}
+    .boxbuscarusuario input {
+        background: none;
+        border: none;
+        border-bottom: solid 1px #28BABF;
+        width: 100%;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.81);
+        margin-top: 16px;
+    }
+    .boxbuscarusuario input::-webkit-input-placeholder ,.boxbuscarusuario input:-moz-placeholder ,.boxbuscarusuario input::-moz-placeholder,.boxbuscarusuario input:-ms-input-placeholder {
+       color: rgba(255, 255, 255, 0.49);
+    }
 
- .menu_izq_arrivba {
-    padding-top: 30px;
-    padding-bottom: 0px;
-    background: #184D4E;
-    color: rgba(255, 255, 255, 0.48);
-}
-.panelusuario.ocultar {
-    left: 0 !important;
-}
-.panelusuario {
-    width: 21%;
-    background: #D0D0D0;
-    top: 0;
-    position: absolute;
-    height: 100%;
-    left: 21%;
-    transition: all ease 0.3s;
-}
-    .blurred {
-    -webkit-filter: blur(36px);
-    filter: blur(36px);
-}
+    .menu_izq i {
+        padding-right: 9px;
+    }
 
-.todomenoslogin {
-    transition: all 0.3s;
-}
+     .menu_izq_arrivba {
+        padding-top: 30px;
+        padding-bottom: 0px;
+        background: #184D4E;
+        color: rgba(255, 255, 255, 0.48);
+    }
+    .panelusuario.ocultar {
+        left: 0 !important;
+    }
+    .panelusuario {
+        width: 21%;
+        background: #D0D0D0;
+        top: 0;
+        position: absolute;
+        height: 100%;
+        left: 21%;
+        transition: all ease 0.3s;
+    }
+        .blurred {
+        -webkit-filter: blur(36px);
+        filter: blur(36px);
+    }
+
+    .todomenoslogin {
+        transition: all 0.3s;
+    }
     .addchat {
         position: absolute;
         bottom: 0;
@@ -696,13 +709,13 @@
       margin-top: 5px;
       margin-left: 7px;
     }
-.boxbuscarusuario {
-    padding-bottom: 0px;
-    padding-top: 5%;
-    border: solid 0px #BFBFBF;
-    border-bottom: 0;
-}
 
+    .boxbuscarusuario {
+        padding-bottom: 0px;
+        padding-top: 5%;
+        border: solid 0px #BFBFBF;
+        border-bottom: 0;
+    }
 
     .elementosizquierda {
       overflow: auto;
@@ -713,6 +726,7 @@
     width: 7px;
     background-color: rgba(245, 245, 245, 0);
     }
+
     .elementosizquierda::-webkit-scrollbar-thumb {
         border-radius: 0px;
         border-left: 0px solid rgba(0, 0, 0, 0);
@@ -721,6 +735,7 @@
         background-clip: padding-box;
         background-color: white;
     }
+
     .elementosizquierda::-webkit-scrollbar-track {
         -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0);
         border-radius: 10px;
@@ -733,8 +748,6 @@
     }
 
     </style>
-
-
 
   </body>
 

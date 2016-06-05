@@ -13,6 +13,7 @@ import (
 	"log"
 )
 
+//Datos tabla usuario
 type Usuario struct {
 	Id           int    `json:"Id"`
 	Nombre       string `json:"Nombre"`
@@ -47,22 +48,12 @@ func generarClaveLoginClaves(clavehashlogin []byte) ([]byte, []byte) {
 	return clavebcryptlogin, salt
 }
 
-/*
-func (bd *BD) insertClavesMensajes(usuario int, clave []byte) bool {
-	dbmap, db, test := bd.conectarBD()
-	defer db.Close()
-	if test == false {
-		return false
-	}
-	//	err:=dbmap.Insert(...)
-}
-*/
 //Insertamos a un nuevo usuario en BD
 func (bd *BD) insertUsuarioBD(usuario Usuario) (Usuario, bool) {
 
 	var usuariobd Usuario
 
-	//genera la clavelogin con scrypt (y el salt con el que se crea)
+	//genera la clavelogin con bcrypt (y el salt con el que se crea)
 	usuario.Clavelogin, usuario.Salt = generarClaveLoginClaves(usuario.Clavelogin)
 
 	//Conexion y dbmapa
@@ -112,6 +103,7 @@ func (bd *BD) loginUsuarioBD(nombre string, clavehashlogin []byte) (Usuario, boo
 	return usuario, true
 }
 
+//Devuelve la clave privada de un usuario
 func (bd *BD) obtenerClavePrivadaUsuario(id int) (Usuario, bool) {
 	//Conexion y dbmapa
 	dbmap, db, test := bd.conectarBD()
@@ -262,6 +254,7 @@ func (bd *BD) modificarUsuarioNombreEstadoBD(usuario Usuario) bool {
 	return true
 }
 
+//Obtiene las claves de los mensajes
 func (bd *BD) getClavesMensajes(usuario int) ([]string, bool) {
 
 	//Conexion y dbmapa

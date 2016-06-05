@@ -1,5 +1,6 @@
 package main
 
+//Constantes para el entendimiento en las comunicaciones servidor cliente
 const (
 	Constantes_registrarusuario     = 101
 	Constantes_registrarusuario_ok  = 201

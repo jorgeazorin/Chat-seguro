@@ -234,7 +234,7 @@ func eliminarUsuariosChat(idchat int, usuarios []string) bool {
 	return true
 }
 
-//Cliente lee mensajes del chay
+//Cliente lee mensajes del chat
 func MarcarChatComoLeido(idchat int) bool {
 	mensaje := MensajeSocket{From: ClientUsuario.Nombre, Idfrom: ClientUsuario.Id, Chat: idchat, Funcion: Constantes_marcarchatcomoleido}
 	escribirSocket(mensaje)
@@ -253,6 +253,7 @@ func MarcarChatComoLeido(idchat int) bool {
 	return true
 }
 
+//Cliente lee mensaje del chat
 func MarcarMensajeComoLeido(id int) bool {
 	mensaje := MensajeSocket{From: ClientUsuario.Nombre, Idfrom: ClientUsuario.Id, Datos: []string{strconv.Itoa(id)}, Funcion: Constantes_marcarmensajeleido}
 	escribirSocket(mensaje)
@@ -271,6 +272,7 @@ func MarcarMensajeComoLeido(id int) bool {
 	return true
 }
 
+//Cliente pide crear chat
 func crearChat(nombrechat string) (int, bool) {
 	r := -1
 	datos := make([]string, 0, 1)
@@ -328,7 +330,7 @@ func obtenerChats() ([]ChatDatos, bool) {
 	return chats, true
 }
 
-//Modificar chat
+//Cliente mdifica chat
 func editarChat(chat Chat) bool {
 
 	mensaje := MensajeSocket{From: ClientUsuario.Nombre, Idfrom: ClientUsuario.Id, Chat: chat.Id, Datos: []string{chat.Nombre}, Funcion: Constantes_modificarchat}
@@ -347,7 +349,7 @@ func editarChat(chat Chat) bool {
 	return true
 }
 
-//Modificar usuario
+//Cliente modifica usuario
 func editarUsuario(usuario Usuario) bool {
 
 	mensaje := MensajeSocket{From: usuario.Nombre, Idfrom: ClientUsuario.Id, Datos: []string{usuario.Estado}, Funcion: Constantes_modificarusuario}
@@ -366,7 +368,7 @@ func editarUsuario(usuario Usuario) bool {
 	return true
 }
 
-//Obtener usuarios
+//Cliente obtiene usuarios
 func getUsuarios() ([]Usuario, bool) {
 
 	var allusuarios = []Usuario{}
@@ -398,16 +400,10 @@ func getUsuarios() ([]Usuario, bool) {
 }
 
 ////////////////////////////////////////////////////
+////////// FUNCIONES AUXILIARES       //////////////
 ////////////////////////////////////////////////////
 
-//
-//
-//
-
-////////////////////////////////////////////////////
-////////// FUNCIOS AUXILIARES       /////////////
-/////////////////////////////////////////////////
-
+//Cliente pide los mensajes de tipo admin
 func obtenermensajesAdmin() bool {
 	mensaje := MensajeSocket{From: ClientUsuario.Nombre, Idfrom: ClientUsuario.Id, Funcion: Constantes_obtenermensajesAdmin}
 	escribirSocket(mensaje)

@@ -10,6 +10,35 @@ import (
 	"strconv"
 )
 
+//Datos tabla mensaje
+type Mensaje struct {
+	Id     int    `json:"Id"`
+	Texto  []byte `json:"Texto"`
+	Emisor int    `json:"Emisor"`
+	Chat   int    `json:"Chat"`
+	Clave  int    `json:"Clave"`
+	Admin  bool   `json:"Admin"`
+}
+
+//Datos tabla receptoresmensaje
+type Receptoresmensaje struct {
+	Idmensaje  int  `json:"Idmensaje"`
+	Idreceptor int  `json:"Idreceptor"`
+	Leido      bool `json:"Leido"`
+}
+
+//Datos tabla clavesmensajes
+type Clavesmensajes struct {
+	Id int `json:"Id"`
+}
+
+//Datos tabla clavesusuario
+type Clavesusuario struct {
+	Idusuario        int    `json:"Idusuario"`
+	Idclavesmensajes int    `json:"Idclavesmensajes"`
+	Clavemensajes    []byte `json:"Clavemensajes"`
+}
+
 //Para enviar todo lo de un mensaje
 type MensajeTodo struct {
 	Id           int    `json:"Id"`
@@ -24,32 +53,7 @@ type MensajeTodo struct {
 	Admin        bool   `json:"Admin"`
 }
 
-//Para guardar un mensaje con sus datos
-type Mensaje struct {
-	Id     int    `json:"Id"`
-	Texto  []byte `json:"Texto"`
-	Emisor int    `json:"Emisor"`
-	Chat   int    `json:"Chat"`
-	Clave  int    `json:"Clave"`
-	Admin  bool   `json:"Admin"`
-}
-
-type Receptoresmensaje struct {
-	Idmensaje  int  `json:"Idmensaje"`
-	Idreceptor int  `json:"Idreceptor"`
-	Leido      bool `json:"Leido"`
-}
-
-type Clavesmensajes struct {
-	Id int `json:"Id"`
-}
-
-type Clavesusuario struct {
-	Idusuario        int    `json:"Idusuario"`
-	Idclavesmensajes int    `json:"Idclavesmensajes"`
-	Clavemensajes    []byte `json:"Clavemensajes"`
-}
-
+//Para guardar todos los datos de un mensaje
 type MensajeDatos struct {
 	Mensaje MensajeTodo `json:"Mensaje"`
 	Leido   bool        `json:"Leido"`
@@ -200,7 +204,6 @@ func (bd *BD) getMensajesChatBD(idchat int, idusuario int) ([]MensajeDatos, bool
 
 		mimensaje.Mensaje.Clave, err2 = bd.getClaveMensaje(mimensaje.Mensaje.Id, idusuario)
 		if err2 == false {
-			//	fmt.Println("Error3 al obtener datos del mensaje.", mimensaje.Mensaje.Id, idusuario)
 			return []MensajeDatos{}, false
 		}
 

@@ -8,7 +8,6 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -18,7 +17,6 @@ import (
 	"log"
 )
 
-//var conn Connection
 var conn *tls.Conn
 
 var _canalMensajeSocket = make(chan MensajeSocket)
@@ -52,19 +50,23 @@ func main() {
 	}
 }
 
+//Obtenemos las respuestas que lleguen del servidor
 func handleServerRead() {
 	var mensaje MensajeSocket
 	for {
 		defer conn.Close()
-		reply := make([]byte, 1048576) //256
+		reply := make([]byte, 1048576)
 		n, err := conn.Read(reply)
 		if err != nil {
 			break
 			conn.Close()
 		}
+
+		//Mostramos lo recibido
 		json.Unmarshal(reply[:n], &mensaje)
 		fmt.Println("Recibido:", mensaje.From, " -> ", mensaje.Funcion)
 
+		//Diferenciamos entre mensajes de admin o no y lo enviamos a cliente web
 		if mensaje.Funcion == Constantes_MensajeOtroClienteConectado {
 			mensaje := MensajeSocket{Mensaje: "mensajedeotrocliente", Datos: []string{}}
 			escribirWebSocket(mensaje)
@@ -75,12 +77,11 @@ func handleServerRead() {
 			_canalMensajeSocket <- mensaje
 
 		}
-
 	}
 
 }
 
-//Convertir a json y escribir en el socket
+//Convertir a json y escribir en el socket del servidor
 func escribirSocket(mensaje MensajeSocket) {
 	fmt.Println("Enviado: ", mensaje.Idfrom, " -> ", mensaje.Funcion)
 	mensaje.Idfrom = ClientUsuario.Id
@@ -88,7 +89,7 @@ func escribirSocket(mensaje MensajeSocket) {
 	conn.Write(b)
 }
 
-//Convertir a json y escribir en el socket con cliente
+//Convertir a json y escribir en el socket con cliente web
 func escribirWebSocket(mensaje MensajeSocket) {
 	var s string
 	b, _ := json.Marshal(mensaje)
@@ -96,19 +97,7 @@ func escribirWebSocket(mensaje MensajeSocket) {
 	websocket.Message.Send(wbSocket, s)
 }
 
-// función para codificar de []bytes a string (Base64)
-func encode64(data []byte) string {
-	return base64.StdEncoding.EncodeToString(data) // sólo utiliza caracteres "imprimibles"
-}
-
-// función para decodificar de string a []bytes (Base64)
-func decode64(s string) []byte {
-	b, err := base64.StdEncoding.DecodeString(s) // recupera el formato original
-	fmt.Println(err)                             // comprobamos el error
-	return b                                     // devolvemos los datos originales
-}
-
-//De la ontraseña en claro se realiza hash y se divide en 2 (login y cifrado)
+//De la ontraseña en claro se realiza hash y se divide en 2 (clave login y clave cifrado)
 func generarHashClaves(clave string) ([]byte, []byte) {
 
 	//Hash con SHA-2 (256) para la contraseña en general
@@ -122,7 +111,7 @@ func generarHashClaves(clave string) ([]byte, []byte) {
 	return clavehashlogin, clavehashcifrado
 }
 
-//Genera una clave pública y otra privada
+//Genera una clave pública y otra privada RSA
 func generarClavesRSA() ([]byte, []byte) {
 	claveprivada, err := rsa.GenerateKey(rand.Reader, 2048)
 
@@ -139,6 +128,7 @@ func generarClavesRSA() ([]byte, []byte) {
 	return pemblock.Bytes, pemblockPublica.Bytes
 }
 
+//Ciframos con RSA
 func cifrarRSA(textocifrar []byte, clave []byte) ([]byte, bool) {
 	r, _ := x509.ParsePKIXPublicKey(clave)
 	rsaPub, _ := r.(*rsa.PublicKey)
@@ -146,6 +136,7 @@ func cifrarRSA(textocifrar []byte, clave []byte) ([]byte, bool) {
 	return out, true
 }
 
+//Desciframos con RSA
 func descifrarRSA(textocifrar []byte, clave []byte) ([]byte, bool) {
 	privateKey, _ := x509.ParsePKCS1PrivateKey(clave)
 	out, _ := rsa.DecryptOAEP(sha256.New(), rand.Reader, privateKey, textocifrar, []byte{})
@@ -176,7 +167,7 @@ func cifrarAES(textocifrar []byte, clave []byte) ([]byte, bool) {
 	return ciphertext, false
 }
 
-//Con CTR se descifra como se cifra, con NewCTR
+//Descifrar con AES en modo CTR
 func descifrarAES(ciphertext []byte, clave []byte) ([]byte, bool) {
 
 	//Calculamos block con clave
